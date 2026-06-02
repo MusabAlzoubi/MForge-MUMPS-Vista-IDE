@@ -5,6 +5,14 @@
   "version": "0.3.0",
   "publisher": "dopamind",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/MusabAlzoubi/MForge-MUMPS-Vista-IDE.git"
+  },
+  "bugs": {
+    "url": "https://github.com/MusabAlzoubi/MForge-MUMPS-Vista-IDE/issues"
+  },
+  "homepage": "https://github.com/MusabAlzoubi/MForge-MUMPS-Vista-IDE#readme",
   "icon": "icon.png",
   "categories": [
     "Programming Languages",

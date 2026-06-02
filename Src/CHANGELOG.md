@@ -13,6 +13,7 @@
 - Added local installation and testing documentation.
 - Added package, local package, local install, environment check, and aggregate test scripts.
 - Restored Node 18-compatible local VSIX packaging by pinning the `vsce@2.11.0` CLI and overriding `cheerio` to `1.0.0-rc.12` instead of using current `@vscode/vsce` releases or unbounded transient dependencies.
+- Added repository, issue, and homepage metadata so `vsce package` can resolve README links during VSIX generation.
 
 ### Notes
 
