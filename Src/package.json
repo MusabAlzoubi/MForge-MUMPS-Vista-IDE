@@ -33,18 +33,19 @@
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
     "vscode:prepublish": "npm run compile",
+    "env:check": "node scripts/check-env.js",
     "test:stage2": "node scripts/test-stage2.js",
     "test:stage3": "node scripts/test-stage3.js",
     "test": "npm run test:stage2 && npm run test:stage3",
-    "package": "vsce package",
-    "package:local": "npm run compile && npm run test && vsce package",
-    "install:local": "code --install-extension *.vsix"
+    "package": "npm run env:check && vsce package",
+    "package:local": "npm run env:check && npm run compile && npm run test && vsce package",
+    "install:local": "code --install-extension mforge-mumps-vista-ide-0.3.0.vsix"
   },
   "devDependencies": {
-    "@types/node": "^20.14.8",
+    "@types/node": "^18.19.1",
     "@types/vscode": "^1.90.0",
     "typescript": "^5.5.2",
-    "@vscode/vsce": "^3.2.2"
+    "vsce": "2.15.0"
   },
   "contributes": {
     "languages": [

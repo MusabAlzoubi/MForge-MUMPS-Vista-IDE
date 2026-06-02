@@ -53,11 +53,20 @@ Run commands from the repository root unless noted. Run `cd Src` only once; if y
 ```bash
 cd Src
 npm install
-npm run package:local
+npm run env:check
+npm run compile
+npm run test
+npm run package
 code --install-extension mforge-mumps-vista-ide-0.3.0.vsix
 ```
 
-The exact VSIX filename is safer than `*.vsix` if your shell does not expand wildcards. See [Local installation and testing](docs/local-installation.md) for prerequisites, compile/test/package commands, manual Extension Development Host testing, and troubleshooting for `tsc: not found`, missing package scripts, `*.vsix` ENOENT, and `cd: Src` path errors.
+Expected VSIX filename for version 0.3.0: `mforge-mumps-vista-ide-0.3.0.vsix`. The exact VSIX filename is safer than `*.vsix` if your shell does not expand wildcards.
+
+### Packaging requirements and troubleshooting
+
+MForge local packaging supports Node.js **18.19.1 or newer**. Node 18 LTS and Node 20 LTS are the intended development targets. The package uses the Node-18-compatible `vsce@2.15.0` CLI for local VSIX generation instead of current `@vscode/vsce` releases, which can pull newer `undici` dependencies that require Node 20+ globals and fail on Node 18 with `ReferenceError: File is not defined`.
+
+Run `npm run env:check` before packaging to print the Node version, npm version, VSIX packager dependency, whether the local VSIX packager is installed, and whether packaging requirements are met. See [Local installation and testing](docs/local-installation.md) for prerequisites, compile/test/package commands, manual Extension Development Host testing, and troubleshooting for `tsc: not found`, missing package scripts, `*.vsix` ENOENT, `ReferenceError: File is not defined`, and `cd: Src` path errors.
 
 ## Configuration
 
@@ -87,9 +96,10 @@ Run from inside `Src`:
 
 ```bash
 npm install
+npm run env:check
 npm run compile
 npm run test
-npm run package:local
+npm run package
 ```
 
 Individual tests are available:

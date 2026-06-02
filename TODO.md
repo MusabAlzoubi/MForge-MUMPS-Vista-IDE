@@ -80,9 +80,10 @@
 ## Local packaging and testing documentation
 
 - [x] Add package scripts for VSIX generation.
-- [x] Add `@vscode/vsce` development dependency.
+- [x] Add Node 18-compatible `vsce` development dependency.
 - [x] Document local install and testing workflow.
 - [x] Document local packaging troubleshooting.
+- [x] Add packaging environment check script.
 
 ## Stage 8: Packaging and publishing
 

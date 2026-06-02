@@ -11,11 +11,13 @@
 - Added a lightweight routine index for supported MUMPS routine file extensions.
 - Added Stage 3 navigation fixture checks through `npm run test:stage3`.
 - Added local installation and testing documentation.
-- Added package, local package, local install, and aggregate test scripts with `@vscode/vsce`.
+- Added package, local package, local install, environment check, and aggregate test scripts.
+- Restored Node 18-compatible local VSIX packaging by pinning the `vsce@2.15.0` CLI instead of current `@vscode/vsce` releases.
 
 ### Notes
 
 - Stage 3 navigation is static and conservative; dynamic indirection, hover, completion, signature help, debugger, runtime, and VistA explorer features remain future stages.
+- Local packaging supports Node.js 18.19.1 or newer, with Node 18 LTS and Node 20 LTS as the intended packaging targets.
 - Old extension code remains reference-only and was not copied.
 
 ## 0.2.0 - 2026-06-02
