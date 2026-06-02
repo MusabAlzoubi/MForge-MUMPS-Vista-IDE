@@ -33,32 +33,36 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.activate = activate;
-exports.deactivate = deactivate;
+exports.registerDiagnosticsFeature = registerDiagnosticsFeature;
 const vscode = __importStar(require("vscode"));
-const language_1 = require("./config/language");
-const diagnostics_1 = require("./features/diagnostics");
-const formatter_1 = require("./features/formatter");
-const OUTPUT_CHANNEL_NAME = 'MForge MUMPS & VistA IDE';
-function activate(context) {
-    const output = vscode.window.createOutputChannel(OUTPUT_CHANNEL_NAME);
-    context.subscriptions.push(output);
-    output.appendLine(`${OUTPUT_CHANNEL_NAME} activated for language '${language_1.MUMPS_LANGUAGE_ID}'.`);
-    output.appendLine(`Supported extensions: ${language_1.SUPPORTED_EXTENSIONS.join(', ')}`);
-    (0, formatter_1.registerFormatterFeature)(context);
-    (0, diagnostics_1.registerDiagnosticsFeature)(context);
-    context.subscriptions.push(vscode.commands.registerCommand('mforge.showGettingStarted', async () => {
-        const selection = await vscode.window.showInformationMessage('MForge MUMPS & VistA IDE is ready. Stage 2 includes syntax highlighting, snippets, formatting, and diagnostics.', 'Open README', 'Show Output');
-        if (selection === 'Open README') {
-            const readme = vscode.Uri.joinPath(context.extensionUri, 'README.md');
-            await vscode.commands.executeCommand('vscode.open', readme);
+const language_1 = require("../../config/language");
+const diagnostics_1 = require("./diagnostics");
+function registerDiagnosticsFeature(context) {
+    const collection = vscode.languages.createDiagnosticCollection('mforge-mumps');
+    context.subscriptions.push(collection);
+    const refresh = (document) => {
+        if (document.languageId !== language_1.MUMPS_LANGUAGE_ID) {
+            return;
         }
-        if (selection === 'Show Output') {
-            output.show();
+        if (!isDiagnosticsEnabled()) {
+            collection.delete(document.uri);
+            return;
+        }
+        collection.set(document.uri, (0, diagnostics_1.analyzeMumpsDocument)(document));
+    };
+    for (const document of vscode.workspace.textDocuments) {
+        refresh(document);
+    }
+    context.subscriptions.push(vscode.workspace.onDidOpenTextDocument(refresh), vscode.workspace.onDidChangeTextDocument((event) => refresh(event.document)), vscode.workspace.onDidSaveTextDocument(refresh), vscode.workspace.onDidCloseTextDocument((document) => collection.delete(document.uri)), vscode.workspace.onDidChangeConfiguration((event) => {
+        if (!event.affectsConfiguration('mforge.diagnostics.enabled')) {
+            return;
+        }
+        for (const document of vscode.workspace.textDocuments) {
+            refresh(document);
         }
     }));
 }
-function deactivate() {
-    // Stage 2 features register disposables through context.subscriptions.
+function isDiagnosticsEnabled() {
+    return vscode.workspace.getConfiguration('mforge').get('diagnostics.enabled', true);
 }
-//# sourceMappingURL=extension.js.map
+//# sourceMappingURL=index.js.map

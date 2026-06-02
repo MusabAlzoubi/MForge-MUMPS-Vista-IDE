@@ -24,13 +24,13 @@
 
 ## Stage 2: Editing productivity
 
-- [ ] Implement basic formatter provider.
-- [ ] Add formatter fixture tests.
-- [ ] Implement parser-assisted auto indentation.
-- [ ] Implement basic diagnostics collection.
-- [ ] Add diagnostics fixture tests.
-- [ ] Document formatter and diagnostics.
-- [ ] Update README and changelog.
+- [x] Implement basic formatter provider.
+- [x] Add formatter fixture tests.
+- [x] Implement parser-assisted auto indentation.
+- [x] Implement basic diagnostics collection.
+- [x] Add diagnostics fixture tests.
+- [x] Document formatter and diagnostics.
+- [x] Update README and changelog.
 
 ## Stage 3: Navigation
 

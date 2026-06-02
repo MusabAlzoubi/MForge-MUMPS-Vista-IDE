@@ -2,7 +2,7 @@
   "name": "mforge-mumps-vista-ide",
   "displayName": "MForge MUMPS & VistA IDE",
   "description": "Complete IDE toolkit for MUMPS and VistA development in Visual Studio Code.",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "publisher": "dopamind",
   "license": "MIT",
   "icon": "icon.png",
@@ -32,7 +32,8 @@
   "scripts": {
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
-    "vscode:prepublish": "npm run compile"
+    "vscode:prepublish": "npm run compile",
+    "test:stage2": "node scripts/test-stage2.js"
   },
   "devDependencies": {
     "@types/node": "^20.14.8",
@@ -99,6 +100,16 @@
           ],
           "default": "off",
           "description": "Controls diagnostic logging for MForge extension features. Stage 1 has minimal logging."
+        },
+        "mforge.formatter.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable the conservative MForge document formatter for MUMPS files."
+        },
+        "mforge.diagnostics.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable basic MForge diagnostics for MUMPS files."
         }
       }
     }

@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.2.0 - 2026-06-02
+
+### Added
+
+- Added conservative MUMPS document formatter registration gated by `mforge.formatter.enabled`.
+- Added lightweight parser-assisted line analysis for labels, commands, comments, strings, globals, dot-block levels, and parenthesis balance.
+- Added basic diagnostics gated by `mforge.diagnostics.enabled` for unterminated strings, suspicious command tokens, invalid labels, unbalanced parentheses, and trailing whitespace.
+- Added Stage 2 formatter and parser fixture checks through `npm run test:stage2`.
+- Added formatter and diagnostics feature documentation.
+
+### Notes
+
+- Stage 2 remains intentionally line-based and conservative; navigation, hover, completion, debugger, and VistA tools are still future stages.
+- Old extension code remains reference-only and was not copied.
+
 ## 0.1.0 - 2026-06-02
 
 ### Added
