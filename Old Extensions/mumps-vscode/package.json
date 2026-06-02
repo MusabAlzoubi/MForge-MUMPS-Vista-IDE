@@ -1,0 +1,89 @@
+{
+  "name": "mumps",
+  "displayName": "M/MUMPS/Caché language syntax highlighting and basic formatting",
+  "description": "M/MUMPS/Caché language syntax highlighting, basic formatting, javadoc, and autoindent",
+  "version": "0.1.2",
+  "publisher": "dsilin",
+  "icon": "icon.png",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/chessgecko/mumps-vscode.git"
+  },
+  "engines": {
+    "vscode": "^1.15.0"
+  },
+  "categories": [
+    "Languages",
+    "Formatters"
+  ],
+  "contributes": {
+    "languages": [
+      {
+        "id": "mumps",
+        "aliases": [
+          "MUMPS",
+          "mumps"
+        ],
+        "extensions": [
+          ".int",
+          ".m",
+          ".mps",
+          ".zwr"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "mumps",
+        "scopeName": "source.mumps",
+        "path": "./syntaxes/mumps.tmLanguage"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "mumps.documentFunction",
+        "key": "ctrl+d",
+        "when":"editorLangId == mumps"
+      },
+      {
+        "command": "mumps.autoSpaceEnter",
+        "when":"editorLangId == mumps",
+        "key": "enter"
+      },
+      {
+        "command": "mumps.autoSpaceTab",
+        "when":"editorLangId == mumps",
+        "key": "tab"
+      }
+    ],
+    "configurationDefaults": {
+      "[mumps]": {
+        "editor.insertSpaces": false,
+        "editor.formatOnSave": true
+      }
+    }
+  },
+  "activationEvents": [
+    "onLanguage:mumps"
+  ],
+  "main": "./out/src/extension",
+  "scripts": {
+    "vscode:prepublish": "tsc -p ./",
+    "compile": "tsc -watch -p ./",
+    "postinstall": "node ./node_modules/vscode/bin/install",
+    "test": "node ./node_modules/vscode/bin/test"
+  },
+  "devDependencies": {
+    "typescript": "^2.0.3",
+    "vscode": "^1.0.0",
+    "mocha": "^2.3.3",
+    "eslint": "^3.6.0",
+    "@types/node": "^6.0.40",
+    "@types/mocha": "^2.2.32"
+  },
+  "dependencies": {
+    "emcellent": "0.0.5",
+    "node-typescript": "^0.1.3"
+  }
+}

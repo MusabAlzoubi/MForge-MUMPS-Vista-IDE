@@ -1,0 +1,191 @@
+{
+  "name": "tree-sitter-m-vscode",
+  "displayName": "M (MUMPS)",
+  "description": "Syntax highlighting and language support for the M (MUMPS) programming language. Powered by tree-sitter-m via web-tree-sitter (WASM).",
+  "version": "0.3.0",
+  "publisher": "rafael5",
+  "license": "MIT",
+  "icon": "images/icon.png",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/m-dev-tools/tree-sitter-m-vscode.git"
+  },
+  "bugs": {
+    "url": "https://github.com/m-dev-tools/tree-sitter-m-vscode/issues"
+  },
+  "homepage": "https://github.com/m-dev-tools/tree-sitter-m-vscode#readme",
+  "qna": "https://github.com/m-dev-tools/tree-sitter-m-vscode/discussions",
+  "keywords": [
+    "m",
+    "mumps",
+    "vista",
+    "yottadb",
+    "iris",
+    "cache",
+    "objectscript",
+    "tree-sitter",
+    "syntax-highlighting"
+  ],
+  "categories": [
+    "Programming Languages"
+  ],
+  "galleryBanner": {
+    "color": "#1F2933",
+    "theme": "dark"
+  },
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "main": "./out/extension.js",
+  "contributes": {
+    "languages": [
+      {
+        "id": "m",
+        "aliases": [
+          "MUMPS",
+          "M",
+          "M (MUMPS)"
+        ],
+        "extensions": [
+          ".m",
+          ".mac",
+          ".int"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "m",
+        "scopeName": "source.m",
+        "path": "./syntaxes/m.tmLanguage.json"
+      }
+    ],
+    "semanticTokenScopes": [
+      {
+        "language": "m",
+        "scopes": {
+          "keyword": [
+            "keyword.control.command.m"
+          ],
+          "keyword.defaultLibrary": [
+            "support.constant.pattern-code.m"
+          ],
+          "function": [
+            "entity.name.function.m"
+          ],
+          "function.declaration": [
+            "entity.name.function.label.m"
+          ],
+          "function.defaultLibrary": [
+            "support.function.intrinsic.m"
+          ],
+          "variable": [
+            "variable.other.m"
+          ],
+          "variable.defaultLibrary": [
+            "support.variable.special.m"
+          ],
+          "variable.defaultLibrary.readonly": [
+            "support.variable.special.m"
+          ],
+          "parameter": [
+            "variable.parameter.m"
+          ],
+          "parameter.declaration": [
+            "variable.parameter.declaration.m"
+          ],
+          "string": [
+            "string.quoted.double.m"
+          ],
+          "number": [
+            "constant.numeric.m"
+          ],
+          "comment": [
+            "comment.line.semicolon.m"
+          ],
+          "operator": [
+            "keyword.operator.m"
+          ]
+        }
+      }
+    ],
+    "configurationDefaults": {
+      "[m]": {
+        "editor.tabSize": 1,
+        "editor.insertSpaces": true,
+        "editor.detectIndentation": false,
+        "editor.semanticHighlighting.enabled": true
+      }
+    },
+    "commands": [
+      {
+        "command": "tree-sitter-m.about",
+        "title": "M (MUMPS): About this extension"
+      },
+      {
+        "command": "tree-sitter-m.openAllInWorkspace",
+        "title": "M (MUMPS): Open all M files in workspace as tabs"
+      },
+      {
+        "command": "tree-sitter-m.smokeReport",
+        "title": "M (MUMPS): Smoke-report all M files in workspace"
+      },
+      {
+        "command": "tree-sitter-m.lsp.restart",
+        "title": "M (MUMPS): Restart Language Server"
+      }
+    ],
+    "configuration": {
+      "title": "M (MUMPS) — m-cli LSP",
+      "properties": {
+        "m-cli.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable the m-cli Language Server. Provides live lint diagnostics, format-on-save, and Quick Fix code actions for .m files."
+        },
+        "m-cli.path": {
+          "type": "string",
+          "default": "m",
+          "description": "Path to the `m` CLI binary. Defaults to looking for `m` on PATH. Set this to an absolute path if m-cli is installed in a virtualenv (e.g. /home/you/projects/m-cli/.venv/bin/m)."
+        },
+        "m-cli.args": {
+          "type": "array",
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "description": "Extra arguments passed to `m lsp` (the subcommand is added automatically). Example: [\"--verbose\"]."
+        },
+        "m-cli.trace.server": {
+          "type": "string",
+          "enum": [
+            "off",
+            "messages",
+            "verbose"
+          ],
+          "default": "off",
+          "description": "Log LSP messages between the editor and the m-cli server (visible in the Output panel under \"m-cli LSP\")."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "package": "vsce package",
+    "lint": "tsc -noEmit -p ./",
+    "build-wasm": "scripts/build-wasm.sh"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/vscode": "^1.85.0",
+    "@vscode/vsce": "^3.0.0",
+    "typescript": "^5.4.0"
+  },
+  "dependencies": {
+    "vscode-languageclient": "^9.0.1",
+    "web-tree-sitter": "^0.25.10"
+  }
+}
