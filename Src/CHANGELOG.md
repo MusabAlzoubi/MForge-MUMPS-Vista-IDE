@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.4.0 - 2026-06-02
+
+### Added
+
+- Added Hover Provider for MUMPS commands, abbreviations, intrinsic functions, and system variables.
+- Added Completion Provider for commands, intrinsics, system variables, current-document labels, workspace-index labels, and workspace routine names.
+- Added Signature Help for `$P`, `$G`, `$O`, `$D`, `$L`, `$E`, `$F`, and `$NA`.
+- Added Intrinsic Documentation for Stage 4 hover and signature help.
+- Added System Variable Documentation for Stage 4 hover and completion.
+- Added Stage 4 fixture checks through `npm run test:stage4`.
+- Added feature documentation for hover, completion, and signature help.
+
+### Notes
+
+- Stage 4 is static language intelligence only; debugger, GT.M/YottaDB runtime integration, VistA explorers, FileMan explorer, Global explorer, and Stage 5+ features remain unimplemented.
+
 ## 0.3.0 - 2026-06-02
 
 ### Added

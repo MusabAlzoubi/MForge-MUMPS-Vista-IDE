@@ -106,6 +106,74 @@ declare module 'vscode' {
 
   export type Definition = Location | Location[];
 
+  export class MarkdownString {
+    constructor(value?: string);
+    value: string;
+  }
+
+  export class Hover {
+    constructor(contents: MarkdownString | string | Array<MarkdownString | string>, range?: Range);
+    contents: Array<MarkdownString | string>;
+    range?: Range;
+  }
+
+  export enum CompletionItemKind {
+    Text = 0,
+    Method = 1,
+    Function = 2,
+    Constructor = 3,
+    Field = 4,
+    Variable = 5,
+    Class = 6,
+    Interface = 7,
+    Module = 8,
+    Property = 9,
+    Unit = 10,
+    Value = 11,
+    Enum = 12,
+    Keyword = 13
+  }
+
+  export class CompletionItem {
+    constructor(label: string, kind?: CompletionItemKind);
+    label: string;
+    kind?: CompletionItemKind;
+    detail?: string;
+    documentation?: string | MarkdownString;
+    insertText?: string;
+  }
+
+  export class ParameterInformation {
+    constructor(label: string, documentation?: string | MarkdownString);
+    label: string;
+    documentation?: string | MarkdownString;
+  }
+
+  export class SignatureInformation {
+    constructor(label: string, documentation?: string | MarkdownString);
+    label: string;
+    documentation?: string | MarkdownString;
+    parameters: ParameterInformation[];
+  }
+
+  export class SignatureHelp {
+    signatures: SignatureInformation[];
+    activeSignature: number;
+    activeParameter: number;
+  }
+
+  export interface HoverProvider {
+    provideHover(document: TextDocument, position: Position, token?: CancellationToken): Hover | null | Promise<Hover | null>;
+  }
+
+  export interface CompletionItemProvider {
+    provideCompletionItems(document: TextDocument, position: Position, token?: CancellationToken): CompletionItem[] | Promise<CompletionItem[]>;
+  }
+
+  export interface SignatureHelpProvider {
+    provideSignatureHelp(document: TextDocument, position: Position, token?: CancellationToken): SignatureHelp | null | Promise<SignatureHelp | null>;
+  }
+
   export interface DocumentSymbolProvider {
     provideDocumentSymbols(document: TextDocument, token?: CancellationToken): DocumentSymbol[] | Promise<DocumentSymbol[]>;
   }
@@ -166,6 +234,9 @@ declare module 'vscode' {
     export function registerDocumentFormattingEditProvider(languageId: string, provider: DocumentFormattingEditProvider): Disposable;
     export function registerOnTypeFormattingEditProvider(languageId: string, provider: OnTypeFormattingEditProvider, firstTriggerCharacter: string, ...moreTriggerCharacter: string[]): Disposable;
     export function registerDocumentSymbolProvider(languageId: string, provider: DocumentSymbolProvider): Disposable;
+    export function registerHoverProvider(languageId: string, provider: HoverProvider): Disposable;
+    export function registerCompletionItemProvider(languageId: string, provider: CompletionItemProvider, ...triggerCharacters: string[]): Disposable;
+    export function registerSignatureHelpProvider(languageId: string, provider: SignatureHelpProvider, ...triggerCharacters: string[]): Disposable;
     export function registerDefinitionProvider(languageId: string, provider: DefinitionProvider): Disposable;
     export function registerWorkspaceSymbolProvider(provider: WorkspaceSymbolProvider): Disposable;
     export function createDiagnosticCollection(name: string): DiagnosticCollection;

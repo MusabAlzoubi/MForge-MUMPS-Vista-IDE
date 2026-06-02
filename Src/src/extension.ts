@@ -3,6 +3,9 @@ import { MUMPS_LANGUAGE_ID, SUPPORTED_EXTENSIONS } from './config/language';
 import { registerDiagnosticsFeature } from './features/diagnostics';
 import { registerFormatterFeature } from './features/formatter';
 import { registerNavigationFeature } from './features/navigation';
+import { registerHoverFeature } from './features/hover';
+import { registerCompletionFeature } from './features/completion';
+import { registerSignatureFeature } from './features/signature';
 
 const OUTPUT_CHANNEL_NAME = 'MForge MUMPS & VistA IDE';
 
@@ -16,11 +19,14 @@ export function activate(context: vscode.ExtensionContext): void {
   registerFormatterFeature(context);
   registerDiagnosticsFeature(context);
   registerNavigationFeature(context, output);
+  registerHoverFeature(context, output);
+  registerCompletionFeature(context, output);
+  registerSignatureFeature(context, output);
 
   context.subscriptions.push(
     vscode.commands.registerCommand('mforge.showGettingStarted', async () => {
       const selection = await vscode.window.showInformationMessage(
-        'MForge MUMPS & VistA IDE is ready. Stage 3 includes syntax highlighting, snippets, formatting, diagnostics, symbols, and navigation.',
+        'MForge MUMPS & VistA IDE is ready. Stage 4 includes syntax highlighting, snippets, formatting, diagnostics, symbols, navigation, hover, completion, and signature help.',
         'Open README',
         'Show Output'
       );

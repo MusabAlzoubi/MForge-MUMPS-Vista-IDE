@@ -44,12 +44,12 @@
 
 ## Stage 4: Intelligence
 
-- [ ] Add MUMPS command reference data.
-- [ ] Implement hover provider.
-- [ ] Implement completion provider.
-- [ ] Implement signature help provider.
-- [ ] Add provider tests.
-- [ ] Document intelligence features.
+- [x] Add MUMPS command reference data.
+- [x] Implement hover provider.
+- [x] Implement completion provider.
+- [x] Implement signature help provider.
+- [x] Add provider tests.
+- [x] Document intelligence features.
 
 ## Stage 5: Advanced analysis
 

@@ -2,7 +2,7 @@
   "name": "mforge-mumps-vista-ide",
   "displayName": "MForge MUMPS & VistA IDE",
   "description": "Complete IDE toolkit for MUMPS and VistA development in Visual Studio Code.",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "publisher": "dopamind",
   "license": "MIT",
   "repository": {
@@ -45,10 +45,11 @@
     "env:check": "node scripts/check-env.js",
     "test:stage2": "node scripts/test-stage2.js",
     "test:stage3": "node scripts/test-stage3.js",
-    "test": "npm run test:stage2 && npm run test:stage3",
+    "test": "npm run test:stage2 && npm run test:stage3 && npm run test:stage4",
     "package": "npm run env:check && npm run compile && npm run test && vsce package",
     "package:local": "npm run package",
-    "install:local": "code --install-extension mforge-mumps-vista-ide-0.3.0.vsix"
+    "install:local": "code --install-extension mforge-mumps-vista-ide-0.4.0.vsix",
+    "test:stage4": "node scripts/test-stage4.js"
   },
   "devDependencies": {
     "@types/node": "^18.19.1",
@@ -115,7 +116,7 @@
             "debug"
           ],
           "default": "off",
-          "description": "Controls diagnostic logging for MForge extension features. Stage 1 has minimal logging."
+          "description": "Controls diagnostic logging for MForge extension features."
         },
         "mforge.formatter.enabled": {
           "type": "boolean",
@@ -137,6 +138,21 @@
           "default": 2000,
           "minimum": 1,
           "description": "Maximum number of supported MUMPS routine files to scan for the Stage 3 workspace routine index."
+        },
+        "mforge.hover.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable Stage 4 MUMPS hover help for commands, intrinsic functions, and system variables."
+        },
+        "mforge.completion.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable Stage 4 MUMPS completion for commands, intrinsics, system variables, labels, and routines."
+        },
+        "mforge.signatureHelp.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable Stage 4 MUMPS intrinsic function signature help."
         }
       }
     }

@@ -1,6 +1,6 @@
 # MForge MUMPS & VistA IDE
 
-MForge is a clean Visual Studio Code extension for MUMPS and VistA development. Current version: **0.3.0**.
+MForge is a clean Visual Studio Code extension for MUMPS and VistA development. Current version: **0.4.0**.
 
 ## Current status
 
@@ -8,7 +8,8 @@ MForge is a clean Visual Studio Code extension for MUMPS and VistA development. 
 - Stage 1: core language support — complete.
 - Stage 2: editing productivity — complete.
 - Stage 3: navigation — complete.
-- Stage 4+ intelligence, advanced analysis, runtime/debugging, and VistA explorers — planned, not implemented yet.
+- Stage 4: intelligence — complete.
+- Stage 5+ advanced analysis, runtime/debugging, and VistA explorers — planned, not implemented yet.
 
 ## Features
 
@@ -46,6 +47,19 @@ See also:
 
 See [Navigation](docs/features/navigation.md) for usage, supported patterns, configuration, examples, limitations, and troubleshooting.
 
+### Stage 4 intelligence
+
+- Adds hover help for common MUMPS commands, command abbreviations, intrinsic functions, and system variables.
+- Adds completion suggestions for commands, intrinsics, system variables, current-document labels, workspace-index labels, and workspace routine names.
+- Adds signature help for `$P`, `$G`, `$O`, `$D`, `$L`, `$E`, `$F`, and `$NA` intrinsic calls.
+- Adds independent settings for hover, completion, and signature help.
+
+See also:
+
+- [Hover](docs/features/hover.md)
+- [Completion](docs/features/completion.md)
+- [Signature Help](docs/features/signature-help.md)
+
 ## Local installation and testing
 
 Run commands from the repository root unless noted. Run `cd Src` only once; if you are already inside `Src`, do not run `cd Src` again.
@@ -58,10 +72,10 @@ npm run env:check
 npm run compile
 npm run test
 npm run package
-code --install-extension mforge-mumps-vista-ide-0.3.0.vsix
+code --install-extension mforge-mumps-vista-ide-0.4.0.vsix
 ```
 
-Expected VSIX filename for version 0.3.0: `mforge-mumps-vista-ide-0.3.0.vsix`. The exact VSIX filename is safer than `*.vsix` if your shell does not expand wildcards.
+Expected VSIX filename for version 0.4.0: `mforge-mumps-vista-ide-0.4.0.vsix`. The exact VSIX filename is safer than `*.vsix` if your shell does not expand wildcards.
 
 ### Packaging requirements and troubleshooting
 
@@ -74,7 +88,7 @@ Troubleshooting summary:
 - If `ReferenceError: File is not defined` appears, a Node-20-only dependency was installed. Remove `node_modules` and `package-lock.json`, verify `package.json` uses exact `"vsce": "2.11.0"` and override `"cheerio": "1.0.0-rc.12"`, then run `npm install` again.
 - If `env:check` expects the wrong version or reports `@vscode/vsce`, pull the latest changes and reinstall dependencies.
 - If the VSIX file is missing, packaging did not complete; do not run the install command until `npm run package` succeeds.
-- Avoid wildcard installs unless `mforge-mumps-vista-ide-0.3.0.vsix` exists.
+- Avoid wildcard installs unless `mforge-mumps-vista-ide-0.4.0.vsix` exists.
 
 
 ### Local Extension Development Host
@@ -84,13 +98,13 @@ cd Src
 code .
 ```
 
-Press `F5` / **Launch Extension**, open a `.m` file in the Extension Development Host, and test syntax highlighting, snippets, Format Document, diagnostics, Outline, `F12` Go To Label, `F12` Go To Routine, and `Ctrl+T` Workspace Symbols.
+Press `F5` / **Launch Extension**, open a `.m` file in the Extension Development Host, and test syntax highlighting, snippets, Format Document, diagnostics, Outline, `F12` Go To Label, `F12` Go To Routine, `Ctrl+T` Workspace Symbols, hover, completion, and signature help.
 
 ### Reinstall local VSIX
 
 ```bash
 code --uninstall-extension dopamind.mforge-mumps-vista-ide
-code --install-extension mforge-mumps-vista-ide-0.3.0.vsix
+code --install-extension mforge-mumps-vista-ide-0.4.0.vsix
 ```
 
 ## Configuration
@@ -101,6 +115,9 @@ code --install-extension mforge-mumps-vista-ide-0.3.0.vsix
 | `mforge.formatter.enabled` | `true` | Enables the conservative MForge document formatter. |
 | `mforge.diagnostics.enabled` | `true` | Enables basic MForge diagnostics for MUMPS files. |
 | `mforge.navigation.enabled` | `true` | Enables Stage 3 Document Symbols, Go to Definition, routine indexing, and Workspace Symbols. |
+| `mforge.hover.enabled` | `true` | Enables Stage 4 command, intrinsic, and system variable hover help. |
+| `mforge.completion.enabled` | `true` | Enables Stage 4 command, intrinsic, system variable, label, and routine completion. |
+| `mforge.signatureHelp.enabled` | `true` | Enables Stage 4 intrinsic function signature help. |
 | `mforge.maxWorkspaceFiles` | `2000` | Maximum supported routine files to scan for the workspace index. |
 
 Example settings:
@@ -110,6 +127,9 @@ Example settings:
   "mforge.formatter.enabled": true,
   "mforge.diagnostics.enabled": true,
   "mforge.navigation.enabled": true,
+  "mforge.hover.enabled": true,
+  "mforge.completion.enabled": true,
+  "mforge.signatureHelp.enabled": true,
   "mforge.maxWorkspaceFiles": 2000,
   "mforge.trace.level": "off"
 }
@@ -133,6 +153,7 @@ Individual tests are available:
 ```bash
 npm run test:stage2
 npm run test:stage3
+npm run test:stage4
 ```
 
 ## Roadmap
@@ -143,5 +164,5 @@ npm run test:stage3
 | Stage 1: Core language support | Done | Syntax highlighting, language configuration, snippets, and docs are in place. |
 | Stage 2: Editing productivity | Done | Formatter, parser-assisted indentation, diagnostics, and tests are in place. |
 | Stage 3: Navigation | Done | Document Symbols, Go To Label/Routine, Workspace Symbols, routine index, tests, and docs are in place. |
-| Stage 4: Intelligence | Planned | Hover, completion, and signature help are intentionally not implemented yet. |
+| Stage 4: Intelligence | Done | Hover, completion, signature help, documentation data, tests, and docs are in place. |
 | Stage 5+: Advanced analysis, runtime, VistA tools | Planned | Future work only. |
