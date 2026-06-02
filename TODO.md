@@ -84,6 +84,8 @@
 - [x] Document local install and testing workflow.
 - [x] Document local packaging troubleshooting.
 - [x] Add packaging environment check script.
+- [x] Align packaging workflow with owner-approved old debugger extension approach.
+- [x] Override Node-18-incompatible packaging transitive dependencies.
 
 ## Stage 8: Packaging and publishing
 

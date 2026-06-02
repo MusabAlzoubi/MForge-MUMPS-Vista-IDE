@@ -24,7 +24,7 @@ When `npm install` creates `package-lock.json`, keep it for reproducible local p
 npm run env:check
 ```
 
-This prints the Node version, npm version, package.json packager dependency, installed `vsce` version, local binary path, and whether local packaging requirements are met.
+This prints the Node version, npm version, package.json packager dependency, installed `vsce`, `cheerio`, and `undici` versions, package-lock status, local binary path, and whether local packaging requirements are met.
 
 ## Compile
 
@@ -72,17 +72,34 @@ The convenience script remains available when wildcard expansion works in your s
 npm run install:local
 ```
 
-## Alternative manual test
+## Reinstall local VSIX
 
-1. Open `Src` in VS Code.
-2. Press `F5`.
-3. Open the Extension Development Host.
-4. Open a `.m`, `.rou`, `.int`, `.mumps`, or `.mps` file and test formatting, diagnostics, symbols, and navigation.
+```bash
+code --uninstall-extension dopamind.mforge-mumps-vista-ide
+code --install-extension mforge-mumps-vista-ide-0.3.0.vsix
+```
+
+## Local Extension Development Host
+
+```bash
+code .
+```
+
+Press `F5` / **Launch Extension**, open a `.m`, `.rou`, `.int`, `.mumps`, or `.mps` file in the Extension Development Host, and test:
+
+- Syntax Highlighting
+- Snippets
+- Format Document
+- Diagnostics
+- Outline
+- `F12` Go To Label
+- `F12` Go To Routine
+- `Ctrl+T` Workspace Symbols
 
 
 ## Node 18-safe VSIX packager
 
-MForge pins the legacy `vsce` CLI to exact version `2.11.0` because it is a known Node-18-safe 2.x packager for this extension. Do not replace it with current `@vscode/vsce` on Node 18; newer scoped releases can pull Node-20-only dependencies and fail with `ReferenceError: File is not defined` in `node_modules/undici/...`.
+MForge pins the legacy `vsce` CLI to exact version `2.11.0` and overrides `cheerio` to `1.0.0-rc.12` because that dependency shape is Node-18-safe for this extension. This packaging approach was adapted from the owner's working old `mumps-debugger---upgrade` extension. Do not replace it with current `@vscode/vsce` on Node 18; newer scoped releases, or un-overridden `vsce` installs, can pull Node-20-only dependencies and fail with `ReferenceError: File is not defined` in `node_modules/undici/...`.
 
 If you previously installed a different packager version, reset local dependencies before reinstalling:
 
@@ -98,7 +115,7 @@ npm install
 | `sh: 1: tsc: not found` | Dependencies were not installed. | Run `npm install` inside `Src`, then rerun `npm run compile`. |
 | `npm ERR! Missing script: "package"` | The local checkout does not include the Stage 3 package scripts or the command is being run in the wrong folder. | Pull the latest changes and check `Src/package.json` scripts. Run commands from inside `Src`. |
 | `env:check` expects the wrong version | The checkout still has an older hardcoded environment check. | Pull the latest changes, remove `node_modules`, run `npm install`, and confirm `env:check` reads the installed `vsce` version dynamically. |
-| `ReferenceError: File is not defined` in `node_modules/undici/...` | A Node-20-only dependency was installed, usually from current `@vscode/vsce` or an incompatible transient dependency. | Remove `node_modules` and `package-lock.json`, verify `package.json` uses exact `"vsce": "2.11.0"`, then run `npm install`, `npm run env:check`, and `npm run package`. |
+| `ReferenceError: File is not defined` in `node_modules/undici/...` | A Node-20-only dependency was installed, usually from current `@vscode/vsce` or an incompatible transient dependency. | Remove `node_modules` and `package-lock.json`, verify `package.json` uses exact `"vsce": "2.11.0"` and override `"cheerio": "1.0.0-rc.12"`, then run `npm install`, `npm run env:check`, and `npm run package`. |
 | `Error: ENOENT no such file or directory, open '*.vsix'` | A VSIX was not created or the wildcard was not expanded. | Packaging did not complete. Do not run install before `npm run package` succeeds; then use `code --install-extension mforge-mumps-vista-ide-0.3.0.vsix`. |
 | `vsce: not found` | Dependencies were not installed or `node_modules/.bin` is unavailable. | Run `npm install` inside `Src`, then rerun `npm run env:check` and `npm run package`. |
 | `cd: Src: No such file or directory` | The terminal is already inside `Src` or not at the repository root. | If already inside `Src`, skip `cd Src`. Otherwise return to the repository root before running `cd Src`. |

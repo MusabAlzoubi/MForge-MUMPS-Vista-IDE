@@ -12,12 +12,13 @@
 - Added Stage 3 navigation fixture checks through `npm run test:stage3`.
 - Added local installation and testing documentation.
 - Added package, local package, local install, environment check, and aggregate test scripts.
-- Restored Node 18-compatible local VSIX packaging by pinning the `vsce@2.11.0` CLI instead of current `@vscode/vsce` releases.
+- Restored Node 18-compatible local VSIX packaging by pinning the `vsce@2.11.0` CLI and overriding `cheerio` to `1.0.0-rc.12` instead of using current `@vscode/vsce` releases or unbounded transient dependencies.
 
 ### Notes
 
 - Stage 3 navigation is static and conservative; dynamic indirection, hover, completion, signature help, debugger, runtime, and VistA explorer features remain future stages.
 - Local packaging supports Node.js 18 or newer, with Node.js 18.19.1 explicitly supported for local packaging.
+- The packaging workflow was adapted from the owner's working old `mumps-debugger---upgrade` extension while keeping MForge source and features separate.
 - Old extension code remains reference-only and was not copied.
 
 ## 0.2.0 - 2026-06-02

@@ -1,8 +1,16 @@
 .vscode/**
 .vscode-test/**
-out/test/**
-src/**
+coverage/**
 node_modules/**
+
+src/**
+test-fixtures/**
+scripts/test-*.js
+docs/research/**
+Old Extensions/**
+
 *.vsix
-*.map
+**/*.js.map
 .DS_Store
+npm-debug.log*
+yarn-error.log*

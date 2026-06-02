@@ -4,9 +4,10 @@ const path = require('node:path');
 
 const MIN_NODE_MAJOR = 18;
 const PACKAGER_NAME = 'vsce';
+const SAFE_CHEERIO_VERSION = '1.0.0-rc.12';
 
 function parseVersion(versionText) {
-  const match = String(versionText).trim().match(/^v?(\d+)\.(\d+)\.(\d+)/);
+  const match = String(versionText).trim().match(/^v?(\d+)\.(\d+)\.(\d+)(?:-(.+))?$/);
   if (!match) {
     return null;
   }
@@ -14,7 +15,8 @@ function parseVersion(versionText) {
     major: Number(match[1]),
     minor: Number(match[2]),
     patch: Number(match[3]),
-    text: `${match[1]}.${match[2]}.${match[3]}`
+    prerelease: match[4] || '',
+    text: `${match[1]}.${match[2]}.${match[3]}${match[4] ? `-${match[4]}` : ''}`
   };
 }
 
@@ -51,25 +53,68 @@ function isDeclaredVersionCompatible(declaredRange, installedVersion) {
     return false;
   }
 
-  if (/^\d+\.\d+\.\d+$/.test(declaredRange)) {
+  if (/^\d+\.\d+\.\d+(?:-.+)?$/.test(declaredRange)) {
     return installedVersion === normalizedDeclared;
   }
 
   return installedVersion === normalizedDeclared || installedVersion.startsWith(`${normalizedDeclared.split('.')[0]}.`);
 }
 
+function isCheerioNode18Safe(version) {
+  if (!version) {
+    return true;
+  }
+  if (version === SAFE_CHEERIO_VERSION) {
+    return true;
+  }
+  const parsed = parseVersion(version);
+  if (!parsed) {
+    return false;
+  }
+  if (parsed.major === 1 && parsed.minor === 0 && parsed.prerelease.startsWith('rc.')) {
+    return true;
+  }
+  return parsed.major === 0;
+}
+
+function packageLockStatus(extensionRoot) {
+  const lockPath = path.join(extensionRoot, 'package-lock.json');
+  if (!fs.existsSync(lockPath)) {
+    return { exists: false, text: 'missing' };
+  }
+  const lock = readJson(lockPath);
+  if (!lock) {
+    return { exists: true, text: 'present but unreadable' };
+  }
+  const packages = lock.packages || {};
+  const lockCheerio = packages['node_modules/cheerio']?.version || null;
+  const lockUndici = packages['node_modules/undici']?.version || null;
+  return {
+    exists: true,
+    text: `present${lockCheerio ? `, cheerio ${lockCheerio}` : ''}${lockUndici ? `, undici ${lockUndici}` : ', no undici entry'}`,
+    cheerio: lockCheerio,
+    undici: lockUndici
+  };
+}
+
+function findInstalledPackageVersion(extensionRoot, packageName) {
+  return readJson(path.join(extensionRoot, 'node_modules', packageName, 'package.json'))?.version || null;
+}
+
 function main() {
   const extensionRoot = path.join(__dirname, '..');
   const packageJsonPath = path.join(extensionRoot, 'package.json');
-  const installedVscePackagePath = path.join(extensionRoot, 'node_modules', PACKAGER_NAME, 'package.json');
   const localBinPath = path.join(extensionRoot, 'node_modules', '.bin', process.platform === 'win32' ? 'vsce.cmd' : 'vsce');
 
   const packageJson = readJson(packageJsonPath) || {};
   const devDependencies = packageJson.devDependencies || {};
+  const overrides = packageJson.overrides || {};
   const declaredVsce = devDependencies[PACKAGER_NAME] || null;
   const hasScopedVsce = Object.prototype.hasOwnProperty.call(devDependencies, '@vscode/vsce');
-  const installedVscePackage = readJson(installedVscePackagePath);
-  const installedVsceVersion = installedVscePackage?.version || null;
+  const installedVsceVersion = findInstalledPackageVersion(extensionRoot, PACKAGER_NAME);
+  const installedCheerioVersion = findInstalledPackageVersion(extensionRoot, 'cheerio');
+  const installedUndiciVersion = findInstalledPackageVersion(extensionRoot, 'undici');
+  const lockStatus = packageLockStatus(extensionRoot);
 
   const nodeVersion = parseVersion(process.version);
   const npmVersion = getCommandVersion('npm --version');
@@ -79,14 +124,23 @@ function main() {
   const installedMajorOk = installedVsceVersion ? parseVersion(installedVsceVersion)?.major === 2 : false;
   const declaredCompatible = isDeclaredVersionCompatible(declaredVsce, installedVsceVersion);
   const packageJsonOk = declaredVsce !== null && !hasScopedVsce;
-  const packagingOk = nodeOk && npmOk && packageJsonOk && localBinExists && installedMajorOk && declaredCompatible;
+  const cheerioOverrideOk = overrides.cheerio === SAFE_CHEERIO_VERSION;
+  const installedCheerioOk = isCheerioNode18Safe(installedCheerioVersion);
+  const lockCheerioOk = isCheerioNode18Safe(lockStatus.cheerio);
+  const nodeMajor = nodeVersion?.major ?? 0;
+  const undiciBreaksNode18 = nodeMajor < 20 && Boolean(installedUndiciVersion || lockStatus.undici);
+  const undiciOk = !undiciBreaksNode18;
+  const packagingOk = nodeOk && npmOk && packageJsonOk && localBinExists && installedMajorOk && declaredCompatible && cheerioOverrideOk && installedCheerioOk && lockCheerioOk && undiciOk;
 
   console.log(`Node version: ${process.version}`);
   console.log(`npm version: ${npmVersion.value}`);
   console.log(`package.json packager dependency: ${declaredVsce ? `${PACKAGER_NAME}@${declaredVsce}` : 'missing'}`);
   console.log(`installed vsce version: ${installedVsceVersion || 'not installed'}`);
+  console.log(`installed cheerio version: ${installedCheerioVersion || 'not installed'}`);
+  console.log(`installed undici version: ${installedUndiciVersion || 'not installed'}`);
   console.log(`local vsce binary path: ${localBinPath}`);
   console.log(`local vsce binary exists: ${localBinExists ? 'yes' : 'no'}`);
+  console.log(`package-lock status: ${lockStatus.text}`);
   console.log(`packaging requirements met: ${packagingOk ? 'yes' : 'no'}`);
 
   if (!nodeOk) {
@@ -115,6 +169,18 @@ function main() {
 
   if (declaredVsce && installedVsceVersion && !declaredCompatible) {
     console.error(`Fix: installed vsce ${installedVsceVersion} does not match package.json declaration ${declaredVsce}. Remove node_modules and package-lock.json, then run npm install.`);
+  }
+
+  if (!cheerioOverrideOk) {
+    console.error(`Fix: package.json must include npm override "cheerio": "${SAFE_CHEERIO_VERSION}" so vsce does not install cheerio 1.1+/1.2+ with undici.`);
+  }
+
+  if (!installedCheerioOk || !lockCheerioOk) {
+    console.error(`Fix: cheerio is too new for Node 18 packaging. Remove node_modules and package-lock.json, keep the cheerio ${SAFE_CHEERIO_VERSION} override, then run npm install.`);
+  }
+
+  if (!undiciOk) {
+    console.error('Fix: undici is present in packaging dependencies while running Node 18. This can cause "ReferenceError: File is not defined". Remove node_modules and package-lock.json, verify the cheerio override, then run npm install.');
   }
 
   if (!packagingOk) {
