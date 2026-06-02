@@ -1,0 +1,114 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "MUMPS",
+  "scopeName": "source.mumps",
+  "patterns": [
+    { "include": "#comments" },
+    { "include": "#strings" },
+    { "include": "#labels" },
+    { "include": "#commands" },
+    { "include": "#intrinsics" },
+    { "include": "#systemVariables" },
+    { "include": "#globals" },
+    { "include": "#numbers" },
+    { "include": "#operators" },
+    { "include": "#postconditionals" }
+  ],
+  "repository": {
+    "comments": {
+      "patterns": [
+        {
+          "name": "comment.line.semicolon.mumps",
+          "match": ";.*$"
+        }
+      ]
+    },
+    "strings": {
+      "patterns": [
+        {
+          "name": "string.quoted.double.mumps",
+          "begin": "\"",
+          "end": "\"",
+          "patterns": [
+            {
+              "name": "constant.character.escape.quote.mumps",
+              "match": "\"\""
+            }
+          ]
+        }
+      ]
+    },
+    "labels": {
+      "patterns": [
+        {
+          "name": "entity.name.function.label.mumps",
+          "match": "^%?[A-Za-z][A-Za-z0-9]*(?=\\s*(\\(|;|$))"
+        },
+        {
+          "name": "variable.parameter.declaration.mumps",
+          "match": "(?<=\\()[%A-Za-z][A-Za-z0-9]*(?=\\s*(,|\\)))"
+        }
+      ]
+    },
+    "commands": {
+      "patterns": [
+        {
+          "name": "keyword.control.command.mumps",
+          "match": "(?i)(?<![%A-Za-z0-9])(?:B|BREAK|C|CLOSE|D|DO|E|ELSE|F|FOR|G|GOTO|H|HALT|HANG|I|IF|J|JOB|K|KILL|L|LOCK|M|MERGE|N|NEW|O|OPEN|Q|QUIT|R|READ|S|SET|TC|TCOMMIT|TRE|TRESTART|TRO|TROLLBACK|TS|TSTART|U|USE|V|VIEW|W|WRITE|X|XECUTE|Z[A-Z][A-Z0-9]*)\\b"
+        }
+      ]
+    },
+    "intrinsics": {
+      "patterns": [
+        {
+          "name": "support.function.intrinsic.mumps",
+          "match": "(?i)\\$(?:A|ASCII|C|CHAR|D|DATA|E|EXTRACT|F|FIND|FN|FNUMBER|G|GET|J|JUSTIFY|L|LENGTH|NA|NAME|O|ORDER|P|PIECE|QL|QLENGTH|QS|QSUBSCRIPT|Q|QUERY|R|RANDOM|RE|REVERSE|S|SELECT|ST|STACK|T|TEXT|TR|TRANSLATE|V|VIEW|Z[A-Z][A-Z0-9]*)\\b"
+        }
+      ]
+    },
+    "systemVariables": {
+      "patterns": [
+        {
+          "name": "support.variable.special.mumps",
+          "match": "(?i)\\$(?:D|DEVICE|EC|ECODE|ES|ESTACK|ET|ETRAP|H|HOROLOG|I|IO|J|JOB|K|KEY|P|PRINCIPAL|Q|QUIT|R|REFERENCE|S|STACK|ST|STORAGE|T|TEST|X|Y|ZA|ZB|ZC|ZEOF|ZEOS|ZERROR|ZHOROLOG|ZIO|ZJOB|ZLEVEL|ZMODE|ZPOSITION|ZSTATUS|ZSTEP|ZSYSTEM|ZTEXIT|ZTRAP)\\b"
+        }
+      ]
+    },
+    "globals": {
+      "patterns": [
+        {
+          "name": "variable.other.global.mumps",
+          "match": "\\^%?[A-Za-z][A-Za-z0-9]*(?:\\([^;\\n]*?\\))?"
+        },
+        {
+          "name": "variable.other.indirect-global.mumps",
+          "match": "@\\^?%?[A-Za-z][A-Za-z0-9]*"
+        }
+      ]
+    },
+    "numbers": {
+      "patterns": [
+        {
+          "name": "constant.numeric.mumps",
+          "match": "(?<![%A-Za-z])[-+]?(?:\\d+\\.\\d*|\\.\\d+|\\d+)(?:E[-+]?\\d+)?"
+        }
+      ]
+    },
+    "operators": {
+      "patterns": [
+        {
+          "name": "keyword.operator.mumps",
+          "match": "(_|#|'?=|'?\\[|'?\\]|'?>|'?<|'>|'<|\\*\\*|[+\\-*/\\\\&!_?@#])"
+        }
+      ]
+    },
+    "postconditionals": {
+      "patterns": [
+        {
+          "name": "keyword.operator.postconditional.mumps",
+          "match": ":(?=[^;\\s]+)"
+        }
+      ]
+    }
+  }
+}

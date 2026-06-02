@@ -1,0 +1,87 @@
+# MForge TODO
+
+## Stage 0: Cleanup and project setup
+
+- [x] Verify current `Src/` contents.
+- [x] Create `Src/package.json` with MForge metadata.
+- [x] Configure TypeScript with `Src/tsconfig.json`.
+- [x] Add `Src/src/extension.ts` activation scaffold.
+- [x] Reference the existing icon in marketplace metadata.
+- [x] Add base `Src/README.md`.
+- [x] Add `Src/CHANGELOG.md`.
+- [x] Add `Src/LICENSE`.
+
+## Stage 1: Core language support
+
+- [x] Register MUMPS language id and aliases.
+- [x] Add supported extensions: `.m`, `.M`, `.mumps`, `.mps`, `.rou`, `.int`.
+- [x] Add syntax highlighting grammar.
+- [x] Add language configuration.
+- [x] Add comment, bracket, and auto-closing-pair rules.
+- [x] Add MUMPS snippets.
+- [x] Document syntax highlighting.
+- [x] Document snippets.
+
+## Stage 2: Editing productivity
+
+- [ ] Implement basic formatter provider.
+- [ ] Add formatter fixture tests.
+- [ ] Implement parser-assisted auto indentation.
+- [ ] Implement basic diagnostics collection.
+- [ ] Add diagnostics fixture tests.
+- [ ] Document formatter and diagnostics.
+- [ ] Update README and changelog.
+
+## Stage 3: Navigation
+
+- [ ] Implement routine/label parser.
+- [ ] Implement document symbols.
+- [ ] Implement Go to Label.
+- [ ] Implement Go to Routine.
+- [ ] Implement workspace symbols.
+- [ ] Add navigation fixture tests.
+- [ ] Document navigation.
+
+## Stage 4: Intelligence
+
+- [ ] Add MUMPS command reference data.
+- [ ] Implement hover provider.
+- [ ] Implement completion provider.
+- [ ] Implement signature help provider.
+- [ ] Add provider tests.
+- [ ] Document intelligence features.
+
+## Stage 5: Advanced analysis
+
+- [ ] Implement find references.
+- [ ] Implement routine dependency analyzer.
+- [ ] Implement code metrics.
+- [ ] Add analysis reports.
+- [ ] Add analysis tests.
+- [ ] Document advanced analysis.
+
+## Stage 6: Runtime and debugging
+
+- [ ] Research MDEBUG protocol and compatibility requirements.
+- [ ] Design debug adapter architecture.
+- [ ] Add GT.M/YottaDB runtime configuration.
+- [ ] Document Docker/Remote SSH workflows.
+- [ ] Add runtime/debugger tests or mocks.
+
+## Stage 7: VistA tools
+
+- [ ] Design VistA connector safety model.
+- [ ] Implement VistA routine helpers.
+- [ ] Prototype RPC explorer.
+- [ ] Prototype FileMan dictionary explorer.
+- [ ] Prototype read-only global explorer.
+- [ ] Document VistA tools.
+
+## Stage 8: Packaging and publishing
+
+- [ ] Add release checklist.
+- [ ] Run full test/build suite.
+- [ ] Package with `vsce`.
+- [ ] Prepare screenshots.
+- [ ] Finalize Marketplace README.
+- [ ] Finalize release notes.

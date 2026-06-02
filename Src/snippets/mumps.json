@@ -1,0 +1,86 @@
+{
+  "Routine header": {
+    "prefix": "routine",
+    "body": [
+      "${1:ROUTINE} ; ${2:Description}",
+      " ;",
+      " ; Author: ${3:Name}",
+      " ; Created: ${CURRENT_YEAR}-${CURRENT_MONTH}-${CURRENT_DATE}",
+      " ;",
+      " Q"
+    ],
+    "description": "Create a basic MUMPS routine header."
+  },
+  "Label with parameters": {
+    "prefix": "label",
+    "body": [
+      "${1:LABEL}(${2:ARGS}) ; ${3:Description}",
+      " N ${4:VAR}",
+      " ${5:; code}",
+      " Q${6:}"
+    ],
+    "description": "Create a label entry point with parameters and a QUIT."
+  },
+  "DO label": {
+    "prefix": "do",
+    "body": "D ${1:LABEL}${2:^${3:ROUTINE}}",
+    "description": "Call a label or routine with DO."
+  },
+  "Extrinsic function call": {
+    "prefix": "$$",
+    "body": "$$${1:LABEL}${2:^${3:ROUTINE}}(${4:ARGS})",
+    "description": "Insert an extrinsic function call."
+  },
+  "FOR loop": {
+    "prefix": "for",
+    "body": [
+      "F ${1:I}=1:1:${2:COUNT} D",
+      " . ${3:W I,!}"
+    ],
+    "description": "Create a basic MUMPS FOR loop with a dot block."
+  },
+  "ORDER loop": {
+    "prefix": "order",
+    "body": [
+      "S ${1:SUB}=\"\"",
+      "F  S ${1:SUB}=\\$O(${2:^GLOBAL}(${1:SUB})) Q:${1:SUB}=\"\"  D",
+      " . ${3:W ${1:SUB},!}"
+    ],
+    "description": "Iterate through a global or local array with $ORDER."
+  },
+  "NEW variables": {
+    "prefix": "new",
+    "body": "N ${1:VAR1},${2:VAR2}",
+    "description": "NEW one or more local variables."
+  },
+  "SET global": {
+    "prefix": "sglobal",
+    "body": "S ${1:^GLOBAL}(${2:SUBSCRIPT})=${3:VALUE}",
+    "description": "Set a MUMPS global node."
+  },
+  "WRITE line": {
+    "prefix": "write",
+    "body": "W ${1:\"Text\"},!",
+    "description": "Write text followed by a newline."
+  },
+  "VistA RPC entry point": {
+    "prefix": "rpc",
+    "body": [
+      "${1:RPC}(RESULT,${2:PARAMS}) ; ${3:RPC description}",
+      " N ${4:ERR}",
+      " S RESULT=$$${5:BUILD}(${2:PARAMS})",
+      " Q"
+    ],
+    "description": "Create a VistA-style RPC entry point skeleton."
+  },
+  "FileMan FDA skeleton": {
+    "prefix": "fda",
+    "body": [
+      "N FDA,IENS,ERR",
+      "S IENS=\"${1:IEN},\"",
+      "S FDA(${2:FILE},IENS,${3:FIELD})=${4:VALUE}",
+      "D FILE^DIE(\"\",\"FDA\",\"ERR\")"
+    ],
+    "description": "Create a FileMan FDA update skeleton."
+  }
+}

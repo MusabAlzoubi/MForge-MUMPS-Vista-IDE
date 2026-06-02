@@ -1,0 +1,106 @@
+{
+  "name": "mforge-mumps-vista-ide",
+  "displayName": "MForge MUMPS & VistA IDE",
+  "description": "Complete IDE toolkit for MUMPS and VistA development in Visual Studio Code.",
+  "version": "0.1.0",
+  "publisher": "dopamind",
+  "license": "MIT",
+  "icon": "icon.png",
+  "categories": [
+    "Programming Languages",
+    "Formatters",
+    "Snippets",
+    "Other"
+  ],
+  "keywords": [
+    "MUMPS",
+    "M",
+    "VistA",
+    "GT.M",
+    "YottaDB",
+    "FileMan",
+    "healthcare"
+  ],
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "activationEvents": [
+    "onLanguage:mumps",
+    "onCommand:mforge.showGettingStarted"
+  ],
+  "main": "./out/extension.js",
+  "scripts": {
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "vscode:prepublish": "npm run compile"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.8",
+    "@types/vscode": "^1.90.0",
+    "typescript": "^5.5.2"
+  },
+  "contributes": {
+    "languages": [
+      {
+        "id": "mumps",
+        "aliases": [
+          "MForge MUMPS",
+          "MUMPS",
+          "M",
+          "VistA MUMPS"
+        ],
+        "extensions": [
+          ".m",
+          ".M",
+          ".mumps",
+          ".mps",
+          ".rou",
+          ".int"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "mumps",
+        "scopeName": "source.mumps",
+        "path": "./syntaxes/mumps.tmLanguage.json"
+      }
+    ],
+    "snippets": [
+      {
+        "language": "mumps",
+        "path": "./snippets/mumps.json"
+      }
+    ],
+    "commands": [
+      {
+        "command": "mforge.showGettingStarted",
+        "title": "MForge: Show Getting Started"
+      }
+    ],
+    "configurationDefaults": {
+      "[mumps]": {
+        "editor.tabSize": 1,
+        "editor.insertSpaces": true,
+        "editor.detectIndentation": false,
+        "editor.wordSeparators": "`~!@#%$^&*()-=+[{]}\\|;:'\",.<>/?"
+      }
+    },
+    "configuration": {
+      "title": "MForge MUMPS & VistA IDE",
+      "properties": {
+        "mforge.trace.level": {
+          "type": "string",
+          "enum": [
+            "off",
+            "info",
+            "debug"
+          ],
+          "default": "off",
+          "description": "Controls diagnostic logging for MForge extension features. Stage 1 has minimal logging."
+        }
+      }
+    }
+  }
+}
