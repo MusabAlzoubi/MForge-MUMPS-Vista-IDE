@@ -8,8 +8,14 @@ declare module 'vscode' {
     extensionUri: Uri;
   }
 
+  export interface CancellationToken {
+    isCancellationRequested: boolean;
+  }
+
   export class Uri {
     static joinPath(base: Uri, ...pathSegments: string[]): Uri;
+    static file(path: string): Uri;
+    fsPath: string;
   }
 
   export class Position {
@@ -23,6 +29,12 @@ declare module 'vscode' {
     constructor(startLine: number, startCharacter: number, endLine: number, endCharacter: number);
     start: Position;
     end: Position;
+  }
+
+  export class Location {
+    constructor(uri: Uri, rangeOrPosition: Range | Position);
+    uri: Uri;
+    range: Range;
   }
 
   export class TextEdit {
@@ -58,6 +70,52 @@ declare module 'vscode' {
   export interface OutputChannel extends Disposable {
     appendLine(value: string): void;
     show(): void;
+  }
+
+  export enum SymbolKind {
+    File = 0,
+    Module = 1,
+    Namespace = 2,
+    Package = 3,
+    Class = 4,
+    Method = 5,
+    Property = 6,
+    Field = 7,
+    Constructor = 8,
+    Enum = 9,
+    Interface = 10,
+    Function = 11
+  }
+
+  export class DocumentSymbol {
+    constructor(name: string, detail: string, kind: SymbolKind, range: Range, selectionRange: Range);
+    name: string;
+    detail: string;
+    kind: SymbolKind;
+    range: Range;
+    selectionRange: Range;
+  }
+
+  export class SymbolInformation {
+    constructor(name: string, kind: SymbolKind, containerName: string, location: Location);
+    name: string;
+    kind: SymbolKind;
+    containerName: string;
+    location: Location;
+  }
+
+  export type Definition = Location | Location[];
+
+  export interface DocumentSymbolProvider {
+    provideDocumentSymbols(document: TextDocument, token?: CancellationToken): DocumentSymbol[] | Promise<DocumentSymbol[]>;
+  }
+
+  export interface DefinitionProvider {
+    provideDefinition(document: TextDocument, position: Position, token?: CancellationToken): Definition | null | Promise<Definition | null>;
+  }
+
+  export interface WorkspaceSymbolProvider {
+    provideWorkspaceSymbols(query: string, token?: CancellationToken): SymbolInformation[] | Promise<SymbolInformation[]>;
   }
 
   export interface DocumentFormattingEditProvider {
@@ -107,12 +165,23 @@ declare module 'vscode' {
   export namespace languages {
     export function registerDocumentFormattingEditProvider(languageId: string, provider: DocumentFormattingEditProvider): Disposable;
     export function registerOnTypeFormattingEditProvider(languageId: string, provider: OnTypeFormattingEditProvider, firstTriggerCharacter: string, ...moreTriggerCharacter: string[]): Disposable;
+    export function registerDocumentSymbolProvider(languageId: string, provider: DocumentSymbolProvider): Disposable;
+    export function registerDefinitionProvider(languageId: string, provider: DefinitionProvider): Disposable;
+    export function registerWorkspaceSymbolProvider(provider: WorkspaceSymbolProvider): Disposable;
     export function createDiagnosticCollection(name: string): DiagnosticCollection;
+  }
+
+  export interface FileSystemWatcher extends Disposable {
+    onDidCreate(listener: (uri: Uri) => unknown): Disposable;
+    onDidChange(listener: (uri: Uri) => unknown): Disposable;
+    onDidDelete(listener: (uri: Uri) => unknown): Disposable;
   }
 
   export namespace workspace {
     export const textDocuments: readonly TextDocument[];
     export function getConfiguration(section?: string): WorkspaceConfiguration;
+    export function findFiles(include: string, exclude?: string, maxResults?: number): Promise<Uri[]>;
+    export function createFileSystemWatcher(globPattern: string): FileSystemWatcher;
     export function onDidOpenTextDocument(listener: (document: TextDocument) => unknown): Disposable;
     export function onDidChangeTextDocument(listener: (event: TextDocumentChangeEvent) => unknown): Disposable;
     export function onDidSaveTextDocument(listener: (document: TextDocument) => unknown): Disposable;

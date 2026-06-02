@@ -39,6 +39,7 @@ const vscode = __importStar(require("vscode"));
 const language_1 = require("./config/language");
 const diagnostics_1 = require("./features/diagnostics");
 const formatter_1 = require("./features/formatter");
+const navigation_1 = require("./features/navigation");
 const OUTPUT_CHANNEL_NAME = 'MForge MUMPS & VistA IDE';
 function activate(context) {
     const output = vscode.window.createOutputChannel(OUTPUT_CHANNEL_NAME);
@@ -47,8 +48,9 @@ function activate(context) {
     output.appendLine(`Supported extensions: ${language_1.SUPPORTED_EXTENSIONS.join(', ')}`);
     (0, formatter_1.registerFormatterFeature)(context);
     (0, diagnostics_1.registerDiagnosticsFeature)(context);
+    (0, navigation_1.registerNavigationFeature)(context, output);
     context.subscriptions.push(vscode.commands.registerCommand('mforge.showGettingStarted', async () => {
-        const selection = await vscode.window.showInformationMessage('MForge MUMPS & VistA IDE is ready. Stage 2 includes syntax highlighting, snippets, formatting, and diagnostics.', 'Open README', 'Show Output');
+        const selection = await vscode.window.showInformationMessage('MForge MUMPS & VistA IDE is ready. Stage 3 includes syntax highlighting, snippets, formatting, diagnostics, symbols, and navigation.', 'Open README', 'Show Output');
         if (selection === 'Open README') {
             const readme = vscode.Uri.joinPath(context.extensionUri, 'README.md');
             await vscode.commands.executeCommand('vscode.open', readme);
@@ -59,6 +61,6 @@ function activate(context) {
     }));
 }
 function deactivate() {
-    // Stage 2 features register disposables through context.subscriptions.
+    // MForge features register disposables through context.subscriptions.
 }
 //# sourceMappingURL=extension.js.map

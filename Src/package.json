@@ -2,7 +2,7 @@
   "name": "mforge-mumps-vista-ide",
   "displayName": "MForge MUMPS & VistA IDE",
   "description": "Complete IDE toolkit for MUMPS and VistA development in Visual Studio Code.",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "publisher": "dopamind",
   "license": "MIT",
   "icon": "icon.png",
@@ -33,12 +33,18 @@
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
     "vscode:prepublish": "npm run compile",
-    "test:stage2": "node scripts/test-stage2.js"
+    "test:stage2": "node scripts/test-stage2.js",
+    "test:stage3": "node scripts/test-stage3.js",
+    "test": "npm run test:stage2 && npm run test:stage3",
+    "package": "vsce package",
+    "package:local": "npm run compile && npm run test && vsce package",
+    "install:local": "code --install-extension *.vsix"
   },
   "devDependencies": {
     "@types/node": "^20.14.8",
     "@types/vscode": "^1.90.0",
-    "typescript": "^5.5.2"
+    "typescript": "^5.5.2",
+    "@vscode/vsce": "^3.2.2"
   },
   "contributes": {
     "languages": [
@@ -110,6 +116,17 @@
           "type": "boolean",
           "default": true,
           "description": "Enable basic MForge diagnostics for MUMPS files."
+        },
+        "mforge.navigation.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable Stage 3 MUMPS navigation features: document symbols, definitions, routine indexing, and workspace symbols."
+        },
+        "mforge.maxWorkspaceFiles": {
+          "type": "number",
+          "default": 2000,
+          "minimum": 1,
+          "description": "Maximum number of supported MUMPS routine files to scan for the Stage 3 workspace routine index."
         }
       }
     }

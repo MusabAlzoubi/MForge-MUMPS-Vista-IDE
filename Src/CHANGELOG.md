@@ -1,5 +1,23 @@
 # Changelog
 
+## 0.3.0 - 2026-06-02
+
+### Added
+
+- Added Document Symbols for MUMPS labels.
+- Added Go To Label for local `DO`, `GOTO`, and extrinsic references.
+- Added Go To Routine for `^ROUTINE` and `LABEL^ROUTINE` references.
+- Added Workspace Symbols for routines, labels, and `LABEL^ROUTINE` entries.
+- Added a lightweight routine index for supported MUMPS routine file extensions.
+- Added Stage 3 navigation fixture checks through `npm run test:stage3`.
+- Added local installation and testing documentation.
+- Added package, local package, local install, and aggregate test scripts with `@vscode/vsce`.
+
+### Notes
+
+- Stage 3 navigation is static and conservative; dynamic indirection, hover, completion, signature help, debugger, runtime, and VistA explorer features remain future stages.
+- Old extension code remains reference-only and was not copied.
+
 ## 0.2.0 - 2026-06-02
 
 ### Added

@@ -34,13 +34,13 @@
 
 ## Stage 3: Navigation
 
-- [ ] Implement routine/label parser.
-- [ ] Implement document symbols.
-- [ ] Implement Go to Label.
-- [ ] Implement Go to Routine.
-- [ ] Implement workspace symbols.
-- [ ] Add navigation fixture tests.
-- [ ] Document navigation.
+- [x] Implement routine/label parser.
+- [x] Implement document symbols.
+- [x] Implement Go to Label.
+- [x] Implement Go to Routine.
+- [x] Implement workspace symbols.
+- [x] Add navigation fixture tests.
+- [x] Document navigation.
 
 ## Stage 4: Intelligence
 
@@ -76,6 +76,13 @@
 - [ ] Prototype FileMan dictionary explorer.
 - [ ] Prototype read-only global explorer.
 - [ ] Document VistA tools.
+
+## Local packaging and testing documentation
+
+- [x] Add package scripts for VSIX generation.
+- [x] Add `@vscode/vsce` development dependency.
+- [x] Document local install and testing workflow.
+- [x] Document local packaging troubleshooting.
 
 ## Stage 8: Packaging and publishing
 

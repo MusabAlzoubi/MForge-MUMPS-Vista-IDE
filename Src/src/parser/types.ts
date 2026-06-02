@@ -37,3 +37,33 @@ export interface ParsedMumpsLine {
   parenBalance: number;
   hasTrailingWhitespace: boolean;
 }
+
+
+export interface MumpsLabel {
+  name: string;
+  parameters: string[];
+  signature: string;
+  line: number;
+  startCharacter: number;
+  endCharacter: number;
+  nameStartCharacter: number;
+  nameEndCharacter: number;
+}
+
+export interface MumpsReference {
+  label: string | null;
+  routine: string | null;
+  startCharacter: number;
+  endCharacter: number;
+  labelStartCharacter: number | null;
+  labelEndCharacter: number | null;
+  routineStartCharacter: number | null;
+  routineEndCharacter: number | null;
+  raw: string;
+}
+
+export interface RoutineParseResult {
+  routineName?: string;
+  labels: MumpsLabel[];
+  lines: ParsedMumpsLine[];
+}
