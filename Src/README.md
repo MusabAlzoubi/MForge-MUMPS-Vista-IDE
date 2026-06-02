@@ -52,6 +52,7 @@ Run commands from the repository root unless noted. Run `cd Src` only once; if y
 
 ```bash
 cd Src
+rm -rf node_modules
 npm install
 npm run env:check
 npm run compile
@@ -64,9 +65,17 @@ Expected VSIX filename for version 0.3.0: `mforge-mumps-vista-ide-0.3.0.vsix`. T
 
 ### Packaging requirements and troubleshooting
 
-MForge local packaging supports Node.js **18.19.1 or newer**. Node 18 LTS and Node 20 LTS are the intended development targets. The package uses the Node-18-compatible `vsce@2.15.0` CLI for local VSIX generation instead of current `@vscode/vsce` releases, which can pull newer `undici` dependencies that require Node 20+ globals and fail on Node 18 with `ReferenceError: File is not defined`.
+MForge local packaging supports Node.js **18 or newer**, with Node.js 18.19.1 explicitly supported for local packaging. The package uses the Node-18-compatible `vsce@2.11.0` CLI for local VSIX generation instead of current `@vscode/vsce` releases, which can pull newer `undici` dependencies that require Node 20+ globals and fail on Node 18 with `ReferenceError: File is not defined`.
 
-Run `npm run env:check` before packaging to print the Node version, npm version, VSIX packager dependency, whether the local VSIX packager is installed, and whether packaging requirements are met. See [Local installation and testing](docs/local-installation.md) for prerequisites, compile/test/package commands, manual Extension Development Host testing, and troubleshooting for `tsc: not found`, missing package scripts, `*.vsix` ENOENT, `ReferenceError: File is not defined`, and `cd: Src` path errors.
+Run `npm run env:check` before packaging to print the Node version, npm version, package.json packager dependency, installed `vsce` version, local binary path, and whether packaging requirements are met. See [Local installation and testing](docs/local-installation.md) for prerequisites, compile/test/package commands, manual Extension Development Host testing, and troubleshooting for `tsc: not found`, missing package scripts, `*.vsix` ENOENT, `ReferenceError: File is not defined`, and `cd: Src` path errors.
+
+Troubleshooting summary:
+
+- If `ReferenceError: File is not defined` appears, a Node-20-only dependency was installed. Remove `node_modules` and `package-lock.json`, verify `package.json` uses exact `"vsce": "2.11.0"`, then run `npm install` again.
+- If `env:check` expects the wrong version or reports `@vscode/vsce`, pull the latest changes and reinstall dependencies.
+- If the VSIX file is missing, packaging did not complete; do not run the install command until `npm run package` succeeds.
+- Avoid wildcard installs unless `mforge-mumps-vista-ide-0.3.0.vsix` exists.
+
 
 ## Configuration
 
@@ -95,6 +104,7 @@ Example settings:
 Run from inside `Src`:
 
 ```bash
+rm -rf node_modules
 npm install
 npm run env:check
 npm run compile

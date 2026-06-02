@@ -38,14 +38,14 @@
     "test:stage3": "node scripts/test-stage3.js",
     "test": "npm run test:stage2 && npm run test:stage3",
     "package": "npm run env:check && vsce package",
-    "package:local": "npm run env:check && npm run compile && npm run test && vsce package",
+    "package:local": "npm run compile && npm run test && npm run package",
     "install:local": "code --install-extension mforge-mumps-vista-ide-0.3.0.vsix"
   },
   "devDependencies": {
     "@types/node": "^18.19.1",
     "@types/vscode": "^1.90.0",
     "typescript": "^5.5.2",
-    "vsce": "2.15.0"
+    "vsce": "2.11.0"
   },
   "contributes": {
     "languages": [
