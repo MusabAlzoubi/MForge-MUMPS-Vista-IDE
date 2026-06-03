@@ -2,7 +2,7 @@
 
 MForge is a modern Visual Studio Code extension for MUMPS, GT.M/YottaDB, and VistA developers. It provides syntax highlighting, snippets, formatting, diagnostics, IntelliSense, semantic highlighting, routine indexing, Ctrl+Click navigation, and VistA-friendly development tools.
 
-**Version:** 0.4.9<br>
+**Version:** 0.4.10<br>
 **VS Code:** ^1.90.0<br>
 **License:** MIT<br>
 **Focus:** MUMPS / VistA / YottaDB
@@ -155,7 +155,7 @@ code --install-extension mforge-mumps-vista-ide-x.y.z.vsix
 For this release, the expected local VSIX name is:
 
 ```bash
-code --install-extension mforge-mumps-vista-ide-0.4.9.vsix
+code --install-extension mforge-mumps-vista-ide-0.4.10.vsix
 ```
 
 ## Troubleshooting
@@ -166,7 +166,7 @@ Open a supported MUMPS file such as `.m`, `.M`, `.int`, `.rou`, `.mps`, or `.mum
 
 ### Semantic token errors
 
-MForge uses VS Code-compatible semantic token IDs with letters, numbers, hyphens, and underscores only. If VS Code reports semantic token schema errors, reinstall the latest VSIX and confirm the installed extension is version 0.4.9 or newer.
+MForge uses VS Code-compatible semantic token IDs with letters, numbers, hyphens, and underscores only. If VS Code reports semantic token schema errors, reinstall the latest VSIX and confirm the installed extension is version 0.4.10 or newer.
 
 ### Ctrl+Click does not work
 

@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.4.10 - 2026-06-03
+
+### Fixed
+
+- Expanded semantic token validation to cover token types, token modifiers, and contributed theme semantic token colors so invalid dotted token IDs cannot reappear in Marketplace packages.
+
 ## 0.4.9 - 2026-06-03
 
 ### Fixed
