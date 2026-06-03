@@ -6,17 +6,17 @@ import { isKnownMumpsCommand } from '../../parser/mumpsCommands';
 import { MumpsRoutineIndex } from '../navigation/routineIndex';
 
 export const MUMPS_SEMANTIC_TOKEN_TYPES = [
-  'mumps.label',
-  'mumps.command',
-  'mumps.intrinsic',
-  'mumps.global',
-  'mumps.systemVariable',
-  'mumps.parameter',
-  'mumps.localVariable',
-  'mumps.api',
-  'mumps.routineReference',
-  'mumps.navigableRoutineReference',
-  'mumps.unresolvedRoutineReference'
+  'mumps-label',
+  'mumps-command',
+  'mumps-intrinsic',
+  'mumps-global',
+  'mumps-system-variable',
+  'mumps-parameter',
+  'mumps-local-variable',
+  'mumps-api',
+  'mumps-routine-reference',
+  'mumps-navigable-routine-reference',
+  'mumps-unresolved-routine-reference'
 ] as const;
 
 export type MumpsSemanticTokenType = typeof MUMPS_SEMANTIC_TOKEN_TYPES[number];
@@ -69,7 +69,7 @@ export function classifyMumpsSemanticTokens(text: string, indexedRoutineNames?: 
     const occupied: Array<{ start: number; end: number }> = line.strings.map((span) => ({ start: span.start, end: span.end }));
 
     if (line.label && line.labelStart !== null && line.labelEnd !== null) {
-      addToken(tokens, occupied, lineNumber, line.labelStart, line.labelEnd, 'mumps.label');
+      addToken(tokens, occupied, lineNumber, line.labelStart, line.labelEnd, 'mumps-label');
       const parameterStart = line.labelEnd;
       if (line.code[parameterStart] === '(') {
         addLabelParameters(tokens, occupied, lineNumber, line.code, parameterStart + 1);
@@ -77,14 +77,14 @@ export function classifyMumpsSemanticTokens(text: string, indexedRoutineNames?: 
     }
 
     for (const command of line.commands) {
-      addToken(tokens, occupied, lineNumber, command.start, command.end, 'mumps.command');
+      addToken(tokens, occupied, lineNumber, command.start, command.end, 'mumps-command');
     }
 
     addRoutineReferenceTokens(tokens, occupied, lineNumber, line.code, indexedRoutineNames);
 
-    addPatternTokens(tokens, occupied, lineNumber, line.code, SYSTEM_VARIABLE_PATTERN, (value, _start, end) => SYSTEM_VARIABLES.has(value.toUpperCase()) && line.code[end] !== '(' ? 'mumps.systemVariable' : null);
-    addPatternTokens(tokens, occupied, lineNumber, line.code, INTRINSIC_PATTERN, (value, _start, end) => !SYSTEM_VARIABLES.has(value.toUpperCase()) || line.code[end] === '(' ? 'mumps.intrinsic' : null);
-    addPatternTokens(tokens, occupied, lineNumber, line.code, GLOBAL_PATTERN, () => 'mumps.global');
+    addPatternTokens(tokens, occupied, lineNumber, line.code, SYSTEM_VARIABLE_PATTERN, (value, _start, end) => SYSTEM_VARIABLES.has(value.toUpperCase()) && line.code[end] !== '(' ? 'mumps-system-variable' : null);
+    addPatternTokens(tokens, occupied, lineNumber, line.code, INTRINSIC_PATTERN, (value, _start, end) => !SYSTEM_VARIABLES.has(value.toUpperCase()) || line.code[end] === '(' ? 'mumps-intrinsic' : null);
+    addPatternTokens(tokens, occupied, lineNumber, line.code, GLOBAL_PATTERN, () => 'mumps-global');
     addLocalVariableTokens(tokens, occupied, lineNumber, line.code);
   }
 
@@ -105,10 +105,10 @@ function addRoutineReferenceTokens(
     }
     const raw = reference.raw.toUpperCase();
     const type: MumpsSemanticTokenType = COMMON_FILEMAN_APIS.has(raw)
-      ? 'mumps.api'
+      ? 'mumps-api'
       : indexedRoutineNames
-        ? indexedRoutineNames.has(reference.routine.toUpperCase()) ? 'mumps.navigableRoutineReference' : 'mumps.unresolvedRoutineReference'
-        : 'mumps.navigableRoutineReference';
+        ? indexedRoutineNames.has(reference.routine.toUpperCase()) ? 'mumps-navigable-routine-reference' : 'mumps-unresolved-routine-reference'
+        : 'mumps-navigable-routine-reference';
     addToken(tokens, occupied, line, reference.startCharacter, reference.endCharacter, type);
   }
 }
@@ -122,7 +122,7 @@ function addLabelParameters(tokens: ClassifiedMumpsSemanticToken[], occupied: Ar
     if (match.index >= limit) {
       break;
     }
-    addToken(tokens, occupied, line, match.index, match.index + match[0].length, 'mumps.parameter');
+    addToken(tokens, occupied, line, match.index, match.index + match[0].length, 'mumps-parameter');
   }
 }
 
@@ -136,7 +136,7 @@ function addLocalVariableTokens(tokens: ClassifiedMumpsSemanticToken[], occupied
     if (previous === '$' || previous === '^' || previous === '%' || isKnownMumpsCommand(match[0])) {
       continue;
     }
-    addToken(tokens, occupied, line, start, end, 'mumps.localVariable');
+    addToken(tokens, occupied, line, start, end, 'mumps-local-variable');
   }
 }
 

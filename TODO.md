@@ -78,9 +78,11 @@
 - [x] Add navigation debug commands, routine-top fallback, and semantic distinction for routine references for 0.4.6.
 - [x] Add routine search-path indexing, extensionless routine option, index diagnostics, and unresolved navigation guidance for 0.4.7.
 - [x] Add automatic routine path detection, activation-time index rebuild, routine-index status command, and optional save-detected-paths command for 0.4.8.
+- [x] Complete pre-release Marketplace polish for 0.4.9, including activation-safe semantic token identifiers, Marketplace metadata, README refresh, and semantic token contribution validation.
 
 ## Stage 5: Advanced analysis
 
+- [ ] Stage 5 remains next after pre-release Marketplace polish.
 - [x] Implement static routine/label find references.
 - [ ] Implement deeper variable/global find references and safe variable rename.
 - [ ] Implement routine dependency analyzer.
@@ -122,5 +124,5 @@
 - [ ] Run full test/build suite.
 - [ ] Package with `vsce`.
 - [ ] Prepare screenshots.
-- [ ] Finalize Marketplace README.
-- [ ] Finalize release notes.
+- [x] Finalize Marketplace README.
+- [x] Finalize release notes.
