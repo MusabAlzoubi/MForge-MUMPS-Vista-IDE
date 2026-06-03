@@ -1,18 +1,47 @@
 {
   "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
-  "name": "MUMPS",
+  "name": "MForge MUMPS",
   "scopeName": "source.mumps",
   "patterns": [
-    { "include": "#comments" },
-    { "include": "#strings" },
-    { "include": "#labels" },
-    { "include": "#commands" },
-    { "include": "#intrinsics" },
-    { "include": "#systemVariables" },
-    { "include": "#globals" },
-    { "include": "#numbers" },
-    { "include": "#operators" },
-    { "include": "#postconditionals" }
+    {
+      "include": "#comments"
+    },
+    {
+      "include": "#strings"
+    },
+    {
+      "include": "#labels"
+    },
+    {
+      "include": "#filemanApis"
+    },
+    {
+      "include": "#routineReferences"
+    },
+    {
+      "include": "#commands"
+    },
+    {
+      "include": "#intrinsics"
+    },
+    {
+      "include": "#systemVariables"
+    },
+    {
+      "include": "#globals"
+    },
+    {
+      "include": "#numbers"
+    },
+    {
+      "include": "#operators"
+    },
+    {
+      "include": "#postconditionals"
+    },
+    {
+      "include": "#localVariables"
+    }
   ],
   "repository": {
     "comments": {
@@ -41,20 +70,48 @@
     "labels": {
       "patterns": [
         {
-          "name": "entity.name.function.label.mumps",
-          "match": "^%?[A-Za-z][A-Za-z0-9]*(?=\\s*(\\(|;|$))"
+          "name": "meta.label.definition.mumps",
+          "begin": "^(%?[A-Za-z][A-Za-z0-9]*)(\\()",
+          "beginCaptures": {
+            "1": {
+              "name": "entity.name.function.label.mumps"
+            },
+            "2": {
+              "name": "punctuation.definition.parameters.begin.mumps"
+            }
+          },
+          "end": "(\\))(?=\\s*(?:;|$|[A-Za-z.]))",
+          "endCaptures": {
+            "1": {
+              "name": "punctuation.definition.parameters.end.mumps"
+            }
+          },
+          "patterns": [
+            {
+              "name": "variable.parameter.declaration.mumps",
+              "match": "%?[A-Za-z][A-Za-z0-9]*"
+            },
+            {
+              "name": "punctuation.separator.parameter.mumps",
+              "match": ","
+            }
+          ]
         },
         {
-          "name": "variable.parameter.declaration.mumps",
-          "match": "(?<=\\()[%A-Za-z][A-Za-z0-9]*(?=\\s*(,|\\)))"
+          "name": "entity.name.function.label.mumps",
+          "match": "^%?[A-Za-z][A-Za-z0-9]*(?=\\s*(?:;|$|[A-Za-z.]))"
         }
       ]
     },
     "commands": {
       "patterns": [
         {
+          "name": "keyword.control.command.abbreviation.mumps",
+          "match": "(?i)(?<![%A-Za-z0-9])(?:B|C|D|E|F|G|H|I|J|K|L|M|N|O|Q|R|S|U|V|W|X)(?=:|\\s|$)"
+        },
+        {
           "name": "keyword.control.command.mumps",
-          "match": "(?i)(?<![%A-Za-z0-9])(?:B|BREAK|C|CLOSE|D|DO|E|ELSE|F|FOR|G|GOTO|H|HALT|HANG|I|IF|J|JOB|K|KILL|L|LOCK|M|MERGE|N|NEW|O|OPEN|Q|QUIT|R|READ|S|SET|TC|TCOMMIT|TRE|TRESTART|TRO|TROLLBACK|TS|TSTART|U|USE|V|VIEW|W|WRITE|X|XECUTE|Z[A-Z][A-Z0-9]*)\\b"
+          "match": "(?i)(?<![%A-Za-z0-9])(?:BREAK|CLOSE|DO|ELSE|FOR|GOTO|HALT|HANG|IF|JOB|KILL|LOCK|MERGE|NEW|OPEN|QUIT|READ|SET|TCOMMIT|TRESTART|TROLLBACK|TSTART|USE|VIEW|WRITE|XECUTE|Z[A-Z][A-Z0-9]*)(?=:|\\s|$)"
         }
       ]
     },
@@ -62,15 +119,15 @@
       "patterns": [
         {
           "name": "support.function.intrinsic.mumps",
-          "match": "(?i)\\$(?:A|ASCII|C|CHAR|D|DATA|E|EXTRACT|F|FIND|FN|FNUMBER|G|GET|J|JUSTIFY|L|LENGTH|NA|NAME|O|ORDER|P|PIECE|QL|QLENGTH|QS|QSUBSCRIPT|Q|QUERY|R|RANDOM|RE|REVERSE|S|SELECT|ST|STACK|T|TEXT|TR|TRANSLATE|V|VIEW|Z[A-Z][A-Z0-9]*)\\b"
+          "match": "(?i)\\$(?:ASCII|CHAR|DATA|EXTRACT|FIND|FNUMBER|GET|JUSTIFY|LENGTH|NAME|ORDER|PIECE|QLENGTH|QSUBSCRIPT|QUERY|RANDOM|REVERSE|SELECT|STACK|TEXT|TRANSLATE|VIEW|A|C|D|E|F|FN|G|J|L|NA|O|P|QL|QS|Q|R|RE|S|ST|T|TR|V|Z[A-Z][A-Z0-9]*)\\b"
         }
       ]
     },
     "systemVariables": {
       "patterns": [
         {
-          "name": "support.variable.special.mumps",
-          "match": "(?i)\\$(?:D|DEVICE|EC|ECODE|ES|ESTACK|ET|ETRAP|H|HOROLOG|I|IO|J|JOB|K|KEY|P|PRINCIPAL|Q|QUIT|R|REFERENCE|S|STACK|ST|STORAGE|T|TEST|X|Y|ZA|ZB|ZC|ZEOF|ZEOS|ZERROR|ZHOROLOG|ZIO|ZJOB|ZLEVEL|ZMODE|ZPOSITION|ZSTATUS|ZSTEP|ZSYSTEM|ZTEXIT|ZTRAP)\\b"
+          "name": "variable.language.system.mumps",
+          "match": "(?i)\\$(?:DEVICE|D|ECODE|EC|ESTACK|ES|ETRAP|ET|HOROLOG|H|IO|I|JOB|J|KEY|K|PRINCIPAL|P|QUIT|Q|REFERENCE|R|STACK|S|STORAGE|ST|TEST|T|X|Y|ZA|ZB|ZC|ZEOF|ZEOS|ZERROR|ZHOROLOG|ZIO|ZJOB|ZLEVEL|ZMODE|ZPOSITION|ZSTATUS|ZSTEP|ZSYSTEM|ZTEXIT|ZTRAP)\\b"
         }
       ]
     },
@@ -83,6 +140,45 @@
         {
           "name": "variable.other.indirect-global.mumps",
           "match": "@\\^?%?[A-Za-z][A-Za-z0-9]*"
+        }
+      ]
+    },
+    "filemanApis": {
+      "patterns": [
+        {
+          "name": "support.function.api.fileman.mumps",
+          "match": "(?i)\\b(?:UPDATE\\^DIE|FILE\\^DIE|FIND1\\^DIC|GETS\\^DIQ|GET1\\^DIQ)\\b"
+        }
+      ]
+    },
+    "routineReferences": {
+      "patterns": [
+        {
+          "name": "meta.routine-reference.mumps",
+          "match": "\\b(%?[A-Za-z][A-Za-z0-9]*)(\\^)(%?[A-Za-z][A-Za-z0-9]*)\\b",
+          "captures": {
+            "1": {
+              "name": "entity.name.function.label-reference.mumps"
+            },
+            "2": {
+              "name": "punctuation.separator.routine-reference.mumps"
+            },
+            "3": {
+              "name": "entity.name.namespace.routine-reference.mumps"
+            }
+          }
+        },
+        {
+          "name": "entity.name.namespace.routine-reference.mumps",
+          "match": "\\^%?[A-Za-z][A-Za-z0-9]*"
+        }
+      ]
+    },
+    "localVariables": {
+      "patterns": [
+        {
+          "name": "variable.other.local.mumps",
+          "match": "(?<![$^%A-Za-z0-9])%?[A-Za-z][A-Za-z0-9]*\\b"
         }
       ]
     },

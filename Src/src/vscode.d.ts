@@ -162,6 +162,26 @@ declare module 'vscode' {
     activeParameter: number;
   }
 
+  export class SemanticTokensLegend {
+    constructor(tokenTypes: string[], tokenModifiers?: string[]);
+    tokenTypes: string[];
+    tokenModifiers: string[];
+  }
+
+  export class SemanticTokens {
+    readonly data: Uint32Array;
+  }
+
+  export class SemanticTokensBuilder {
+    constructor(legend?: SemanticTokensLegend);
+    push(line: number, char: number, length: number, tokenType: number, tokenModifiers?: number): void;
+    build(): SemanticTokens;
+  }
+
+  export interface DocumentSemanticTokensProvider {
+    provideDocumentSemanticTokens(document: TextDocument, token?: CancellationToken): SemanticTokens | Promise<SemanticTokens>;
+  }
+
   export interface HoverProvider {
     provideHover(document: TextDocument, position: Position, token?: CancellationToken): Hover | null | Promise<Hover | null>;
   }
@@ -237,6 +257,7 @@ declare module 'vscode' {
     export function registerHoverProvider(languageId: string, provider: HoverProvider): Disposable;
     export function registerCompletionItemProvider(languageId: string, provider: CompletionItemProvider, ...triggerCharacters: string[]): Disposable;
     export function registerSignatureHelpProvider(languageId: string, provider: SignatureHelpProvider, ...triggerCharacters: string[]): Disposable;
+    export function registerDocumentSemanticTokensProvider(languageId: string, provider: DocumentSemanticTokensProvider, legend: SemanticTokensLegend): Disposable;
     export function registerDefinitionProvider(languageId: string, provider: DefinitionProvider): Disposable;
     export function registerWorkspaceSymbolProvider(provider: WorkspaceSymbolProvider): Disposable;
     export function createDiagnosticCollection(name: string): DiagnosticCollection;

@@ -2,7 +2,7 @@
   "name": "mforge-mumps-vista-ide",
   "displayName": "MForge MUMPS & VistA IDE",
   "description": "Complete IDE toolkit for MUMPS and VistA development in Visual Studio Code.",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "publisher": "dopamind",
   "license": "MIT",
   "repository": {
@@ -45,11 +45,12 @@
     "env:check": "node scripts/check-env.js",
     "test:stage2": "node scripts/test-stage2.js",
     "test:stage3": "node scripts/test-stage3.js",
-    "test": "npm run test:stage2 && npm run test:stage3 && npm run test:stage4",
+    "test": "npm run test:stage2 && npm run test:stage3 && npm run test:stage4 && npm run test:stage45",
     "package": "npm run env:check && npm run compile && npm run test && vsce package",
     "package:local": "npm run package",
-    "install:local": "code --install-extension mforge-mumps-vista-ide-0.4.0.vsix",
-    "test:stage4": "node scripts/test-stage4.js"
+    "install:local": "code --install-extension mforge-mumps-vista-ide-0.4.1.vsix",
+    "test:stage4": "node scripts/test-stage4.js",
+    "test:stage45": "node scripts/test-stage45.js"
   },
   "devDependencies": {
     "@types/node": "^18.19.1",
@@ -153,9 +154,68 @@
           "type": "boolean",
           "default": true,
           "description": "Enable Stage 4 MUMPS intrinsic function signature help."
+        },
+        "mforge.semanticHighlighting.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable Stage 4.5 semantic highlighting for MUMPS files."
         }
       }
-    }
+    },
+    "themes": [
+      {
+        "label": "MForge Dark",
+        "uiTheme": "vs-dark",
+        "path": "./themes/MForge Dark-color-theme.json"
+      }
+    ],
+    "semanticTokenTypes": [
+      {
+        "id": "mumps.label",
+        "superType": "function",
+        "description": "MUMPS routine label definitions."
+      },
+      {
+        "id": "mumps.command",
+        "superType": "keyword",
+        "description": "MUMPS commands and command abbreviations."
+      },
+      {
+        "id": "mumps.intrinsic",
+        "superType": "function",
+        "description": "MUMPS intrinsic functions."
+      },
+      {
+        "id": "mumps.global",
+        "superType": "variable",
+        "description": "MUMPS global variable references."
+      },
+      {
+        "id": "mumps.systemVariable",
+        "superType": "variable",
+        "description": "MUMPS system variables."
+      },
+      {
+        "id": "mumps.parameter",
+        "superType": "parameter",
+        "description": "MUMPS label parameters."
+      },
+      {
+        "id": "mumps.localVariable",
+        "superType": "variable",
+        "description": "MUMPS local variables."
+      },
+      {
+        "id": "mumps.api",
+        "superType": "function",
+        "description": "Common FileMan and VistA-style API entry points."
+      },
+      {
+        "id": "mumps.routineReference",
+        "superType": "namespace",
+        "description": "MUMPS routine references."
+      }
+    ]
   },
   "overrides": {
     "cheerio": "1.0.0-rc.12"

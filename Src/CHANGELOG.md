@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.4.1 - 2026-06-03
+
+### Added
+
+- Added the MForge Dark professional syntax theme.
+- Added improved TextMate scopes for labels, label parameters, commands, command abbreviations, intrinsics, system variables, globals, local variables, FileMan APIs, label references, and routine references.
+- Added semantic token provider for MUMPS labels, commands, intrinsics, globals, system variables, parameters, local variables, FileMan APIs, and routine references.
+- Added common FileMan API highlighting for `UPDATE^DIE`, `FILE^DIE`, `FIND1^DIC`, `GETS^DIQ`, and `GET1^DIQ`.
+- Added Stage 4.5 semantic token fixture checks through `npm run test:stage45`.
+- Added professional theme documentation.
+
+### Notes
+
+- Stage 4.5 remains editor intelligence only; Stage 5 analysis, debugger, runtime integrations, and VistA explorers remain unimplemented.
+
 ## 0.4.0 - 2026-06-02
 
 ### Added

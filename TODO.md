@@ -51,6 +51,15 @@
 - [x] Add provider tests.
 - [x] Document intelligence features.
 
+## Stage 4.5: Professional syntax theme
+
+- [x] Improve TextMate scopes for MUMPS visual hierarchy.
+- [x] Add semantic token provider.
+- [x] Add MForge Dark theme.
+- [x] Highlight common FileMan APIs.
+- [x] Add semantic token tests.
+- [x] Document theme usage and limitations.
+
 ## Stage 5: Advanced analysis
 
 - [ ] Implement find references.

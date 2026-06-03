@@ -1,0 +1,93 @@
+{
+  "$schema": "vscode://schemas/color-theme",
+  "name": "MForge Dark",
+  "type": "dark",
+  "semanticHighlighting": true,
+  "colors": {
+    "editor.background": "#1E1E1E",
+    "editor.foreground": "#D4D4D4",
+    "editorLineNumber.foreground": "#858585",
+    "editorCursor.foreground": "#AEAFAD",
+    "editor.selectionBackground": "#264F78",
+    "editor.inactiveSelectionBackground": "#3A3D41",
+    "editorWhitespace.foreground": "#3B3A32"
+  },
+  "tokenColors": [
+    {
+      "name": "MUMPS labels",
+      "scope": ["entity.name.function.label.mumps"],
+      "settings": { "foreground": "#F5D76E", "fontStyle": "bold" }
+    },
+    {
+      "name": "MUMPS label parameters",
+      "scope": ["variable.parameter.declaration.mumps", "meta.parameters.mumps"],
+      "settings": { "foreground": "#9CDCFE" }
+    },
+    {
+      "name": "MUMPS commands",
+      "scope": ["keyword.control.command.mumps", "keyword.control.command.abbreviation.mumps"],
+      "settings": { "foreground": "#61AFEF", "fontStyle": "bold" }
+    },
+    {
+      "name": "MUMPS intrinsic functions",
+      "scope": ["support.function.intrinsic.mumps"],
+      "settings": { "foreground": "#E5C07B" }
+    },
+    {
+      "name": "MUMPS globals",
+      "scope": ["variable.other.global.mumps", "variable.other.indirect-global.mumps"],
+      "settings": { "foreground": "#56B6C2" }
+    },
+    {
+      "name": "MUMPS system variables",
+      "scope": ["variable.language.system.mumps", "support.variable.special.mumps"],
+      "settings": { "foreground": "#4FC1FF" }
+    },
+    {
+      "name": "MUMPS strings",
+      "scope": ["string.quoted.double.mumps"],
+      "settings": { "foreground": "#CE9178" }
+    },
+    {
+      "name": "MUMPS comments",
+      "scope": ["comment.line.semicolon.mumps"],
+      "settings": { "foreground": "#6A9955", "fontStyle": "italic" }
+    },
+    {
+      "name": "MUMPS numbers",
+      "scope": ["constant.numeric.mumps"],
+      "settings": { "foreground": "#B5CEA8" }
+    },
+    {
+      "name": "MUMPS local variables",
+      "scope": ["variable.other.local.mumps"],
+      "settings": { "foreground": "#D4D4D4" }
+    },
+    {
+      "name": "FileMan APIs",
+      "scope": ["support.function.api.fileman.mumps"],
+      "settings": { "foreground": "#DCDCAA", "fontStyle": "bold" }
+    },
+    {
+      "name": "MUMPS routine references",
+      "scope": ["meta.routine-reference.mumps", "entity.name.namespace.routine-reference.mumps"],
+      "settings": { "foreground": "#C678DD" }
+    },
+    {
+      "name": "MUMPS label references",
+      "scope": ["entity.name.function.label-reference.mumps"],
+      "settings": { "foreground": "#DCDCAA" }
+    }
+  ],
+  "semanticTokenColors": {
+    "mumps.label": { "foreground": "#F5D76E", "bold": true },
+    "mumps.command": { "foreground": "#61AFEF", "bold": true },
+    "mumps.intrinsic": "#E5C07B",
+    "mumps.global": "#56B6C2",
+    "mumps.systemVariable": "#4FC1FF",
+    "mumps.parameter": "#9CDCFE",
+    "mumps.localVariable": "#D4D4D4",
+    "mumps.api": { "foreground": "#DCDCAA", "bold": true },
+    "mumps.routineReference": "#C678DD"
+  }
+}
