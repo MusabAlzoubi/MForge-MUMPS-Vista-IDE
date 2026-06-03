@@ -2,7 +2,7 @@
   "name": "mforge-mumps-vista-ide",
   "displayName": "MForge MUMPS & VistA IDE",
   "description": "Complete IDE toolkit for MUMPS and VistA development in Visual Studio Code.",
-  "version": "0.4.6",
+  "version": "0.4.7",
   "publisher": "dopamind",
   "license": "MIT",
   "repository": {
@@ -34,7 +34,10 @@
   },
   "activationEvents": [
     "onLanguage:mumps",
-    "onCommand:mforge.showGettingStarted"
+    "onCommand:mforge.showGettingStarted",
+    "onCommand:mforge.debugReferencesInCurrentLine",
+    "onCommand:mforge.rebuildRoutineIndex",
+    "onCommand:mforge.findRoutineInIndex"
   ],
   "main": "./out/extension.js",
   "scripts": {
@@ -48,7 +51,7 @@
     "test": "npm run test:stage2 && npm run test:stage3 && npm run test:stage4 && npm run test:stage45 && npm run test:stage46",
     "package": "npm run env:check && npm run compile && npm run test && vsce package",
     "package:local": "npm run package",
-    "install:local": "code --install-extension mforge-mumps-vista-ide-0.4.6.vsix",
+    "install:local": "code --install-extension mforge-mumps-vista-ide-0.4.7.vsix",
     "test:stage4": "node scripts/test-stage4.js",
     "test:stage45": "node scripts/test-stage45.js",
     "test:stage46": "node scripts/test-stage46.js"
@@ -105,6 +108,10 @@
       {
         "command": "mforge.rebuildRoutineIndex",
         "title": "MForge: Rebuild Routine Index"
+      },
+      {
+        "command": "mforge.findRoutineInIndex",
+        "title": "MForge: Find Routine In Index"
       }
     ],
     "configurationDefaults": {
@@ -174,6 +181,19 @@
           "default": 250,
           "minimum": 0,
           "description": "Debounce interval in milliseconds before marking the MUMPS workspace routine index dirty after file events."
+        },
+        "mforge.routineSearchPaths": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [],
+          "description": "Additional absolute or workspace-relative folders to scan for MUMPS routine files outside the active workspace root."
+        },
+        "mforge.indexExtensionlessRoutines": {
+          "type": "boolean",
+          "default": false,
+          "description": "Index extensionless routine files in workspace and mforge.routineSearchPaths. Enable for VistA/YottaDB exports that omit file extensions."
         }
       }
     },

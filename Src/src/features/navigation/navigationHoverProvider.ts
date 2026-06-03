@@ -24,11 +24,13 @@ export class MumpsNavigationHoverProvider implements vscode.HoverProvider {
     if (!location) {
       if (this.isDebugTraceEnabled() && reference.routine) {
         const debugMarkdown = new vscode.MarkdownString([
-          '### MForge Navigation Debug',
+          '### MForge Navigation',
           '',
-          `Reference detected but target not indexed: \`${reference.raw}\`.`,
+          `Reference detected: \`${reference.raw}\`.`,
           '',
-          'Run **MForge: Rebuild Routine Index** and **MForge: Debug References In Current Line**.'
+          `Target routine \`${reference.routine}\` is not indexed.`,
+          '',
+          'Run **MForge: Rebuild Routine Index** or add the folder to `mforge.routineSearchPaths`.'
         ].join('\n'));
         return new vscode.Hover(debugMarkdown, range);
       }

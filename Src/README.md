@@ -1,6 +1,6 @@
 # MForge MUMPS & VistA IDE
 
-MForge is a clean Visual Studio Code extension for MUMPS and VistA development. Current version: **0.4.6**.
+MForge is a clean Visual Studio Code extension for MUMPS and VistA development. Current version: **0.4.7**.
 
 ## Current status
 
@@ -47,7 +47,8 @@ See also:
 - Adds Workspace Symbols for routine names, label names, and `LABEL^ROUTINE` entries.
 - Adds Ctrl+Hover, Ctrl+Click, F12, Peek Definition, Document Links, and Find References for supported static label/routine references.
 - Adds basic same-document local variable definition navigation for `NEW` declarations and nearest prior `SET` assignments.
-- Adds **MForge: Rebuild Routine Index** and **MForge: Debug References In Current Line** troubleshooting commands for real-world navigation issues.
+- Adds **MForge: Rebuild Routine Index**, **MForge: Debug References In Current Line**, and **MForge: Find Routine In Index** troubleshooting commands for real-world navigation issues.
+- Supports `mforge.routineSearchPaths` for VistA routine folders outside the active workspace and optional extensionless routine indexing for YottaDB/GT.M exports.
 - Adds a lightweight lazy routine index with configurable file limits, debounced dirty marking, URI-keyed caches, and default exclusions for `node_modules`, `.git`, `dist`, `out`, and `Old Extensions`.
 - Supports remote-safe navigation for `file:`, `vscode-remote:`, and MUMPS `untitled:` documents without assuming `fsPath` exists.
 - Ignores non-MUMPS, output, and `rendererLog` documents before parsing to avoid AST tracker noise and extension-host stalls.
@@ -87,10 +88,10 @@ npm run env:check
 npm run compile
 npm run test
 npm run package
-code --install-extension mforge-mumps-vista-ide-0.4.6.vsix
+code --install-extension mforge-mumps-vista-ide-0.4.7.vsix
 ```
 
-Expected VSIX filename for version 0.4.6: `mforge-mumps-vista-ide-0.4.6.vsix`. The exact VSIX filename is safer than `*.vsix` if your shell does not expand wildcards.
+Expected VSIX filename for version 0.4.7: `mforge-mumps-vista-ide-0.4.7.vsix`. The exact VSIX filename is safer than `*.vsix` if your shell does not expand wildcards.
 
 ### Packaging requirements and troubleshooting
 
@@ -99,11 +100,12 @@ MForge local packaging supports Node.js **18 or newer**, with Node.js 18.19.1 ex
 Run `npm run env:check` before packaging to print the Node version, npm version, package.json packager dependency, installed `vsce`, `cheerio`, and `undici` versions, package-lock status, local binary path, and whether packaging requirements are met. See [Local installation and testing](docs/local-installation.md) for prerequisites, compile/test/package commands, manual Extension Development Host testing, and troubleshooting for `tsc: not found`, missing package scripts, `*.vsix` ENOENT, `ReferenceError: File is not defined`, and `cd: Src` path errors.
 
 Troubleshooting summary:
+- If `GET1^DIQ` works but `XPAR`, `DIE`, `XLFSTR`, or a local routine does not, run **MForge: Rebuild Routine Index**, check routine status output, add missing routine folders to `mforge.routineSearchPaths`, increase `mforge.maxWorkspaceFiles`, confirm supported extensions, then run **MForge: Find Routine In Index**.
 
 - If `ReferenceError: File is not defined` appears, a Node-20-only dependency was installed. Remove `node_modules` and `package-lock.json`, verify `package.json` uses exact `"vsce": "2.11.0"` and override `"cheerio": "1.0.0-rc.12"`, then run `npm install` again.
 - If `env:check` expects the wrong version or reports `@vscode/vsce`, pull the latest changes and reinstall dependencies.
 - If the VSIX file is missing, packaging did not complete; do not run the install command until `npm run package` succeeds.
-- Avoid wildcard installs unless `mforge-mumps-vista-ide-0.4.6.vsix` exists.
+- Avoid wildcard installs unless `mforge-mumps-vista-ide-0.4.7.vsix` exists.
 
 
 ### Local Extension Development Host
@@ -119,7 +121,7 @@ Press `F5` / **Launch Extension**, open a `.m` file in the Extension Development
 
 ```bash
 code --uninstall-extension dopamind.mforge-mumps-vista-ide
-code --install-extension mforge-mumps-vista-ide-0.4.6.vsix
+code --install-extension mforge-mumps-vista-ide-0.4.7.vsix
 ```
 
 ## Configuration
@@ -134,7 +136,9 @@ code --install-extension mforge-mumps-vista-ide-0.4.6.vsix
 | `mforge.completion.enabled` | `true` | Enables Stage 4 command, intrinsic, system variable, label, and routine completion. |
 | `mforge.signatureHelp.enabled` | `true` | Enables Stage 4 intrinsic function signature help. |
 | `mforge.semanticHighlighting.enabled` | `true` | Enables Stage 4.5 semantic highlighting. |
-| `mforge.maxWorkspaceFiles` | `2000` | Maximum supported routine files to scan lazily for the workspace index. |
+| `mforge.maxWorkspaceFiles` | `2000` | Maximum supported routine files to scan lazily for the workspace index and configured routine search paths. |
+| `mforge.routineSearchPaths` | `[]` | Additional absolute or workspace-relative folders scanned for routines, such as `/var/worldvista/prod/hakeem/routines` and `/var/worldvista/prod/hakeem/localr`. |
+| `mforge.indexExtensionlessRoutines` | `false` | Also index extensionless routine files for VistA/YottaDB exports that omit file extensions. |
 | `mforge.workspaceScanDebounceMs` | `250` | Debounce interval for file events before marking the workspace routine index dirty. |
 
 Example settings:
@@ -149,6 +153,11 @@ Example settings:
   "mforge.signatureHelp.enabled": true,
   "mforge.semanticHighlighting.enabled": true,
   "mforge.maxWorkspaceFiles": 2000,
+  "mforge.routineSearchPaths": [
+    "/var/worldvista/prod/hakeem/routines",
+    "/var/worldvista/prod/hakeem/localr"
+  ],
+  "mforge.indexExtensionlessRoutines": false,
   "mforge.workspaceScanDebounceMs": 250,
   "mforge.trace.level": "off"
 }

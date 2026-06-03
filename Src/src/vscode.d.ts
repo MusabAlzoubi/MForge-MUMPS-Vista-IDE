@@ -14,6 +14,7 @@ declare module 'vscode' {
 
   export class Uri {
     static joinPath(base: Uri, ...pathSegments: string[]): Uri;
+    static parse(value: string): Uri;
     static file(path: string): Uri;
     fsPath: string;
     path: string;
@@ -84,6 +85,18 @@ declare module 'vscode' {
 
   export interface WorkspaceConfiguration {
     get<T>(section: string, defaultValue: T): T;
+  }
+
+  export interface WorkspaceFolder {
+    uri: Uri;
+    name: string;
+    index: number;
+  }
+
+  export interface InputBoxOptions {
+    prompt?: string;
+    placeHolder?: string;
+    value?: string;
   }
 
   export interface OutputChannel extends Disposable {
@@ -253,6 +266,13 @@ declare module 'vscode' {
     provideOnTypeFormattingEdits(document: TextDocument, position: Position, ch: string, options?: FormattingOptions): TextEdit[];
   }
 
+  export enum FileType {
+    Unknown = 0,
+    File = 1,
+    Directory = 2,
+    SymbolicLink = 64
+  }
+
   export enum DiagnosticSeverity {
     Error = 0,
     Warning = 1,
@@ -278,6 +298,7 @@ declare module 'vscode' {
     export const activeTextEditor: TextEditor | undefined;
     export function createOutputChannel(name: string): OutputChannel;
     export function showInformationMessage(message: string, ...items: string[]): Promise<string | undefined>;
+    export function showInputBox(options?: InputBoxOptions): Promise<string | undefined>;
   }
 
   export namespace commands {
@@ -308,7 +329,11 @@ declare module 'vscode' {
 
   export namespace workspace {
     export const textDocuments: readonly TextDocument[];
-    export const fs: { readFile(uri: Uri): Promise<Uint8Array> };
+    export const workspaceFolders: readonly WorkspaceFolder[] | undefined;
+    export const fs: {
+      readFile(uri: Uri): Promise<Uint8Array>;
+      readDirectory(uri: Uri): Promise<[string, FileType][]>;
+    };
     export function getConfiguration(section?: string): WorkspaceConfiguration;
     export function findFiles(include: string, exclude?: string, maxResults?: number): Promise<Uri[]>;
     export function createFileSystemWatcher(globPattern: string): FileSystemWatcher;

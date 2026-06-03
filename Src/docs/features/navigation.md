@@ -90,7 +90,7 @@ MForge supports:
 - `vscode-remote:` URIs for Remote SSH, containers, and similar VS Code remote providers.
 - `untitled:` documents when the document language id is `mumps`.
 
-The navigation index avoids assuming that `uri.fsPath` is available. Workspace file reads use `vscode.workspace.fs`, and index keys use `uri.toString()`.
+The navigation index avoids assuming that `uri.fsPath` is available. Workspace file reads use `vscode.workspace.fs`, index keys use `uri.toString()`, and routine names/labels are normalized for case-insensitive lookup. If a VistA routine directory is outside the opened workspace, add it to `mforge.routineSearchPaths`.
 
 ## Performance safeguards
 
@@ -106,8 +106,27 @@ The navigation index avoids assuming that `uri.fsPath` is available. Workspace f
 | Setting | Default | Description |
 | --- | --- | --- |
 | `mforge.navigation.enabled` | `true` | Enables document links, Ctrl+Click/F12 definitions, Find References, symbols, and routine indexing. |
-| `mforge.maxWorkspaceFiles` | `2000` | Maximum supported routine files to scan for the workspace index. |
+| `mforge.maxWorkspaceFiles` | `2000` | Maximum supported routine files to scan for the workspace index and configured routine search paths. |
+| `mforge.routineSearchPaths` | `[]` | Additional absolute or workspace-relative folders to scan for MUMPS routine files outside the active workspace root. |
+| `mforge.indexExtensionlessRoutines` | `false` | Also index extensionless routine files when your VistA/YottaDB export omits file extensions. |
 | `mforge.workspaceScanDebounceMs` | `250` | Debounce interval for file-system events before marking the index dirty. |
+
+### Configuring VistA routine search paths
+
+Use `mforge.routineSearchPaths` when production or local routine folders are not under the folder currently opened in VS Code:
+
+```json
+{
+  "mforge.routineSearchPaths": [
+    "/var/worldvista/prod/hakeem/routines",
+    "/var/worldvista/prod/hakeem/localr"
+  ],
+  "mforge.indexExtensionlessRoutines": false,
+  "mforge.maxWorkspaceFiles": 10000
+}
+```
+
+Configured paths may be absolute or workspace-relative. MForge scans `.m`, `.M`, `.int`, `.rou`, `.mps`, and `.mumps` files by default. Enable `mforge.indexExtensionlessRoutines` only for exports where routine filenames omit extensions, because scanning every extensionless file can increase index size.
 
 ## Debugging a missing routine link
 
@@ -115,15 +134,18 @@ If `GET1^DIQ` works but another routine reference such as `ACCEPT^UJOWXUS` does 
 
 1. Run **MForge: Rebuild Routine Index**.
 2. Run **MForge: Debug References In Current Line** on the failing line.
-3. Confirm the target routine exists in the opened workspace or remote workspace.
-4. Confirm the file language mode is `MForge MUMPS` / `mumps`.
-5. Confirm old/reference extensions such as `Old Extensions` experiments or `mumps-lsp` are disabled in the Extension Development Host.
+3. Check the key routine status output for `UJOWXUS`, `UJOWXUS2`, `XPAR`, `XLFSTR`, `DIE`, and `DIQ`.
+4. Add missing routine folders to `mforge.routineSearchPaths` and increase `mforge.maxWorkspaceFiles` if needed.
+5. Run **MForge: Find Routine In Index** for the missing routine name.
+6. Confirm the target file has a supported extension or enable `mforge.indexExtensionlessRoutines`.
+7. Confirm the file language mode is `MForge MUMPS` / `mumps`.
+8. Confirm old/reference extensions such as `Old Extensions` experiments or `mumps-lsp` are disabled in the Extension Development Host.
 
 ## Known limitations
 
 - Dynamic indirection such as `D @TARGET` is not resolved.
 - Routine names are based on filenames without extensions.
-- FileMan API calls only navigate when the referenced routine file is present in the workspace.
+- FileMan API calls navigate when the referenced routine file is present in the workspace or in `mforge.routineSearchPaths`.
 - Find References is static and limited to label/routine references. Static inline calls, unary-NOT/logical extrinsics, and no-parentheses extrinsics are supported; dynamic indirection is not.
 - Local variable navigation is intentionally basic: it is same-document only, recognizes `NEW` and `SET`, and does not yet implement full MUMPS scoping, variable references, or rename.
 - Rename remains unimplemented until deeper semantic analysis is added.
@@ -135,7 +157,8 @@ If `GET1^DIQ` works but another routine reference such as `ACCEPT^UJOWXUS` does 
 | --- | --- |
 | No Outline labels appear | Confirm the file language mode is `MForge MUMPS` / `mumps` and `mforge.navigation.enabled` is `true`. |
 | `Ctrl+Click` or `F12` does nothing | Confirm the reference is one of the supported static patterns and is not inside a comment or string. |
-| Cross-routine navigation fails | Open the folder containing the routine file and ensure the file extension is supported. |
-| Remote navigation fails | Confirm the routine exists in the remote workspace and the URI is `file:` or `vscode-remote:`. |
+| Cross-routine navigation fails | Run **MForge: Rebuild Routine Index**, add the folder to `mforge.routineSearchPaths`, increase `mforge.maxWorkspaceFiles`, and ensure the file extension is supported. |
+| Remote navigation fails | Confirm the routine exists in the remote workspace, configured search paths are visible to the remote extension host, and the URI is `file:` or `vscode-remote:`. |
 | Large workspace feels slow | Lower `mforge.maxWorkspaceFiles` or narrow the opened workspace folder. |
 | Output/renderer logs show parser messages | Update to Stage 4.6; these URI schemes/names are filtered before parsing. |
+| `GET1^DIQ` works but `XPAR`/`DIE` does not | Rebuild the index, inspect key routine status, add production/local routine directories to `mforge.routineSearchPaths`, then run **MForge: Find Routine In Index**. |

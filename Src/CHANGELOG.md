@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.4.7 - 2026-06-03
+
+### Fixed
+
+- Expanded the routine index to scan configured `mforge.routineSearchPaths` in addition to workspace files, with optional `mforge.indexExtensionlessRoutines` support for extensionless VistA/YottaDB exports.
+- Added routine-index diagnostics for workspace folders, include/exclude patterns, skipped files, duplicates, key routine status, and configured search paths.
+- Added **MForge: Find Routine In Index** and improved unresolved-reference hovers so missing routines explain how to rebuild the index or add routine search paths.
+- Added Stage 4.6 regression tests for outside-workspace routine folders, extensionless indexing, missing-label routine-top fallback, unresolved hover diagnostics, and key routine status logging.
+
 ## 0.4.6 - 2026-06-03
 
 ### Fixed

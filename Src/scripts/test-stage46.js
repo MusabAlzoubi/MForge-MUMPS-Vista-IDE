@@ -26,6 +26,12 @@ class Hover { constructor(contents, range) { this.contents = Array.isArray(conte
 class Uri {
   constructor(scheme, path) { this.scheme = scheme; this.path = path; this.fsPath = scheme === 'file' ? path : ''; }
   static file(filePath) { return new Uri('file', filePath); }
+  static parse(value) { const index = value.indexOf(':'); return new Uri(value.slice(0, index), value.slice(index + 1)); }
+  static joinPath(base, ...segments) {
+    const clean = segments.map((segment) => String(segment).replace(/^\/+|\/+$/g, '')).filter(Boolean).join('/');
+    const basePath = base.path.endsWith('/') ? base.path.slice(0, -1) : base.path;
+    return new Uri(base.scheme, `${basePath}/${clean}`);
+  }
   toString() { return `${this.scheme}:${this.path}`; }
 }
 class SemanticTokensLegend {
@@ -53,12 +59,15 @@ function remoteRoutineUri(name) {
 
 const remoteUri = remoteRoutineUri('XUP');
 const routineBUri = remoteRoutineUri('ROUTINEB');
-const ujowxusUri = remoteRoutineUri('UJOWXUS');
-const dieUri = remoteRoutineUri('DIE');
+const ujowxusUri = Uri.file('/extra/routines/UJOWXUS.m');
+const ujowxus2Uri = Uri.file('/extra/routines/UJOWXUS2.m');
+const dieUri = Uri.file('/extra/routines/DIE.m');
 const diqUri = remoteRoutineUri('DIQ');
 const xushshUri = remoteRoutineUri('XUSHSH');
-const xparUri = remoteRoutineUri('XPAR');
-const xlfstrUri = remoteRoutineUri('XLFSTR');
+const xparUri = Uri.file('/extra/routines/XPAR.m');
+const xlfstrUri = Uri.file('/extra/routines/XLFSTR.m');
+const noLabelUri = Uri.file('/extra/routines/NOLABEL.m');
+const extensionlessUri = Uri.file('/extra/routines/EXTLESS');
 const rou1Uri = remoteRoutineUri('ROU1');
 const rou2Uri = remoteRoutineUri('ROU2');
 const rou3Uri = remoteRoutineUri('ROU3');
@@ -69,11 +78,14 @@ const texts = new Map([
   [remoteUri.toString(), 'EN(X,Y) Q\nINIT Q'],
   [routineBUri.toString(), 'VALUE() Q 1'],
   [ujowxusUri.toString(), 'ACCEPT Q 1'],
+  [ujowxus2Uri.toString(), 'START Q'],
   [dieUri.toString(), 'FILE(FLAGS,FDA,ERR) Q\nUPDATE(FLAGS,FDA,IEN,ERR) Q'],
   [diqUri.toString(), 'GET1(FILE,IEN,FIELD) Q 1'],
   [xushshUri.toString(), 'EN(X) Q 1'],
   [xparUri.toString(), 'GET(ENT,PAR) Q 1'],
   [xlfstrUri.toString(), 'UP(X) Q X'],
+  [noLabelUri.toString(), 'OTHER Q'],
+  [extensionlessUri.toString(), 'ENTRY Q'],
   [rou1Uri.toString(), 'ONE() Q 1'],
   [rou2Uri.toString(), 'TWO Q 2'],
   [rou3Uri.toString(), 'THREE Q'],
@@ -90,19 +102,50 @@ const texts = new Map([
   ].join('\n')]
 ]);
 
-const workspaceUris = [remoteUri, routineBUri, ujowxusUri, dieUri, diqUri, xushshUri, xparUri, xlfstrUri, rou1Uri, rou2Uri, rou3Uri];
+const workspaceUris = [remoteUri, routineBUri, diqUri, xushshUri, rou1Uri, rou2Uri, rou3Uri];
+const settings = {
+  'trace.level': 'debug',
+  routineSearchPaths: ['/extra/routines'],
+  indexExtensionlessRoutines: true,
+  maxWorkspaceFiles: 2000
+};
+const directoryEntries = new Map([
+  ['file:/extra/routines', [
+    ['UJOWXUS.m', 1],
+    ['UJOWXUS2.m', 1],
+    ['DIE.m', 1],
+    ['XPAR.m', 1],
+    ['XLFSTR.m', 1],
+    ['NOLABEL.m', 1],
+    ['EXTLESS', 1],
+    ['README.txt', 1]
+  ]]
+]);
+const outputLines = [];
+const output = { appendLine: (line) => outputLines.push(line), show: () => undefined, dispose: () => undefined };
 
 const originalLoad = Module._load;
 Module._load = function patchedLoad(request, parent, isMain) {
   if (request === 'vscode') {
     return {
       Position, Range, Location, DocumentLink, MarkdownString, Hover, Uri, SemanticTokensLegend, SemanticTokensBuilder,
+      FileType: { Unknown: 0, File: 1, Directory: 2, SymbolicLink: 64 },
       workspace: {
+        workspaceFolders: [{ uri: Uri.file('/workspace'), name: 'workspace', index: 0 }],
         textDocuments: [],
-        fs: { readFile: async (uri) => Buffer.from(texts.get(uri.toString()) ?? '') },
+        fs: {
+          readFile: async (uri) => Buffer.from(texts.get(uri.toString()) ?? ''),
+          readDirectory: async (uri) => {
+            if (!directoryEntries.has(uri.toString())) {
+              throw new Error(`No directory fixture for ${uri.toString()}`);
+            }
+            return directoryEntries.get(uri.toString());
+          }
+        },
         findFiles: async () => workspaceUris,
-        getConfiguration: () => ({ get: (_name, fallback) => fallback })
-      }
+        getConfiguration: () => ({ get: (name, fallback) => Object.prototype.hasOwnProperty.call(settings, name) ? settings[name] : fallback })
+      },
+      window: { showInputBox: async () => 'XPAR' }
     };
   }
   return originalLoad.call(this, request, parent, isMain);
@@ -219,10 +262,16 @@ assert.equal(refs.some((ref) => ref.label === 'BUILD' && ref.routine === null), 
 assert.equal(refs.some((ref) => ref.label === 'GET1' && ref.routine === 'DIQ'), true, 'extrinsic FileMan API references are parsed');
 assert.equal(refs.some((ref) => ref.label === 'VALUE' && ref.routine === 'ROUTINEB'), true, 'extrinsic cross-routine references are parsed');
 
-const index = new MumpsRoutineIndex();
+const index = new MumpsRoutineIndex(output);
 const localDoc = createDocument(localUri, texts.get(localUri.toString()));
-await index.rebuild();
+await Promise.all([index.rebuild(), index.rebuild()]);
 index.indexOpenDocument(localDoc);
+assert.equal(index.findRoutine('UJOWXUS')?.uri.toString(), ujowxusUri.toString(), 'routineSearchPaths index routines outside the workspace root');
+assert.equal(index.findRoutine('XPAR')?.uri.toString(), xparUri.toString(), 'configured routineSearchPaths index XPAR outside the workspace root');
+assert.equal(index.findRoutine('EXTLESS')?.uri.toString(), extensionlessUri.toString(), 'extensionless routines are indexed when mforge.indexExtensionlessRoutines is enabled');
+assert.equal(index.getLastDiagnostics().skippedByExtension >= 1, true, 'scan diagnostics count files skipped by unsupported extension');
+assert.equal(index.getLastDiagnostics().keyRoutineStatus.UJOWXUS2.includes('FOUND'), true, 'key routine diagnostics include UJOWXUS2 status');
+assert.equal(outputLines.some((line) => line.includes('Index contains UJOWXUS2')), true, 'debug logging includes UJOWXUS2 key routine status');
 
 const definitionProvider = new MumpsDefinitionProvider(index);
 const line = localDoc.lineAt(0).text;
@@ -247,6 +296,17 @@ const getDefinition = await definitionProvider.provideDefinition(localDoc, new P
 assert.equal(getDefinition.uri.toString(), xparUri.toString(), 'F12 resolves unary-NOT extrinsic references after logical operators');
 const upDefinition = await definitionProvider.provideDefinition(localDoc, new Position(5, intrinsicLine.indexOf('UP^') + 1));
 assert.equal(upDefinition.uri.toString(), xlfstrUri.toString(), 'F12 resolves later extrinsic references on the same line');
+
+const noLabelDoc = createDocument(localUri, 'MISS S X=$$MISSING^NOLABEL()');
+const noLabelDefinition = await definitionProvider.provideDefinition(noLabelDoc, new Position(0, noLabelDoc.lineAt(0).text.indexOf('MISSING') + 1));
+assert.equal(noLabelDefinition.uri.toString(), noLabelUri.toString(), 'routine exists but missing label falls back to routine top');
+assert.equal(noLabelDefinition.range.start.line, 0, 'missing label fallback opens the routine top');
+
+const missingDoc = createDocument(localUri, 'MISS S X=$$NOPE^NOPE()');
+const missingHover = await new MumpsNavigationHoverProvider(index).provideHover(missingDoc, new Position(0, missingDoc.lineAt(0).text.indexOf('NOPE') + 1));
+assert.notEqual(missingHover, null, 'unresolved routine references show actionable debug hover when trace debug is enabled');
+assert.equal(missingHover.contents[0].value.includes('Target routine `NOPE` is not indexed'), true, 'unresolved hover explains missing routine index entry');
+assert.equal(missingHover.contents[0].value.includes('mforge.routineSearchPaths'), true, 'unresolved hover points to routineSearchPaths');
 
 const multiLine = localDoc.lineAt(6).text;
 const threeDefinition = await definitionProvider.provideDefinition(localDoc, new Position(6, multiLine.indexOf('THREE') + 1));

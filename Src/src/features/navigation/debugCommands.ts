@@ -4,7 +4,7 @@ import { findMumpsReferencesInLine, referenceContainsPosition } from '../../pars
 import { MumpsReference } from '../../parser/types';
 import { MumpsRoutineIndex } from './routineIndex';
 
-const IMPORTANT_ROUTINES = ['UJOWXUS', 'XPAR', 'XLFSTR', 'DIE', 'DIQ'];
+const IMPORTANT_ROUTINES = ['UJOWXUS', 'UJOWXUS2', 'XPAR', 'XLFSTR', 'DIE', 'DIQ'];
 
 export function registerNavigationDebugCommands(context: vscode.ExtensionContext, routineIndex: MumpsRoutineIndex, output?: vscode.OutputChannel): void {
   context.subscriptions.push(
@@ -13,6 +13,9 @@ export function registerNavigationDebugCommands(context: vscode.ExtensionContext
     }),
     vscode.commands.registerCommand('mforge.rebuildRoutineIndex', async () => {
       await rebuildRoutineIndex(routineIndex, output);
+    }),
+    vscode.commands.registerCommand('mforge.findRoutineInIndex', async () => {
+      await findRoutineInIndex(routineIndex, output);
     })
   );
 }
@@ -56,14 +59,53 @@ async function rebuildRoutineIndex(routineIndex: MumpsRoutineIndex, output?: vsc
   routineIndex.clear();
   await routineIndex.rebuild();
   const routines = routineIndex.getRoutines();
+  const diagnostics = routineIndex.getLastDiagnostics();
   output?.appendLine(`[navigation-debug] Indexed ${routines.length} routine(s), ${routineIndex.getLabelCount()} label(s).`);
+  output?.appendLine(`[navigation-debug] Workspace folders: ${diagnostics.workspaceFolders.join(', ') || '(none)'}`);
+  output?.appendLine(`[navigation-debug] Include patterns: ${diagnostics.includePatterns.join(', ') || '(none)'}`);
+  output?.appendLine(`[navigation-debug] Exclude patterns: ${diagnostics.excludePattern}`);
+  output?.appendLine(`[navigation-debug] mforge.maxWorkspaceFiles: ${diagnostics.maxWorkspaceFiles}`);
+  output?.appendLine(`[navigation-debug] mforge.routineSearchPaths: ${diagnostics.routineSearchPaths.join(', ') || '(none)'}`);
+  output?.appendLine(`[navigation-debug] mforge.indexExtensionlessRoutines: ${diagnostics.indexExtensionlessRoutines}`);
+  output?.appendLine(`[navigation-debug] Files discovered: workspace=${diagnostics.workspaceFilesDiscovered}, searchPaths=${diagnostics.searchPathFilesDiscovered}`);
+  output?.appendLine(`[navigation-debug] Files skipped: extension=${diagnostics.skippedByExtension}, excludes=${diagnostics.skippedByExcludes}`);
+  output?.appendLine(`[navigation-debug] Duplicate routine names: ${diagnostics.duplicateRoutineNames}${diagnostics.duplicateRoutineNameList.length ? ` (${diagnostics.duplicateRoutineNameList.join(', ')})` : ''}`);
   const traceLevel = vscode.workspace.getConfiguration('mforge').get<string>('trace.level', 'off');
   if (traceLevel === 'debug') {
     output?.appendLine(`[navigation-debug] First routines: ${routines.slice(0, 20).map((routine) => routine.name).join(', ') || '(none)'}`);
   }
   for (const name of IMPORTANT_ROUTINES) {
-    const routine = routineIndex.findRoutine(name);
-    output?.appendLine(`[navigation-debug] ${name}: ${routine ? `FOUND ${routine.uri.toString()} (${routine.labels.length} label(s))` : 'not indexed'}`);
+    output?.appendLine(`[navigation-debug] ${name}: ${diagnostics.keyRoutineStatus[name] ?? 'not indexed'}`);
+  }
+  output?.show();
+}
+
+async function findRoutineInIndex(routineIndex: MumpsRoutineIndex, output?: vscode.OutputChannel): Promise<void> {
+  const name = await vscode.window.showInputBox({ prompt: 'Enter a MUMPS routine name to find in the MForge routine index' });
+  const normalized = name?.trim().toUpperCase();
+  if (!normalized) {
+    return;
+  }
+
+  output?.appendLine(`[navigation-debug] Find Routine In Index: ${normalized}`);
+  await routineIndex.ensureBuilt();
+  const routine = routineIndex.findRoutine(normalized);
+  if (routine) {
+    output?.appendLine(`[navigation-debug] ${normalized}: FOUND ${routine.uri.toString()}`);
+    output?.appendLine(`[navigation-debug] label count: ${routine.labels.length}`);
+    output?.show();
+    return;
+  }
+
+  output?.appendLine(`[navigation-debug] ${normalized}: not indexed.`);
+  output?.appendLine('[navigation-debug] Searching configured mforge.routineSearchPaths for possible matching filenames...');
+  const candidates = await routineIndex.findRoutineCandidatesInSearchPaths(normalized);
+  if (candidates.length === 0) {
+    output?.appendLine('[navigation-debug] No possible matches found in configured routine search paths.');
+  } else {
+    for (const candidate of candidates.slice(0, 20)) {
+      output?.appendLine(`[navigation-debug] possible match: ${candidate.toString()}`);
+    }
   }
   output?.show();
 }
@@ -86,7 +128,7 @@ function logReferenceDebug(output: vscode.OutputChannel | undefined, routineInde
   const routine = routineIndex.findRoutine(reference.routine);
   if (!routine) {
     output?.appendLine(`  target routine found: no`);
-    output?.appendLine(`  unresolved reason: routine ${reference.routine} is not indexed; run MForge: Rebuild Routine Index and confirm the routine file is in the workspace.`);
+    output?.appendLine(`  unresolved reason: routine ${reference.routine} is not indexed; run MForge: Rebuild Routine Index or add the folder to mforge.routineSearchPaths.`);
     return;
   }
 
