@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import { isMumpsUri } from '../../config/language';
 import { parseMumpsDocument } from '../../parser/mumpsLineParser';
 import { isKnownMumpsCommand } from '../../parser/mumpsCommands';
 
@@ -42,6 +43,9 @@ export const MUMPS_SEMANTIC_LEGEND = new vscode.SemanticTokensLegend([...MUMPS_S
 export class MumpsSemanticTokenProvider implements vscode.DocumentSemanticTokensProvider {
   provideDocumentSemanticTokens(document: vscode.TextDocument): vscode.SemanticTokens {
     const builder = new vscode.SemanticTokensBuilder(MUMPS_SEMANTIC_LEGEND);
+    if (!isMumpsUri(document.uri, document.languageId)) {
+      return builder.build();
+    }
     for (const token of classifyMumpsSemanticTokens(document.getText())) {
       builder.push(token.line, token.start, token.length, tokenTypeOrder(token.type), 0);
     }

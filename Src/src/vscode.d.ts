@@ -16,6 +16,9 @@ declare module 'vscode' {
     static joinPath(base: Uri, ...pathSegments: string[]): Uri;
     static file(path: string): Uri;
     fsPath: string;
+    path: string;
+    scheme: string;
+    toString(skipEncoding?: boolean): string;
   }
 
   export class Position {
@@ -35,6 +38,13 @@ declare module 'vscode' {
     constructor(uri: Uri, rangeOrPosition: Range | Position);
     uri: Uri;
     range: Range;
+  }
+
+  export class DocumentLink {
+    constructor(range: Range, target?: Uri);
+    range: Range;
+    target?: Uri;
+    tooltip?: string;
   }
 
   export class TextEdit {
@@ -105,6 +115,7 @@ declare module 'vscode' {
   }
 
   export type Definition = Location | Location[];
+  export type ProviderResult<T> = T | undefined | null | Promise<T | undefined | null>;
 
   export class MarkdownString {
     constructor(value?: string);
@@ -202,6 +213,19 @@ declare module 'vscode' {
     provideDefinition(document: TextDocument, position: Position, token?: CancellationToken): Definition | null | Promise<Definition | null>;
   }
 
+  export interface ReferenceContext {
+    includeDeclaration: boolean;
+  }
+
+  export interface ReferenceProvider {
+    provideReferences(document: TextDocument, position: Position, context: ReferenceContext, token?: CancellationToken): Location[] | Promise<Location[]>;
+  }
+
+  export interface DocumentLinkProvider<T extends DocumentLink = DocumentLink> {
+    provideDocumentLinks(document: TextDocument, token?: CancellationToken): ProviderResult<T[]>;
+    resolveDocumentLink?(link: T, token?: CancellationToken): ProviderResult<T>;
+  }
+
   export interface WorkspaceSymbolProvider {
     provideWorkspaceSymbols(query: string, token?: CancellationToken): SymbolInformation[] | Promise<SymbolInformation[]>;
   }
@@ -259,6 +283,8 @@ declare module 'vscode' {
     export function registerSignatureHelpProvider(languageId: string, provider: SignatureHelpProvider, ...triggerCharacters: string[]): Disposable;
     export function registerDocumentSemanticTokensProvider(languageId: string, provider: DocumentSemanticTokensProvider, legend: SemanticTokensLegend): Disposable;
     export function registerDefinitionProvider(languageId: string, provider: DefinitionProvider): Disposable;
+    export function registerReferenceProvider(languageId: string, provider: ReferenceProvider): Disposable;
+    export function registerDocumentLinkProvider(languageId: string, provider: DocumentLinkProvider): Disposable;
     export function registerWorkspaceSymbolProvider(provider: WorkspaceSymbolProvider): Disposable;
     export function createDiagnosticCollection(name: string): DiagnosticCollection;
   }
@@ -271,6 +297,7 @@ declare module 'vscode' {
 
   export namespace workspace {
     export const textDocuments: readonly TextDocument[];
+    export const fs: { readFile(uri: Uri): Promise<Uint8Array> };
     export function getConfiguration(section?: string): WorkspaceConfiguration;
     export function findFiles(include: string, exclude?: string, maxResults?: number): Promise<Uri[]>;
     export function createFileSystemWatcher(globPattern: string): FileSystemWatcher;

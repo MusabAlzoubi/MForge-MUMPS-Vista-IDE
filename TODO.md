@@ -60,9 +60,23 @@
 - [x] Add semantic token tests.
 - [x] Document theme usage and limitations.
 
+## Stage 4.6: Navigation review and remote stability
+
+- [x] Audit `Old Extensions/tree-sitter-m-vscode` navigation, AST, tree-sitter, LSP, and remote capabilities.
+- [x] Audit `Old Extensions/mumps-lsp` definition, reference, symbol, workspace, and LSP navigation capabilities.
+- [x] Add DocumentLinkProvider for resolvable MUMPS references.
+- [x] Harden Ctrl+Hover, Ctrl+Click, F12, and Peek Definition for static local/cross-routine references.
+- [x] Add Find References for static routine and label references.
+- [x] Support remote-safe URI indexing with `uri.toString()` and `vscode.workspace.fs`.
+- [x] Ignore non-MUMPS, output, and `rendererLog` documents.
+- [x] Add lazy indexing, parse/document cache, and debounced dirty marking.
+- [x] Add Stage 4.6 fixture tests.
+- [x] Update navigation documentation and version to 0.4.2.
+
 ## Stage 5: Advanced analysis
 
-- [ ] Implement find references.
+- [x] Implement static routine/label find references.
+- [ ] Implement deeper variable/global find references.
 - [ ] Implement routine dependency analyzer.
 - [ ] Implement code metrics.
 - [ ] Add analysis reports.

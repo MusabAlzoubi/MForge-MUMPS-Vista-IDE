@@ -1,17 +1,27 @@
 import * as vscode from 'vscode';
-import { parseMumpsRoutine, findMumpsReferenceAt } from '../../parser/routineParser';
+import { isMumpsUri } from '../../config/language';
+import { findMumpsReferenceAt } from '../../parser/routineParser';
+import { MumpsReference } from '../../parser/types';
 import { MumpsRoutineIndex } from './routineIndex';
 
 export class MumpsDefinitionProvider implements vscode.DefinitionProvider {
   constructor(private readonly routineIndex: MumpsRoutineIndex, private readonly output?: vscode.OutputChannel) {}
 
   async provideDefinition(document: vscode.TextDocument, position: vscode.Position): Promise<vscode.Definition | null> {
+    if (!isMumpsUri(document.uri, document.languageId)) {
+      return null;
+    }
+
     const reference = findMumpsReferenceAt(document.lineAt(position.line).text, position.character);
     if (!reference) {
       this.debug('No MUMPS label or routine reference at cursor.');
       return null;
     }
 
+    return this.resolveReference(document, reference);
+  }
+
+  async resolveReference(document: vscode.TextDocument, reference: MumpsReference): Promise<vscode.Location | null> {
     if (reference.routine) {
       await this.routineIndex.ensureBuilt();
       const routine = this.routineIndex.findRoutine(reference.routine);
@@ -33,7 +43,7 @@ export class MumpsDefinitionProvider implements vscode.DefinitionProvider {
     }
 
     if (reference.label) {
-      const localLabel = parseMumpsRoutine(document.getText()).labels.find((label) => label.name.toUpperCase() === reference.label?.toUpperCase());
+      const localLabel = this.routineIndex.parseDocument(document)?.labels.find((label) => label.name.toUpperCase() === reference.label?.toUpperCase());
       if (!localLabel) {
         this.debug(`Local label '${reference.label}' not found.`);
         return null;

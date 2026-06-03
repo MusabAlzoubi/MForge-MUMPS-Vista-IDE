@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.4.2 - 2026-06-03
+
+### Added
+
+- Added Stage 4.6 Ctrl+Hover, Ctrl+Click, F12, Peek Definition, Document Link, and Find References support for static MUMPS label/routine references.
+- Added remote-safe routine indexing for `file:`, `vscode-remote:`, and MUMPS `untitled:` documents using `uri.toString()` keys and `vscode.workspace.fs`.
+- Added lazy workspace indexing, parse/document caches, debounced index invalidation, and non-MUMPS/output/`rendererLog` filtering to avoid extension-host stalls.
+- Added Stage 4.6 navigation, remote URI, document link, and missing-AST/non-MUMPS stability fixture checks through `npm run test:stage46`.
+- Added a legacy extension feature audit and navigation architecture documentation.
+
+### Notes
+
+- Stage 4.6 adopts the useful routine/label navigation model from the old `mumps-lsp` project while postponing tree-sitter AST indexing, rename, and variable/global analysis to Stage 5+.
+
 ## 0.4.1 - 2026-06-03
 
 ### Added

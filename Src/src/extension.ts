@@ -28,7 +28,7 @@ export function activate(context: vscode.ExtensionContext): void {
   context.subscriptions.push(
     vscode.commands.registerCommand('mforge.showGettingStarted', async () => {
       const selection = await vscode.window.showInformationMessage(
-        'MForge MUMPS & VistA IDE is ready. Stage 4.5 includes syntax highlighting, snippets, formatting, diagnostics, symbols, navigation, hover, completion, signature help, semantic highlighting, and the MForge Dark theme.',
+        'MForge MUMPS & VistA IDE is ready. Stage 4.6 includes syntax highlighting, snippets, formatting, diagnostics, symbols, Ctrl+Click/F12 navigation, references, remote-safe routine indexing, hover, completion, signature help, semantic highlighting, and the MForge Dark theme.',
         'Open README',
         'Show Output'
       );

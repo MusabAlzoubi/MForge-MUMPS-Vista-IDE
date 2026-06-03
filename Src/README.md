@@ -1,6 +1,6 @@
 # MForge MUMPS & VistA IDE
 
-MForge is a clean Visual Studio Code extension for MUMPS and VistA development. Current version: **0.4.1**.
+MForge is a clean Visual Studio Code extension for MUMPS and VistA development. Current version: **0.4.2**.
 
 ## Current status
 
@@ -10,6 +10,7 @@ MForge is a clean Visual Studio Code extension for MUMPS and VistA development. 
 - Stage 3: navigation — complete.
 - Stage 4: intelligence — complete.
 - Stage 4.5: professional syntax theme — complete.
+- Stage 4.6: navigation review, LSP feature extraction, and remote workspace stability — complete.
 - Stage 5+ advanced analysis, runtime/debugging, and VistA explorers — planned, not implemented yet.
 
 ## Features
@@ -38,13 +39,16 @@ See also:
 - [Formatter](docs/features/formatter.md)
 - [Diagnostics](docs/features/diagnostics.md)
 
-### Stage 3 navigation
+### Stage 3 / 4.6 navigation
 
 - Adds Document Symbols for MUMPS labels so labels appear in the VS Code Outline.
 - Adds Go To Label for local references such as `D BUILD`, `G EXIT`, and `$$VALUE()`.
 - Adds Go To Routine for references such as `^XUP`, `D EN^XUP`, and `$$VALUE^ROUTINEB()`.
 - Adds Workspace Symbols for routine names, label names, and `LABEL^ROUTINE` entries.
-- Adds a lightweight routine index with configurable file limits and default exclusions for `node_modules`, `.git`, `dist`, `out`, and `Old Extensions`.
+- Adds Ctrl+Hover, Ctrl+Click, F12, Peek Definition, Document Links, and Find References for supported static label/routine references.
+- Adds a lightweight lazy routine index with configurable file limits, debounced dirty marking, URI-keyed caches, and default exclusions for `node_modules`, `.git`, `dist`, `out`, and `Old Extensions`.
+- Supports remote-safe navigation for `file:`, `vscode-remote:`, and MUMPS `untitled:` documents without assuming `fsPath` exists.
+- Ignores non-MUMPS, output, and `rendererLog` documents before parsing to avoid AST tracker noise and extension-host stalls.
 
 See [Navigation](docs/features/navigation.md) for usage, supported patterns, configuration, examples, limitations, and troubleshooting.
 
@@ -81,10 +85,10 @@ npm run env:check
 npm run compile
 npm run test
 npm run package
-code --install-extension mforge-mumps-vista-ide-0.4.1.vsix
+code --install-extension mforge-mumps-vista-ide-0.4.2.vsix
 ```
 
-Expected VSIX filename for version 0.4.1: `mforge-mumps-vista-ide-0.4.1.vsix`. The exact VSIX filename is safer than `*.vsix` if your shell does not expand wildcards.
+Expected VSIX filename for version 0.4.2: `mforge-mumps-vista-ide-0.4.2.vsix`. The exact VSIX filename is safer than `*.vsix` if your shell does not expand wildcards.
 
 ### Packaging requirements and troubleshooting
 
@@ -97,7 +101,7 @@ Troubleshooting summary:
 - If `ReferenceError: File is not defined` appears, a Node-20-only dependency was installed. Remove `node_modules` and `package-lock.json`, verify `package.json` uses exact `"vsce": "2.11.0"` and override `"cheerio": "1.0.0-rc.12"`, then run `npm install` again.
 - If `env:check` expects the wrong version or reports `@vscode/vsce`, pull the latest changes and reinstall dependencies.
 - If the VSIX file is missing, packaging did not complete; do not run the install command until `npm run package` succeeds.
-- Avoid wildcard installs unless `mforge-mumps-vista-ide-0.4.1.vsix` exists.
+- Avoid wildcard installs unless `mforge-mumps-vista-ide-0.4.2.vsix` exists.
 
 
 ### Local Extension Development Host
@@ -107,13 +111,13 @@ cd Src
 code .
 ```
 
-Press `F5` / **Launch Extension**, open a `.m` file in the Extension Development Host, and test syntax highlighting, snippets, Format Document, diagnostics, Outline, `F12` Go To Label, `F12` Go To Routine, `Ctrl+T` Workspace Symbols, hover, completion, signature help, semantic highlighting, and the MForge Dark theme.
+Press `F5` / **Launch Extension**, open a `.m` file in the Extension Development Host, and test syntax highlighting, snippets, Format Document, diagnostics, Outline, Ctrl+Hover/Ctrl+Click, `F12`/Peek Definition, Find References, `Ctrl+T` Workspace Symbols, hover, completion, signature help, semantic highlighting, remote workspace navigation, and the MForge Dark theme.
 
 ### Reinstall local VSIX
 
 ```bash
 code --uninstall-extension dopamind.mforge-mumps-vista-ide
-code --install-extension mforge-mumps-vista-ide-0.4.1.vsix
+code --install-extension mforge-mumps-vista-ide-0.4.2.vsix
 ```
 
 ## Configuration
@@ -123,12 +127,13 @@ code --install-extension mforge-mumps-vista-ide-0.4.1.vsix
 | `mforge.trace.level` | `off` | Controls diagnostic and quiet debug logging for MForge extension features. |
 | `mforge.formatter.enabled` | `true` | Enables the conservative MForge document formatter. |
 | `mforge.diagnostics.enabled` | `true` | Enables basic MForge diagnostics for MUMPS files. |
-| `mforge.navigation.enabled` | `true` | Enables Stage 3 Document Symbols, Go to Definition, routine indexing, and Workspace Symbols. |
+| `mforge.navigation.enabled` | `true` | Enables Stage 4.6 Document Links, Ctrl+Click/F12 definitions, Find References, document symbols, routine indexing, and Workspace Symbols. |
 | `mforge.hover.enabled` | `true` | Enables Stage 4 command, intrinsic, and system variable hover help. |
 | `mforge.completion.enabled` | `true` | Enables Stage 4 command, intrinsic, system variable, label, and routine completion. |
 | `mforge.signatureHelp.enabled` | `true` | Enables Stage 4 intrinsic function signature help. |
 | `mforge.semanticHighlighting.enabled` | `true` | Enables Stage 4.5 semantic highlighting. |
-| `mforge.maxWorkspaceFiles` | `2000` | Maximum supported routine files to scan for the workspace index. |
+| `mforge.maxWorkspaceFiles` | `2000` | Maximum supported routine files to scan lazily for the workspace index. |
+| `mforge.workspaceScanDebounceMs` | `250` | Debounce interval for file events before marking the workspace routine index dirty. |
 
 Example settings:
 
@@ -142,6 +147,7 @@ Example settings:
   "mforge.signatureHelp.enabled": true,
   "mforge.semanticHighlighting.enabled": true,
   "mforge.maxWorkspaceFiles": 2000,
+  "mforge.workspaceScanDebounceMs": 250,
   "mforge.trace.level": "off"
 }
 ```
@@ -166,6 +172,7 @@ npm run test:stage2
 npm run test:stage3
 npm run test:stage4
 npm run test:stage45
+npm run test:stage46
 ```
 
 ## Roadmap
@@ -178,4 +185,5 @@ npm run test:stage45
 | Stage 3: Navigation | Done | Document Symbols, Go To Label/Routine, Workspace Symbols, routine index, tests, and docs are in place. |
 | Stage 4: Intelligence | Done | Hover, completion, signature help, documentation data, tests, and docs are in place. |
 | Stage 4.5: Professional syntax theme | Done | Improved scopes, semantic tokens, MForge Dark theme, tests, and docs are in place. |
+| Stage 4.6: Navigation stability | Done | Legacy extension audit, Ctrl+Click/F12/Peek, Document Links, Find References, remote URI support, lazy indexing, tests, and docs are in place. |
 | Stage 5+: Advanced analysis, runtime, VistA tools | Planned | Future work only. |

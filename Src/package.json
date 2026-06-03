@@ -2,7 +2,7 @@
   "name": "mforge-mumps-vista-ide",
   "displayName": "MForge MUMPS & VistA IDE",
   "description": "Complete IDE toolkit for MUMPS and VistA development in Visual Studio Code.",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "publisher": "dopamind",
   "license": "MIT",
   "repository": {
@@ -45,12 +45,13 @@
     "env:check": "node scripts/check-env.js",
     "test:stage2": "node scripts/test-stage2.js",
     "test:stage3": "node scripts/test-stage3.js",
-    "test": "npm run test:stage2 && npm run test:stage3 && npm run test:stage4 && npm run test:stage45",
+    "test": "npm run test:stage2 && npm run test:stage3 && npm run test:stage4 && npm run test:stage45 && npm run test:stage46",
     "package": "npm run env:check && npm run compile && npm run test && vsce package",
     "package:local": "npm run package",
-    "install:local": "code --install-extension mforge-mumps-vista-ide-0.4.1.vsix",
+    "install:local": "code --install-extension mforge-mumps-vista-ide-0.4.2.vsix",
     "test:stage4": "node scripts/test-stage4.js",
-    "test:stage45": "node scripts/test-stage45.js"
+    "test:stage45": "node scripts/test-stage45.js",
+    "test:stage46": "node scripts/test-stage46.js"
   },
   "devDependencies": {
     "@types/node": "^18.19.1",
@@ -132,13 +133,13 @@
         "mforge.navigation.enabled": {
           "type": "boolean",
           "default": true,
-          "description": "Enable Stage 3 MUMPS navigation features: document symbols, definitions, routine indexing, and workspace symbols."
+          "description": "Enable Stage 4.6 MUMPS navigation features: document links, Ctrl+Click, definitions, references, routine indexing, document symbols, and workspace symbols."
         },
         "mforge.maxWorkspaceFiles": {
           "type": "number",
           "default": 2000,
           "minimum": 1,
-          "description": "Maximum number of supported MUMPS routine files to scan for the Stage 3 workspace routine index."
+          "description": "Maximum number of supported MUMPS routine files to scan lazily for the workspace routine index."
         },
         "mforge.hover.enabled": {
           "type": "boolean",
@@ -159,6 +160,12 @@
           "type": "boolean",
           "default": true,
           "description": "Enable Stage 4.5 semantic highlighting for MUMPS files."
+        },
+        "mforge.workspaceScanDebounceMs": {
+          "type": "number",
+          "default": 250,
+          "minimum": 0,
+          "description": "Debounce interval in milliseconds before marking the MUMPS workspace routine index dirty after file events."
         }
       }
     },
