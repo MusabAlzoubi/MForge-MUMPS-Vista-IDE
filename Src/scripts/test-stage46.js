@@ -107,16 +107,31 @@ const { MumpsDefinitionProvider } = require('../out/features/navigation/definiti
 const { MumpsDocumentLinkProvider } = require('../out/features/navigation/documentLinkProvider');
 const { MumpsReferenceProvider } = require('../out/features/navigation/referenceProvider');
 const { MumpsNavigationHoverProvider } = require('../out/features/navigation/navigationHoverProvider');
-const { findMumpsReferencesInLine } = require('../out/parser/routineParser');
+const { findMumpsReferenceAt, findMumpsReferencesInLine } = require('../out/parser/routineParser');
 
 function summarizeReferences(line) {
-  return findMumpsReferencesInLine(line).map((reference) => ({
+  return findMumpsReferencesInLine(line).map(summarizeReference);
+}
+
+function summarizeReference(reference) {
+  return {
     label: reference.label,
     routine: reference.routine,
     raw: reference.raw,
     start: reference.startCharacter,
     end: reference.endCharacter
-  }));
+  };
+}
+
+function assertReferenceAt(line, token, expected, message) {
+  const index = line.indexOf(token);
+  assert.notEqual(index, -1, `${token} must appear in test line`);
+  assert.deepEqual(summarizeReference(findMumpsReferenceAt(line, index + Math.floor(token.length / 2))), expected, message);
+}
+
+function documentTextForLink(document, link) {
+  const line = document.lineAt(link.range.start.line).text;
+  return line.slice(link.range.start.character, link.range.end.character);
 }
 
 (async () => {
@@ -147,6 +162,24 @@ assert.deepEqual(summarizeReferences('SET EPDAYS=$$GET1^DIQ(4,DIVIEN,400000000)'
 
 assert.deepEqual(summarizeReferences('W "$$FAKE^ROUTINE" ; D FAKE^ROUTINE'), [], 'string and comment references must be ignored');
 
+const acceptLine = 'SET X=$$ACCEPT^UJOWXUS IF (X["^")!(\'$L(X)) DO DIRUT';
+assertReferenceAt(acceptLine, 'ACCEPT', { label: 'ACCEPT', routine: 'UJOWXUS', raw: 'ACCEPT^UJOWXUS', start: 8, end: 22 }, 'cursor on ACCEPT resolves ACCEPT^UJOWXUS');
+assertReferenceAt(acceptLine, 'UJOWXUS', { label: 'ACCEPT', routine: 'UJOWXUS', raw: 'ACCEPT^UJOWXUS', start: 8, end: 22 }, 'cursor on UJOWXUS resolves ACCEPT^UJOWXUS');
+assertReferenceAt(acceptLine, 'DIRUT', { label: 'DIRUT', routine: null, raw: 'DIRUT', start: 46, end: 51 }, 'cursor on DIRUT resolves local label reference');
+
+const xparLine = 'I \'$D(ASKINGVC)!\'$$GET^XPAR("SYS","XU VC CASE SENSITIVE") S X=$$UP^XLFSTR(X)';
+assertReferenceAt(xparLine, 'GET', { label: 'GET', routine: 'XPAR', raw: 'GET^XPAR', start: 19, end: 27 }, 'cursor on GET resolves GET^XPAR');
+assertReferenceAt(xparLine, 'XPAR', { label: 'GET', routine: 'XPAR', raw: 'GET^XPAR', start: 19, end: 27 }, 'cursor on XPAR resolves GET^XPAR');
+assertReferenceAt(xparLine, 'UP', { label: 'UP', routine: 'XLFSTR', raw: 'UP^XLFSTR', start: 64, end: 73 }, 'cursor on UP resolves UP^XLFSTR');
+assertReferenceAt(xparLine, 'XLFSTR', { label: 'UP', routine: 'XLFSTR', raw: 'UP^XLFSTR', start: 64, end: 73 }, 'cursor on XLFSTR resolves UP^XLFSTR');
+
+const fileLine = 'S FDA(200,IEN,2)=XUH D FILE^DIE("","FDA","ERR")';
+assertReferenceAt(fileLine, 'FILE', { label: 'FILE', routine: 'DIE', raw: 'FILE^DIE', start: 23, end: 31 }, 'cursor on FILE resolves FILE^DIE');
+assertReferenceAt(fileLine, 'DIE', { label: 'FILE', routine: 'DIE', raw: 'FILE^DIE', start: 23, end: 31 }, 'cursor on DIE resolves FILE^DIE');
+
+const get1Line = 'S EPDAYS=$$GET1^DIQ(4,DIVIEN,400000000)';
+assertReferenceAt(get1Line, 'GET1', { label: 'GET1', routine: 'DIQ', raw: 'GET1^DIQ', start: 11, end: 19 }, 'cursor on GET1 resolves GET1^DIQ');
+assertReferenceAt(get1Line, 'DIQ', { label: 'GET1', routine: 'DIQ', raw: 'GET1^DIQ', start: 11, end: 19 }, 'cursor on DIQ resolves GET1^DIQ');
 
 assert.deepEqual(summarizeReferences('I \'$D(ASKINGVC)!\'$$GET^XPAR("SYS","XU VC CASE SENSITIVE") S X=$$UP^XLFSTR(X) ;for VOE allow case sensitive Verify Code'), [
   { label: 'GET', routine: 'XPAR', raw: 'GET^XPAR', start: 19, end: 27 },
@@ -211,6 +244,10 @@ assert.equal(links.some((link) => link.target.toString() === ujowxusUri.toString
 assert.equal(links.some((link) => link.target.toString() === dieUri.toString()), true, 'document links include inline FileMan API targets');
 assert.equal(links.some((link) => link.target.toString() === xparUri.toString()), true, 'document links include unary-NOT/logical extrinsic targets');
 assert.equal(links.some((link) => link.target.toString() === rou3Uri.toString()), true, 'document links include inline DO targets after multiple references');
+assert.equal(links.some((link) => documentTextForLink(localDoc, link) === 'ACCEPT^UJOWXUS'), true, 'document link range is exactly ACCEPT^UJOWXUS');
+assert.equal(links.some((link) => documentTextForLink(localDoc, link) === 'GET^XPAR'), true, 'document link range is exactly GET^XPAR');
+assert.equal(links.some((link) => documentTextForLink(localDoc, link) === 'UP^XLFSTR'), true, 'document link range is exactly UP^XLFSTR');
+assert.equal(links.some((link) => documentTextForLink(localDoc, link) === 'FILE^DIE'), true, 'document link range is exactly FILE^DIE');
 assert.equal(links.some((link) => link.tooltip.includes('BUILD')), true, 'document links include local label targets');
 
 const referenceProvider = new MumpsReferenceProvider(index);

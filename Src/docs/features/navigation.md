@@ -8,7 +8,7 @@ MForge now provides:
 
 - Document Symbols and Workspace Symbols.
 - `Ctrl+Hover`, `Ctrl+Click`, `F12`, and Peek Definition for supported static MUMPS routine/label references.
-- Document links for resolvable label and routine references.
+- Document links for resolvable label and routine references, with exact visible `LABEL^ROUTINE` ranges.
 - Find References for local labels and cross-routine label/routine calls.
 - Basic same-document local variable definition navigation from variable usage to nearest prior `NEW` declaration or `SET` assignment.
 - Lazy workspace indexing with open-document and AST/document caches.

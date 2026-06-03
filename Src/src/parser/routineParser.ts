@@ -61,7 +61,21 @@ export function findMumpsReferenceAt(lineText: string, character: number): Mumps
   }
 
   const references = findMumpsReferencesInLine(lineText);
-  return references.find((reference) => character >= reference.startCharacter && character <= reference.endCharacter) ?? null;
+  return references.find((reference) => referenceContainsPosition(reference, character)) ?? null;
+}
+
+export function referenceContainsPosition(reference: MumpsReference, character: number): boolean {
+  const visibleStart = Math.min(
+    reference.labelStartCharacter ?? reference.startCharacter,
+    reference.routineStartCharacter ?? reference.startCharacter,
+    reference.startCharacter
+  );
+  const visibleEnd = Math.max(
+    reference.labelEndCharacter ?? reference.endCharacter,
+    reference.routineEndCharacter ?? reference.endCharacter,
+    reference.endCharacter
+  );
+  return character >= visibleStart && character <= visibleEnd;
 }
 
 export function findMumpsReferencesInLine(lineText: string): MumpsReference[] {

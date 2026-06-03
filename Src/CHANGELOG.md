@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.4.5 - 2026-06-03
+
+### Fixed
+
+- Fixed cursor-range matching for inline routine references so Ctrl+Click/F12 works from either the label or routine segment of `LABEL^ROUTINE`.
+- Added explicit cursor-position regression tests for `ACCEPT^UJOWXUS`, `GET^XPAR`, `UP^XLFSTR`, `FILE^DIE`, `GET1^DIQ`, local labels, and local variables.
+- Verified DocumentLinkProvider ranges cover exactly the visible `LABEL^ROUTINE` text without `$$`, command prefixes, or arguments.
+
 ## 0.4.4 - 2026-06-03
 
 ### Fixed
