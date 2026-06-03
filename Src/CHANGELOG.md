@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.4.4 - 2026-06-03
+
+### Fixed
+
+- Improved the MUMPS reference navigation scanner to link the visible `LABEL^ROUTINE` span for extrinsics, including unary-NOT/logical expressions such as `!'$$GET^XPAR(...)`.
+- Added regression coverage for multiple references on one line, `GET^XPAR`, `UP^XLFSTR`, `ACCEPT^UJOWXUS`, `FILE^DIE`, and string/comment safety.
+- Added basic same-document local variable definition navigation for `NEW` declarations and nearest prior `SET` assignments, adapted from the variable-definition behavior studied in the old `mumps-lsp`.
+
 ## 0.4.3 - 2026-06-03
 
 ### Fixed

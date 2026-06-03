@@ -50,6 +50,11 @@ const ujowxusUri = remoteRoutineUri('UJOWXUS');
 const dieUri = remoteRoutineUri('DIE');
 const diqUri = remoteRoutineUri('DIQ');
 const xushshUri = remoteRoutineUri('XUSHSH');
+const xparUri = remoteRoutineUri('XPAR');
+const xlfstrUri = remoteRoutineUri('XLFSTR');
+const rou1Uri = remoteRoutineUri('ROU1');
+const rou2Uri = remoteRoutineUri('ROU2');
+const rou3Uri = remoteRoutineUri('ROU3');
 const localUri = Uri.file('/workspace/ROUTINEA.m');
 const outputUri = new Uri('output', 'rendererLog');
 const untitledUri = new Uri('untitled', '/scratch/NEWROU.m');
@@ -60,17 +65,25 @@ const texts = new Map([
   [dieUri.toString(), 'FILE(FLAGS,FDA,ERR) Q\nUPDATE(FLAGS,FDA,IEN,ERR) Q'],
   [diqUri.toString(), 'GET1(FILE,IEN,FIELD) Q 1'],
   [xushshUri.toString(), 'EN(X) Q 1'],
+  [xparUri.toString(), 'GET(ENT,PAR) Q 1'],
+  [xlfstrUri.toString(), 'UP(X) Q X'],
+  [rou1Uri.toString(), 'ONE() Q 1'],
+  [rou2Uri.toString(), 'TWO Q 2'],
+  [rou3Uri.toString(), 'THREE Q'],
   [localUri.toString(), [
     'START D EN^XUP D BUILD G EXIT S V=$$VALUE^ROUTINEB()',
     'BUILD Q',
     'DIRUT Q',
     'INLINE SET X=$$ACCEPT^UJOWXUS IF (X["^")!(\'$L(X)) DO DIRUT',
     'FILEMAN S FDA(200,IEN,2)=XUH D FILE^DIE("","FDA","ERR")',
+    'INTR I \'$D(ASKINGVC)!\'$$GET^XPAR("SYS","XU VC CASE SENSITIVE") S X=$$UP^XLFSTR(X) ;for VOE allow case sensitive Verify Code',
+    'MULTI S A=$$ONE^ROU1(),B=$$TWO^ROU2 D THREE^ROU3',
+    'VARS N X,Y S X=1 W X',
     'EXIT Q'
   ].join('\n')]
 ]);
 
-const workspaceUris = [remoteUri, routineBUri, ujowxusUri, dieUri, diqUri, xushshUri];
+const workspaceUris = [remoteUri, routineBUri, ujowxusUri, dieUri, diqUri, xushshUri, xparUri, xlfstrUri, rou1Uri, rou2Uri, rou3Uri];
 
 const originalLoad = Module._load;
 Module._load = function patchedLoad(request, parent, isMain) {
@@ -112,11 +125,11 @@ assert.equal(isMumpsUri(untitledUri, 'mumps'), true, 'untitled MUMPS documents a
 assert.equal(routineNameFromUri(remoteUri), 'XUP', 'remote routine names come from uri.path when fsPath is unavailable');
 
 assert.deepEqual(summarizeReferences('X=$$ACCEPT^UJOWXUS'), [
-  { label: 'ACCEPT', routine: 'UJOWXUS', raw: '$$ACCEPT^UJOWXUS', start: 2, end: 18 }
+  { label: 'ACCEPT', routine: 'UJOWXUS', raw: 'ACCEPT^UJOWXUS', start: 4, end: 18 }
 ], 'extrinsic calls without parentheses must parse');
 
 assert.deepEqual(summarizeReferences('SET X=$$ACCEPT^UJOWXUS IF (X["^")!(\'$L(X)) DO DIRUT'), [
-  { label: 'ACCEPT', routine: 'UJOWXUS', raw: '$$ACCEPT^UJOWXUS', start: 6, end: 22 },
+  { label: 'ACCEPT', routine: 'UJOWXUS', raw: 'ACCEPT^UJOWXUS', start: 8, end: 22 },
   { label: 'DIRUT', routine: null, raw: 'DIRUT', start: 46, end: 51 }
 ], 'inline extrinsic and later DO references must both parse');
 
@@ -125,14 +138,26 @@ assert.deepEqual(summarizeReferences('S FDA(200,IEN,2)=XUH D FILE^DIE("","FDA","
 ], 'inline DO routine calls after SET must parse once');
 
 assert.deepEqual(summarizeReferences('$$EN^XUSHSH(X)'), [
-  { label: 'EN', routine: 'XUSHSH', raw: '$$EN^XUSHSH', start: 0, end: 11 }
+  { label: 'EN', routine: 'XUSHSH', raw: 'EN^XUSHSH', start: 2, end: 11 }
 ], 'extrinsic calls with parentheses must keep parsing');
 
 assert.deepEqual(summarizeReferences('SET EPDAYS=$$GET1^DIQ(4,DIVIEN,400000000)'), [
-  { label: 'GET1', routine: 'DIQ', raw: '$$GET1^DIQ', start: 11, end: 21 }
+  { label: 'GET1', routine: 'DIQ', raw: 'GET1^DIQ', start: 13, end: 21 }
 ], 'FileMan extrinsic calls with parentheses must keep parsing');
 
 assert.deepEqual(summarizeReferences('W "$$FAKE^ROUTINE" ; D FAKE^ROUTINE'), [], 'string and comment references must be ignored');
+
+
+assert.deepEqual(summarizeReferences('I \'$D(ASKINGVC)!\'$$GET^XPAR("SYS","XU VC CASE SENSITIVE") S X=$$UP^XLFSTR(X) ;for VOE allow case sensitive Verify Code'), [
+  { label: 'GET', routine: 'XPAR', raw: 'GET^XPAR', start: 19, end: 27 },
+  { label: 'UP', routine: 'XLFSTR', raw: 'UP^XLFSTR', start: 64, end: 73 }
+], 'unary NOT and logical operator extrinsics must parse before comments');
+
+assert.deepEqual(summarizeReferences('S A=$$ONE^ROU1(),B=$$TWO^ROU2 D THREE^ROU3'), [
+  { label: 'ONE', routine: 'ROU1', raw: 'ONE^ROU1', start: 6, end: 14 },
+  { label: 'TWO', routine: 'ROU2', raw: 'TWO^ROU2', start: 21, end: 29 },
+  { label: 'THREE', routine: 'ROU3', raw: 'THREE^ROU3', start: 32, end: 42 }
+], 'multiple extrinsic and inline DO references on one line must parse');
 
 const refs = findMumpsReferencesInLine(' D EN^XUP DO FILE^DIE G EXIT GOTO BUILD S X=$$GET1^DIQ() S Y=$$VALUE^ROUTINEB()');
 assert.equal(refs.some((ref) => ref.label === 'EN' && ref.routine === 'XUP'), true, 'DO cross-routine references are parsed');
@@ -165,10 +190,27 @@ const fileManLine = localDoc.lineAt(4).text;
 const fileDefinition = await definitionProvider.provideDefinition(localDoc, new Position(4, fileManLine.indexOf('FILE^') + 1));
 assert.equal(fileDefinition.uri.toString(), dieUri.toString(), 'F12 resolves inline FileMan API references after another command');
 
+const intrinsicLine = localDoc.lineAt(5).text;
+const getDefinition = await definitionProvider.provideDefinition(localDoc, new Position(5, intrinsicLine.indexOf('GET^') + 1));
+assert.equal(getDefinition.uri.toString(), xparUri.toString(), 'F12 resolves unary-NOT extrinsic references after logical operators');
+const upDefinition = await definitionProvider.provideDefinition(localDoc, new Position(5, intrinsicLine.indexOf('UP^') + 1));
+assert.equal(upDefinition.uri.toString(), xlfstrUri.toString(), 'F12 resolves later extrinsic references on the same line');
+
+const multiLine = localDoc.lineAt(6).text;
+const threeDefinition = await definitionProvider.provideDefinition(localDoc, new Position(6, multiLine.indexOf('THREE') + 1));
+assert.equal(threeDefinition.uri.toString(), rou3Uri.toString(), 'F12 resolves inline DO references after multiple extrinsics');
+
+const variableLine = localDoc.lineAt(7).text;
+const variableDefinition = await definitionProvider.provideDefinition(localDoc, new Position(7, variableLine.lastIndexOf('X') + 1));
+assert.equal(variableDefinition.uri.toString(), localUri.toString(), 'F12 resolves basic local variable usage in the same routine');
+assert.equal(variableDefinition.range.start.character, variableLine.indexOf('X=1'), 'local variable usage resolves to nearest SET assignment');
+
 const links = await new MumpsDocumentLinkProvider(index).provideDocumentLinks(localDoc);
 assert.equal(links.some((link) => link.target.toString() === remoteUri.toString()), true, 'document links include cross-routine targets');
 assert.equal(links.some((link) => link.target.toString() === ujowxusUri.toString()), true, 'document links include extrinsic targets without parentheses');
 assert.equal(links.some((link) => link.target.toString() === dieUri.toString()), true, 'document links include inline FileMan API targets');
+assert.equal(links.some((link) => link.target.toString() === xparUri.toString()), true, 'document links include unary-NOT/logical extrinsic targets');
+assert.equal(links.some((link) => link.target.toString() === rou3Uri.toString()), true, 'document links include inline DO targets after multiple references');
 assert.equal(links.some((link) => link.tooltip.includes('BUILD')), true, 'document links include local label targets');
 
 const referenceProvider = new MumpsReferenceProvider(index);

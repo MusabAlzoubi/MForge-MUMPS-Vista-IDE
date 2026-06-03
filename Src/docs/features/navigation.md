@@ -7,9 +7,10 @@ Stage 4.6 hardens MForge navigation after reviewing the local legacy extensions 
 MForge now provides:
 
 - Document Symbols and Workspace Symbols.
-- `Ctrl+Hover`, `Ctrl+Click`, `F12`, and Peek Definition for supported static MUMPS references.
+- `Ctrl+Hover`, `Ctrl+Click`, `F12`, and Peek Definition for supported static MUMPS routine/label references.
 - Document links for resolvable label and routine references.
 - Find References for local labels and cross-routine label/routine calls.
+- Basic same-document local variable definition navigation from variable usage to nearest prior `NEW` declaration or `SET` assignment.
 - Lazy workspace indexing with open-document and AST/document caches.
 - Remote-safe indexing for `file:`, `vscode-remote:`, and MUMPS `untitled:` documents.
 - Defensive filtering for non-MUMPS documents, output documents, and `rendererLog` documents.
@@ -76,6 +77,9 @@ Stage 4.6 recognizes these static patterns outside comments and strings:
 | FileMan API call | `UPDATE^DIE`, `FILE^DIE`, `GET1^DIQ`, `FIND1^DIC` | Opens the label/routine if `DIE.m`, `DIQ.m`, or `DIC.m` exists in the workspace. |
 | Cross-routine extrinsic with parentheses | `$$VALUE^ROUTINEB()` | Opens `VALUE` label in `ROUTINEB`. |
 | Cross-routine extrinsic without parentheses | `X=$$ACCEPT^UJOWXUS` | Opens `ACCEPT` label in `UJOWXUS`. |
+| Unary-NOT/logical extrinsic | `I '$D(X)!'$$GET^XPAR(...) S X=$$UP^XLFSTR(X)` | Opens `GET` in `XPAR` and `UP` in `XLFSTR`. |
+| Multiple references | `S A=$$ONE^ROU1(),B=$$TWO^ROU2 D THREE^ROU3` | Opens all three static references. |
+| Basic local variable | `N X S X=1 W X` | `F12` on the final `X` opens the nearest prior `SET` assignment, or a `NEW` declaration when no assignment exists. |
 
 ## Remote workspace support
 
@@ -109,7 +113,8 @@ The navigation index avoids assuming that `uri.fsPath` is available. Workspace f
 - Dynamic indirection such as `D @TARGET` is not resolved.
 - Routine names are based on filenames without extensions.
 - FileMan API calls only navigate when the referenced routine file is present in the workspace.
-- Find References is static and limited to label/routine references. Static inline calls and no-parentheses extrinsics are supported; dynamic indirection is not.
+- Find References is static and limited to label/routine references. Static inline calls, unary-NOT/logical extrinsics, and no-parentheses extrinsics are supported; dynamic indirection is not.
+- Local variable navigation is intentionally basic: it is same-document only, recognizes `NEW` and `SET`, and does not yet implement full MUMPS scoping, variable references, or rename.
 - Rename remains unimplemented until deeper semantic analysis is added.
 - Tree-sitter AST indexing is deferred to Stage 5.
 

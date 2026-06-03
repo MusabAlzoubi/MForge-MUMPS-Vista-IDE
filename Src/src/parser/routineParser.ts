@@ -112,13 +112,13 @@ function readExtrinsicReference(code: string, start: number): MumpsReference | n
   return {
     label: label.text,
     routine: routine?.text ?? null,
-    startCharacter: start,
+    startCharacter: label.start,
     endCharacter: routine?.end ?? label.end,
     labelStartCharacter: label.start,
     labelEndCharacter: label.end,
     routineStartCharacter: routine?.start ?? null,
     routineEndCharacter: routine?.end ?? null,
-    raw: code.slice(start, routine?.end ?? label.end)
+    raw: code.slice(label.start, routine?.end ?? label.end)
   };
 }
 

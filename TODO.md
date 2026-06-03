@@ -73,11 +73,12 @@
 - [x] Add Stage 4.6 fixture tests.
 - [x] Update navigation documentation and version to 0.4.2.
 - [x] Fix inline command and no-parentheses extrinsic reference parsing for 0.4.3.
+- [x] Fix unary-NOT/logical extrinsic scanning and add basic local variable navigation for 0.4.4.
 
 ## Stage 5: Advanced analysis
 
 - [x] Implement static routine/label find references.
-- [ ] Implement deeper variable/global find references.
+- [ ] Implement deeper variable/global find references and safe variable rename.
 - [ ] Implement routine dependency analyzer.
 - [ ] Implement code metrics.
 - [ ] Add analysis reports.
