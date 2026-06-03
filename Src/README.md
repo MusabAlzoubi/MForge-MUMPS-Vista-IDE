@@ -1,207 +1,211 @@
 # MForge MUMPS & VistA IDE
 
-MForge is a clean Visual Studio Code extension for MUMPS and VistA development. Current version: **0.4.8**.
+MForge is a modern Visual Studio Code extension for MUMPS, GT.M/YottaDB, and VistA developers. It provides syntax highlighting, snippets, formatting, diagnostics, IntelliSense, semantic highlighting, routine indexing, Ctrl+Click navigation, and VistA-friendly development tools.
 
-## Current status
+**Version:** 0.4.10<br>
+**VS Code:** ^1.90.0<br>
+**License:** MIT<br>
+**Focus:** MUMPS / VistA / YottaDB
 
-- Stage 0: cleanup and project setup — complete.
-- Stage 1: core language support — complete.
-- Stage 2: editing productivity — complete.
-- Stage 3: navigation — complete.
-- Stage 4: intelligence — complete.
-- Stage 4.5: professional syntax theme — complete.
-- Stage 4.6: navigation review, LSP feature extraction, and remote workspace stability — complete.
-- Stage 5+ advanced analysis, runtime/debugging, and VistA explorers — planned, not implemented yet.
+## Core Language Support
 
-## Features
+- Syntax highlighting for routines, labels, commands, intrinsics, globals, variables, strings, comments, numbers, operators, and postconditionals.
+- MUMPS language configuration with comments, brackets, auto-closing pairs, word detection, and indentation rules.
+- Snippets for common MUMPS, VistA RPC, and FileMan FDA workflows.
+- MForge Dark theme tuned for MUMPS and VistA code.
+- Semantic tokens for labels, commands, intrinsics, globals, system variables, parameters, local variables, FileMan APIs, and routine references.
 
-### Stage 1 core language support
+## Editing Productivity
 
-- Registers language id `mumps` for `.m`, `.M`, `.mumps`, `.mps`, `.rou`, and `.int` files.
-- Adds MUMPS syntax highlighting for labels, commands, intrinsics, globals, variables, strings, comments, numbers, operators, and postconditionals.
-- Adds language configuration for comments, brackets, auto-closing pairs, word detection, and indentation hints.
-- Adds snippets for routine skeletons, labels, calls, loops, globals, VistA RPC entry points, and FileMan FDA examples.
+- Formatter for conservative MUMPS code cleanup.
+- Auto indentation support for labels, commands, comments, and dot-blocks.
+- Diagnostics for common line-level problems.
+- Safe parsing for strings and comments so tooling avoids false positives in quoted text or comments.
+- Dot-block aware formatting for VistA-style indented command blocks.
 
-See also:
+## Navigation
 
-- [Syntax highlighting](docs/features/syntax-highlighting.md)
-- [Snippets](docs/features/snippets.md)
+- Outline / Document Symbols for routine labels.
+- Workspace Symbols for routines, labels, and `LABEL^ROUTINE` entries.
+- Ctrl+Click / F12 navigation for local and cross-routine references.
+- Peek Definition support through VS Code definition providers.
+- Document links for resolvable MUMPS references.
+- Local label navigation.
+- Cross-routine navigation.
+- Local variable navigation.
+- Routine index for workspace, configured, detected, remote, and extensionless routine files.
 
-### Stage 2 editing productivity
+## IntelliSense
 
-- Adds a conservative document formatter gated by `mforge.formatter.enabled`.
-- Adds parser-assisted auto indentation for common dot-block patterns.
-- Adds basic diagnostics gated by `mforge.diagnostics.enabled`.
-- Detects unterminated strings, invalid label formats, suspicious command tokens, unbalanced parentheses, and trailing whitespace.
+- Command hover for full and abbreviated MUMPS commands.
+- Intrinsic hover for common intrinsic functions.
+- System variable hover.
+- Completion for commands, intrinsics, and system variables.
+- Label and routine completion from the current document and routine index.
+- Signature help for common intrinsic functions.
 
-See also:
+## VistA / YottaDB Support
 
-- [Formatter](docs/features/formatter.md)
-- [Diagnostics](docs/features/diagnostics.md)
+- Auto-detect routine folders in common VistA and YottaDB layouts.
+- Manual routine search paths for folders outside the active workspace.
+- Remote container support through VS Code filesystem APIs and URI-safe indexing.
+- VistA routine patterns including `LABEL^ROUTINE` and extrinsic calls.
+- FileMan API references such as `UPDATE^DIE`, `FILE^DIE`, `GET1^DIQ`, and `GETS^DIQ`.
+- WorldVistA/Hakeem-friendly indexing, including optional extensionless routine indexing.
 
-### Stage 3 / 4.6 navigation
+## Debugging / Diagnostics Tools
 
-- Adds Document Symbols for MUMPS labels so labels appear in the VS Code Outline.
-- Adds Go To Label for local references such as `D BUILD`, `G EXIT`, and `$$VALUE()`.
-- Adds Go To Routine for references such as `^XUP`, `D EN^XUP`, and `$$VALUE^ROUTINEB()`.
-- Adds Workspace Symbols for routine names, label names, and `LABEL^ROUTINE` entries.
-- Adds Ctrl+Hover, Ctrl+Click, F12, Peek Definition, Document Links, and Find References for supported static label/routine references.
-- Adds basic same-document local variable definition navigation for `NEW` declarations and nearest prior `SET` assignments.
-- Adds **MForge: Rebuild Routine Index**, **MForge: Debug References In Current Line**, **MForge: Find Routine In Index**, **MForge: Show Routine Index Status**, and **MForge: Save Detected Routine Paths To Settings** troubleshooting commands for real-world navigation issues.
-- Auto-detects common WorldVistA/Hakeem and workspace-relative routine folders, auto-rebuilds the routine index after activation, and still supports manual `mforge.routineSearchPaths` plus optional extensionless routine indexing for YottaDB/GT.M exports.
-- Adds a lightweight lazy routine index with configurable file limits, debounced dirty marking, URI-keyed caches, and default exclusions for `node_modules`, `.git`, `dist`, `out`, and `Old Extensions`.
-- Supports remote-safe navigation for `file:`, `vscode-remote:`, and MUMPS `untitled:` documents without assuming `fsPath` exists.
-- Ignores non-MUMPS, output, and `rendererLog` documents before parsing to avoid AST tracker noise and extension-host stalls.
+- `MForge: Rebuild Routine Index`
+- `MForge: Show Routine Index Status`
+- `MForge: Find Routine In Index`
+- `MForge: Debug References In Current Line`
+- `MForge: Save Detected Routine Paths To Settings`
 
-See [Navigation](docs/features/navigation.md) for usage, supported patterns, configuration, examples, limitations, and troubleshooting.
+## Supported File Extensions
 
-### Stage 4 intelligence
+- `.m`
+- `.M`
+- `.int`
+- `.rou`
+- `.mps`
+- `.mumps`
 
-- Adds hover help for common MUMPS commands, command abbreviations, intrinsic functions, and system variables.
-- Adds completion suggestions for commands, intrinsics, system variables, current-document labels, workspace-index labels, and workspace routine names.
-- Adds signature help for `$P`, `$G`, `$O`, `$D`, `$L`, `$E`, `$F`, and `$NA` intrinsic calls.
-- Adds independent settings for hover, completion, signature help, semantic highlighting, and the MForge Dark theme.
+## Quick Start
 
-See also:
+1. Install the extension.
+2. Open a `.m` file.
+3. Set the color theme to `MForge Dark`.
+4. Run `MForge: Rebuild Routine Index` from the Command Palette.
+5. Use Ctrl+Click or F12 on a `LABEL^ROUTINE` reference.
 
-- [Hover](docs/features/hover.md)
-- [Completion](docs/features/completion.md)
-- [Signature Help](docs/features/signature-help.md)
+## Example Settings
 
-### Stage 4.5 professional syntax theme
-
-- Adds improved TextMate scopes for labels, label parameters, commands, command abbreviations, intrinsics, system variables, globals, local variables, numbers, strings, comments, FileMan APIs, label references, and routine references.
-- Adds semantic highlighting for MUMPS-aware labels, commands, intrinsics, globals, system variables, parameters, local variables, FileMan APIs, and routine references.
-- Adds the **MForge Dark** theme with a modern palette optimized for MUMPS and VistA readability.
-
-See [MForge Professional Syntax Theme](docs/features/theme.md) for examples, configuration, troubleshooting, and limitations.
-
-## Local installation and testing
-
-Run commands from the repository root unless noted. Run `cd Src` only once; if you are already inside `Src`, do not run `cd Src` again.
-
-```bash
-cd Src
-rm -rf node_modules
-npm install
-npm run env:check
-npm run compile
-npm run test
-npm run package
-code --install-extension mforge-mumps-vista-ide-0.4.8.vsix
+```json
+{
+  "mforge.autoDetectRoutinePaths": true,
+  "mforge.autoRebuildIndexOnActivation": true,
+  "mforge.routineSearchPaths": [
+    "/var/worldvista/prod/hakeem/routines",
+    "/var/worldvista/prod/hakeem/localr"
+  ],
+  "mforge.maxWorkspaceFiles": 10000,
+  "mforge.indexExtensionlessRoutines": true,
+  "mforge.trace.level": "info"
+}
 ```
 
-Expected VSIX filename for version 0.4.8: `mforge-mumps-vista-ide-0.4.8.vsix`. The exact VSIX filename is safer than `*.vsix` if your shell does not expand wildcards.
+## Navigation Examples
 
-### Packaging requirements and troubleshooting
-
-MForge local packaging supports Node.js **18 or newer**, with Node.js 18.19.1 explicitly supported for local packaging. The package uses the Node-18-compatible `vsce@2.11.0` CLI plus an npm `cheerio@1.0.0-rc.12` override for local VSIX generation. This mirrors the working packaging dependency shape from the owner's old `mumps-debugger---upgrade` extension while keeping the MForge implementation clean. Current `@vscode/vsce` releases, or un-overridden `vsce` installs, can pull newer `cheerio`/`undici` dependencies that require Node 20+ globals and fail on Node 18 with `ReferenceError: File is not defined`.
-
-Run `npm run env:check` before packaging to print the Node version, npm version, package.json packager dependency, installed `vsce`, `cheerio`, and `undici` versions, package-lock status, local binary path, and whether packaging requirements are met. See [Local installation and testing](docs/local-installation.md) for prerequisites, compile/test/package commands, manual Extension Development Host testing, and troubleshooting for `tsc: not found`, missing package scripts, `*.vsix` ENOENT, `ReferenceError: File is not defined`, and `cd: Src` path errors.
-
-Troubleshooting summary:
-- If `GET1^DIQ` works but `XPAR`, `DIE`, `XLFSTR`, or a local routine does not, run **MForge: Rebuild Routine Index**, check routine status output, add missing routine folders to `mforge.routineSearchPaths`, increase `mforge.maxWorkspaceFiles`, confirm supported extensions, then run **MForge: Find Routine In Index**.
-
-- If `ReferenceError: File is not defined` appears, a Node-20-only dependency was installed. Remove `node_modules` and `package-lock.json`, verify `package.json` uses exact `"vsce": "2.11.0"` and override `"cheerio": "1.0.0-rc.12"`, then run `npm install` again.
-- If `env:check` expects the wrong version or reports `@vscode/vsce`, pull the latest changes and reinstall dependencies.
-- If the VSIX file is missing, packaging did not complete; do not run the install command until `npm run package` succeeds.
-- Avoid wildcard installs unless `mforge-mumps-vista-ide-0.4.8.vsix` exists.
-
-
-### Local Extension Development Host
-
-```bash
-cd Src
-code .
+```mumps
+D EN^XUP
+S X=$$GET1^DIQ(200,DUZ,.01)
+S FDA(200,IEN,2)=XUH D FILE^DIE("","FDA","ERR")
+I '$D(ASKINGVC)!'$$GET^XPAR("SYS","XU VC CASE SENSITIVE") S X=$$UP^XLFSTR(X)
 ```
 
-Press `F5` / **Launch Extension**, open a `.m` file in the Extension Development Host, and test syntax highlighting, snippets, Format Document, diagnostics, Outline, Ctrl+Hover/Ctrl+Click, `F12`/Peek Definition, Find References, `Ctrl+T` Workspace Symbols, hover, completion, signature help, semantic highlighting, remote workspace navigation, and the MForge Dark theme.
+Use Ctrl+Click, F12, or Peek Definition on labels, local variables, and routine references when the target is in the current document or indexed routine paths.
 
-### Reinstall local VSIX
+## Commands
 
-```bash
-code --uninstall-extension dopamind.mforge-mumps-vista-ide
-code --install-extension mforge-mumps-vista-ide-0.4.8.vsix
-```
-
-### Automatic routine path detection
-
-With `mforge.autoDetectRoutinePaths` enabled, MForge checks common WorldVistA/Hakeem paths such as `/var/worldvista/prod/hakeem/routines` and `/var/worldvista/prod/hakeem/localr`, plus workspace-relative folders such as `routines`, `localr`, `localroutines`, `r`, and `src/routines`. Detected folders are used internally and are not written to `settings.json` unless you explicitly run **MForge: Save Detected Routine Paths To Settings**.
-
-When `mforge.autoRebuildIndexOnActivation` is enabled, MForge waits briefly after activation, logs manual, auto-detected, and effective routine paths to the output channel, and rebuilds the routine index once. Use **MForge: Show Routine Index Status** to confirm key routines such as `UJOWXUS`, `XPAR`, `XLFSTR`, `DIE`, `DIQ`, `XLFDT`, `XUS4`, and `XTV` are indexed.
+| Command | Purpose |
+| --- | --- |
+| `MForge: Show Getting Started` | Opens a quick overview of MForge features and setup tips. |
+| `MForge: Rebuild Routine Index` | Rebuilds the routine index for workspace, detected, configured, and supported remote paths. |
+| `MForge: Show Routine Index Status` | Displays indexed routine counts, detected paths, configured paths, and index health details. |
+| `MForge: Find Routine In Index` | Searches the routine index for a routine name and opens the matching file. |
+| `MForge: Debug References In Current Line` | Shows parser and navigation reference details for the active line. |
+| `MForge: Save Detected Routine Paths To Settings` | Writes automatically detected routine folders to `mforge.routineSearchPaths`. |
 
 ## Configuration
 
 | Setting | Default | Description |
 | --- | --- | --- |
-| `mforge.trace.level` | `off` | Controls diagnostic and quiet debug logging for MForge extension features. |
-| `mforge.formatter.enabled` | `true` | Enables the conservative MForge document formatter. |
-| `mforge.diagnostics.enabled` | `true` | Enables basic MForge diagnostics for MUMPS files. |
-| `mforge.navigation.enabled` | `true` | Enables Stage 4.6 Document Links, Ctrl+Click/F12 definitions, Find References, document symbols, routine indexing, and Workspace Symbols. |
-| `mforge.hover.enabled` | `true` | Enables Stage 4 command, intrinsic, and system variable hover help. |
-| `mforge.completion.enabled` | `true` | Enables Stage 4 command, intrinsic, system variable, label, and routine completion. |
-| `mforge.signatureHelp.enabled` | `true` | Enables Stage 4 intrinsic function signature help. |
-| `mforge.semanticHighlighting.enabled` | `true` | Enables Stage 4.5 semantic highlighting. |
-| `mforge.maxWorkspaceFiles` | `2000` | Maximum supported routine files to scan lazily for the workspace index and configured routine search paths. |
-| `mforge.routineSearchPaths` | `[]` | Additional absolute or workspace-relative folders scanned for routines, such as `/var/worldvista/prod/hakeem/routines` and `/var/worldvista/prod/hakeem/localr`. |
-| `mforge.autoDetectRoutinePaths` | `true` | Automatically detects common VistA/YottaDB routine folders and uses them internally without editing user settings. |
-| `mforge.autoRebuildIndexOnActivation` | `true` | Automatically rebuilds the routine index shortly after activation when routine folders are detected. |
-| `mforge.indexExtensionlessRoutines` | `false` | Also index extensionless routine files for VistA/YottaDB exports that omit file extensions. |
-| `mforge.workspaceScanDebounceMs` | `250` | Debounce interval for file events before marking the workspace routine index dirty. |
+| `mforge.trace.level` | `off` | Controls diagnostic logging for MForge extension features. |
+| `mforge.formatter.enabled` | `true` | Enables the conservative MForge document formatter for MUMPS files. |
+| `mforge.diagnostics.enabled` | `true` | Enables basic diagnostics for MUMPS files. |
+| `mforge.navigation.enabled` | `true` | Enables document links, Ctrl+Click, definitions, references, routine indexing, document symbols, and workspace symbols. |
+| `mforge.hover.enabled` | `true` | Enables hover help for commands, intrinsic functions, and system variables. |
+| `mforge.completion.enabled` | `true` | Enables completion for commands, intrinsics, system variables, labels, and routines. |
+| `mforge.signatureHelp.enabled` | `true` | Enables intrinsic function signature help. |
+| `mforge.semanticHighlighting.enabled` | `true` | Enables semantic highlighting for MUMPS files. |
+| `mforge.maxWorkspaceFiles` | `2000` | Maximum number of MUMPS routine files to scan lazily in a workspace. |
+| `mforge.workspaceScanDebounceMs` | `250` | Debounce interval before marking the workspace routine index dirty after file events. |
+| `mforge.routineSearchPaths` | `[]` | Additional absolute or workspace-relative folders to scan for MUMPS routine files. |
+| `mforge.indexExtensionlessRoutines` | `false` | Indexes extensionless routine files for VistA/YottaDB exports when enabled. |
+| `mforge.autoDetectRoutinePaths` | `true` | Detects common VistA/YottaDB routine folders without modifying user settings. |
+| `mforge.autoRebuildIndexOnActivation` | `true` | Rebuilds the routine index shortly after activation when routine folders are detected. |
 
-Example settings:
-
-```jsonc
-{
-  "mforge.formatter.enabled": true,
-  "mforge.diagnostics.enabled": true,
-  "mforge.navigation.enabled": true,
-  "mforge.hover.enabled": true,
-  "mforge.completion.enabled": true,
-  "mforge.signatureHelp.enabled": true,
-  "mforge.semanticHighlighting.enabled": true,
-  "mforge.maxWorkspaceFiles": 2000,
-  "mforge.routineSearchPaths": [],
-  "mforge.autoDetectRoutinePaths": true,
-  "mforge.autoRebuildIndexOnActivation": true,
-  "mforge.indexExtensionlessRoutines": false,
-  "mforge.workspaceScanDebounceMs": 250,
-  "mforge.trace.level": "off"
-}
-```
-
-## Development commands
-
-Run from inside `Src`:
+## Local Development
 
 ```bash
-rm -rf node_modules
 npm install
-npm run env:check
 npm run compile
 npm run test
 npm run package
 ```
 
-Individual tests are available:
+## Release / Install Local VSIX
+
+Package locally from `Src/`, then install the generated VSIX:
 
 ```bash
-npm run test:stage2
-npm run test:stage3
-npm run test:stage4
-npm run test:stage45
-npm run test:stage46
+code --install-extension mforge-mumps-vista-ide-x.y.z.vsix
 ```
+
+For this release, the expected local VSIX name is:
+
+```bash
+code --install-extension mforge-mumps-vista-ide-0.4.10.vsix
+```
+
+## Troubleshooting
+
+### Extension not activated
+
+Open a supported MUMPS file such as `.m`, `.M`, `.int`, `.rou`, `.mps`, or `.mumps`. MForge activates on the `mumps` language and on its contributed commands.
+
+### Semantic token errors
+
+MForge uses VS Code-compatible semantic token IDs with letters, numbers, hyphens, and underscores only. If VS Code reports semantic token schema errors, reinstall the latest VSIX and confirm the installed extension is version 0.4.10 or newer.
+
+### Ctrl+Click does not work
+
+Run `MForge: Rebuild Routine Index`, confirm `mforge.navigation.enabled` is true, and check that the target routine is in the workspace, a configured `mforge.routineSearchPaths` entry, or an automatically detected routine folder.
+
+### Routine not indexed
+
+Run `MForge: Show Routine Index Status`. If the routine folder is outside your workspace, add it to `mforge.routineSearchPaths`. If your VistA export uses extensionless routines, enable `mforge.indexExtensionlessRoutines`.
+
+### Remote container indexing
+
+MForge uses VS Code URI and filesystem APIs for remote-safe indexing. In containers or Remote SSH sessions, prefer absolute in-container paths for `mforge.routineSearchPaths` and rebuild the routine index after path changes.
+
+### Performance on huge routine trees
+
+Increase `mforge.maxWorkspaceFiles` only as needed, keep search paths focused, and disable `mforge.indexExtensionlessRoutines` unless your routine tree requires extensionless files.
 
 ## Roadmap
 
-| Stage | Status | Notes |
-| --- | --- | --- |
-| Stage 0: Cleanup and setup | Done | Extension scaffold and metadata are in place. |
-| Stage 1: Core language support | Done | Syntax highlighting, language configuration, snippets, and docs are in place. |
-| Stage 2: Editing productivity | Done | Formatter, parser-assisted indentation, diagnostics, and tests are in place. |
-| Stage 3: Navigation | Done | Document Symbols, Go To Label/Routine, Workspace Symbols, routine index, tests, and docs are in place. |
-| Stage 4: Intelligence | Done | Hover, completion, signature help, documentation data, tests, and docs are in place. |
-| Stage 4.5: Professional syntax theme | Done | Improved scopes, semantic tokens, MForge Dark theme, tests, and docs are in place. |
-| Stage 4.6: Navigation stability | Done | Legacy extension audit, Ctrl+Click/F12/Peek, Document Links, Find References, remote URI support, lazy indexing, tests, and docs are in place. |
-| Stage 5+: Advanced analysis, runtime, VistA tools | Planned | Future work only. |
+### Stage 5 Planned
+
+- Find References
+- Rename Symbol
+- Call Hierarchy
+- Routine dependency analyzer
+- Code metrics
+- Routine explorer
+
+### Future
+
+- Debugger integration
+- GT.M/YottaDB runtime tooling
+- VistA RPC explorer
+- FileMan dictionary explorer
+- Global explorer
+
+## Author
+
+Created by Musab Alzoubi.
+
+GitHub: <https://github.com/MusabAlzoubi><br>
+LinkedIn: <https://www.linkedin.com/in/musabmalzoubi/>

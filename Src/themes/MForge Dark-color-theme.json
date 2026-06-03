@@ -142,29 +142,29 @@
     }
   ],
   "semanticTokenColors": {
-    "mumps.label": {
+    "mumps-label": {
       "foreground": "#F5D76E",
       "bold": true
     },
-    "mumps.command": {
+    "mumps-command": {
       "foreground": "#61AFEF",
       "bold": true
     },
-    "mumps.intrinsic": "#B678DD",
-    "mumps.global": "#56B6C2",
-    "mumps.systemVariable": "#4FC1FF",
-    "mumps.parameter": "#9CDCFE",
-    "mumps.localVariable": "#D4D4D4",
-    "mumps.api": {
+    "mumps-intrinsic": "#B678DD",
+    "mumps-global": "#56B6C2",
+    "mumps-system-variable": "#4FC1FF",
+    "mumps-parameter": "#9CDCFE",
+    "mumps-local-variable": "#D4D4D4",
+    "mumps-api": {
       "foreground": "#DCDCAA",
       "bold": true
     },
-    "mumps.routineReference": "#C586C0",
-    "mumps.navigableRoutineReference": {
+    "mumps-routine-reference": "#C586C0",
+    "mumps-navigable-routine-reference": {
       "foreground": "#E5C07B",
       "underline": true
     },
-    "mumps.unresolvedRoutineReference": {
+    "mumps-unresolved-routine-reference": {
       "foreground": "#C586C0",
       "italic": true
     }
