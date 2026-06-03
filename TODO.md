@@ -77,6 +77,7 @@
 - [x] Fix cursor-range matching and exact document-link ranges for inline routine references for 0.4.5.
 - [x] Add navigation debug commands, routine-top fallback, and semantic distinction for routine references for 0.4.6.
 - [x] Add routine search-path indexing, extensionless routine option, index diagnostics, and unresolved navigation guidance for 0.4.7.
+- [x] Add automatic routine path detection, activation-time index rebuild, routine-index status command, and optional save-detected-paths command for 0.4.8.
 
 ## Stage 5: Advanced analysis
 

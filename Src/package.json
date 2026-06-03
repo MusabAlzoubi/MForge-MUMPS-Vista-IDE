@@ -2,7 +2,7 @@
   "name": "mforge-mumps-vista-ide",
   "displayName": "MForge MUMPS & VistA IDE",
   "description": "Complete IDE toolkit for MUMPS and VistA development in Visual Studio Code.",
-  "version": "0.4.7",
+  "version": "0.4.8",
   "publisher": "dopamind",
   "license": "MIT",
   "repository": {
@@ -37,7 +37,9 @@
     "onCommand:mforge.showGettingStarted",
     "onCommand:mforge.debugReferencesInCurrentLine",
     "onCommand:mforge.rebuildRoutineIndex",
-    "onCommand:mforge.findRoutineInIndex"
+    "onCommand:mforge.findRoutineInIndex",
+    "onCommand:mforge.showRoutineIndexStatus",
+    "onCommand:mforge.saveDetectedRoutinePathsToSettings"
   ],
   "main": "./out/extension.js",
   "scripts": {
@@ -51,7 +53,7 @@
     "test": "npm run test:stage2 && npm run test:stage3 && npm run test:stage4 && npm run test:stage45 && npm run test:stage46",
     "package": "npm run env:check && npm run compile && npm run test && vsce package",
     "package:local": "npm run package",
-    "install:local": "code --install-extension mforge-mumps-vista-ide-0.4.7.vsix",
+    "install:local": "code --install-extension mforge-mumps-vista-ide-0.4.8.vsix",
     "test:stage4": "node scripts/test-stage4.js",
     "test:stage45": "node scripts/test-stage45.js",
     "test:stage46": "node scripts/test-stage46.js"
@@ -112,6 +114,14 @@
       {
         "command": "mforge.findRoutineInIndex",
         "title": "MForge: Find Routine In Index"
+      },
+      {
+        "command": "mforge.showRoutineIndexStatus",
+        "title": "MForge: Show Routine Index Status"
+      },
+      {
+        "command": "mforge.saveDetectedRoutinePathsToSettings",
+        "title": "MForge: Save Detected Routine Paths To Settings"
       }
     ],
     "configurationDefaults": {
@@ -194,6 +204,16 @@
           "type": "boolean",
           "default": false,
           "description": "Index extensionless routine files in workspace and mforge.routineSearchPaths. Enable for VistA/YottaDB exports that omit file extensions."
+        },
+        "mforge.autoDetectRoutinePaths": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically detects common VistA/YottaDB routine folders and adds them to the routine index without modifying user settings."
+        },
+        "mforge.autoRebuildIndexOnActivation": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically rebuilds the MUMPS routine index shortly after activation when routine folders are detected."
         }
       }
     },

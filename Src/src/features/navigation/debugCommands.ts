@@ -4,7 +4,7 @@ import { findMumpsReferencesInLine, referenceContainsPosition } from '../../pars
 import { MumpsReference } from '../../parser/types';
 import { MumpsRoutineIndex } from './routineIndex';
 
-const IMPORTANT_ROUTINES = ['UJOWXUS', 'UJOWXUS2', 'XPAR', 'XLFSTR', 'DIE', 'DIQ'];
+const IMPORTANT_ROUTINES = ['UJOWXUS', 'UJOWXUS2', 'XPAR', 'XLFSTR', 'DIE', 'DIQ', 'XLFDT', 'XUS4', 'XTV'];
 
 export function registerNavigationDebugCommands(context: vscode.ExtensionContext, routineIndex: MumpsRoutineIndex, output?: vscode.OutputChannel): void {
   context.subscriptions.push(
@@ -16,6 +16,12 @@ export function registerNavigationDebugCommands(context: vscode.ExtensionContext
     }),
     vscode.commands.registerCommand('mforge.findRoutineInIndex', async () => {
       await findRoutineInIndex(routineIndex, output);
+    }),
+    vscode.commands.registerCommand('mforge.showRoutineIndexStatus', async () => {
+      await showRoutineIndexStatus(routineIndex, output);
+    }),
+    vscode.commands.registerCommand('mforge.saveDetectedRoutinePathsToSettings', async () => {
+      await saveDetectedRoutinePathsToSettings(routineIndex, output);
     })
   );
 }
@@ -65,7 +71,11 @@ async function rebuildRoutineIndex(routineIndex: MumpsRoutineIndex, output?: vsc
   output?.appendLine(`[navigation-debug] Include patterns: ${diagnostics.includePatterns.join(', ') || '(none)'}`);
   output?.appendLine(`[navigation-debug] Exclude patterns: ${diagnostics.excludePattern}`);
   output?.appendLine(`[navigation-debug] mforge.maxWorkspaceFiles: ${diagnostics.maxWorkspaceFiles}`);
-  output?.appendLine(`[navigation-debug] mforge.routineSearchPaths: ${diagnostics.routineSearchPaths.join(', ') || '(none)'}`);
+  output?.appendLine(`[navigation-debug] manual routine paths: ${diagnostics.manualRoutineSearchPaths.join(', ') || '(none)'}`);
+  output?.appendLine(`[navigation-debug] auto-detected routine paths: ${diagnostics.autoDetectedRoutinePaths.join(', ') || '(none)'}`);
+  output?.appendLine(`[navigation-debug] effective routine paths: ${diagnostics.effectiveRoutineSearchPaths.join(', ') || '(none)'}`);
+  output?.appendLine(`[navigation-debug] mforge.autoDetectRoutinePaths: ${diagnostics.autoDetectRoutinePaths}`);
+  output?.appendLine(`[navigation-debug] mforge.autoRebuildIndexOnActivation: ${diagnostics.autoRebuildIndexOnActivation}`);
   output?.appendLine(`[navigation-debug] mforge.indexExtensionlessRoutines: ${diagnostics.indexExtensionlessRoutines}`);
   output?.appendLine(`[navigation-debug] Files discovered: workspace=${diagnostics.workspaceFilesDiscovered}, searchPaths=${diagnostics.searchPathFilesDiscovered}`);
   output?.appendLine(`[navigation-debug] Files skipped: extension=${diagnostics.skippedByExtension}, excludes=${diagnostics.skippedByExcludes}`);
@@ -107,6 +117,51 @@ async function findRoutineInIndex(routineIndex: MumpsRoutineIndex, output?: vsco
       output?.appendLine(`[navigation-debug] possible match: ${candidate.toString()}`);
     }
   }
+  output?.show();
+}
+
+async function showRoutineIndexStatus(routineIndex: MumpsRoutineIndex, output?: vscode.OutputChannel): Promise<void> {
+  await routineIndex.ensureBuilt();
+  const diagnostics = routineIndex.getLastDiagnostics();
+  const pathState = await routineIndex.getRoutinePathState(false);
+  output?.appendLine('[navigation-debug] MUMPS Routine Index Status');
+  output?.appendLine(`[navigation-debug] Indexed routines: ${routineIndex.getRoutines().length}`);
+  output?.appendLine(`[navigation-debug] Indexed labels: ${routineIndex.getLabelCount()}`);
+  output?.appendLine(`[navigation-debug] Last rebuild time: ${routineIndex.getLastRebuildTime() ?? '(not rebuilt yet)'}`);
+  output?.appendLine(`[navigation-debug] Auto-detection enabled: ${diagnostics.autoDetectRoutinePaths}`);
+  output?.appendLine(`[navigation-debug] Auto-rebuild on activation enabled: ${diagnostics.autoRebuildIndexOnActivation}`);
+  output?.appendLine(`[navigation-debug] Manual routine paths: ${pathState.manualPaths.join(', ') || '(none)'}`);
+  output?.appendLine(`[navigation-debug] Auto-detected routine paths: ${pathState.autoDetectedPaths.join(', ') || '(none)'}`);
+  output?.appendLine(`[navigation-debug] Effective routine paths: ${pathState.effectivePaths.join(', ') || '(none)'}`);
+  for (const name of IMPORTANT_ROUTINES) {
+    const routine = routineIndex.findRoutine(name);
+    output?.appendLine(`[navigation-debug] ${name}: ${routine ? `FOUND ${routine.uri.toString()} (${routine.labels.length} label(s))` : 'not indexed'}`);
+  }
+  output?.show();
+}
+
+async function saveDetectedRoutinePathsToSettings(routineIndex: MumpsRoutineIndex, output?: vscode.OutputChannel): Promise<void> {
+  const pathState = await routineIndex.getRoutinePathState(true);
+  if (pathState.autoDetectedPaths.length === 0) {
+    output?.appendLine('[navigation-debug] No auto-detected routine paths to save.');
+    output?.show();
+    return;
+  }
+
+  const merged = Array.from(new Set([...pathState.manualPaths, ...pathState.autoDetectedPaths]));
+  const selection = await vscode.window.showInformationMessage(
+    `Save ${pathState.autoDetectedPaths.length} detected MUMPS routine path(s) to mforge.routineSearchPaths?`,
+    'Save',
+    'Cancel'
+  );
+  if (selection !== 'Save') {
+    output?.appendLine('[navigation-debug] Save Detected Routine Paths To Settings cancelled.');
+    output?.show();
+    return;
+  }
+
+  await vscode.workspace.getConfiguration('mforge').update('routineSearchPaths', merged, vscode.ConfigurationTarget.Global);
+  output?.appendLine(`[navigation-debug] Saved routine paths to mforge.routineSearchPaths: ${merged.join(', ')}`);
   output?.show();
 }
 

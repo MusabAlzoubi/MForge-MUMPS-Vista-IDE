@@ -68,6 +68,10 @@ const xparUri = Uri.file('/extra/routines/XPAR.m');
 const xlfstrUri = Uri.file('/extra/routines/XLFSTR.m');
 const noLabelUri = Uri.file('/extra/routines/NOLABEL.m');
 const extensionlessUri = Uri.file('/extra/routines/EXTLESS');
+const xlfdtUri = Uri.file('/var/worldvista/prod/hakeem/routines/XLFDT.m');
+const xus4Uri = Uri.file('/var/worldvista/prod/hakeem/localr/XUS4.m');
+const xtvUri = Uri.file('/workspace/routines/XTV.m');
+const skippedObjectUri = Uri.file('/var/worldvista/prod/hakeem/objects/SKIPOBJ.m');
 const rou1Uri = remoteRoutineUri('ROU1');
 const rou2Uri = remoteRoutineUri('ROU2');
 const rou3Uri = remoteRoutineUri('ROU3');
@@ -86,6 +90,10 @@ const texts = new Map([
   [xlfstrUri.toString(), 'UP(X) Q X'],
   [noLabelUri.toString(), 'OTHER Q'],
   [extensionlessUri.toString(), 'ENTRY Q'],
+  [xlfdtUri.toString(), 'NOW() Q'],
+  [xus4Uri.toString(), 'VALID() Q'],
+  [xtvUri.toString(), 'TEST Q'],
+  [skippedObjectUri.toString(), 'BAD Q'],
   [rou1Uri.toString(), 'ONE() Q 1'],
   [rou2Uri.toString(), 'TWO Q 2'],
   [rou3Uri.toString(), 'THREE Q'],
@@ -105,7 +113,9 @@ const texts = new Map([
 const workspaceUris = [remoteUri, routineBUri, diqUri, xushshUri, rou1Uri, rou2Uri, rou3Uri];
 const settings = {
   'trace.level': 'debug',
-  routineSearchPaths: ['/extra/routines'],
+  routineSearchPaths: ['/extra/routines', '/workspace/routines'],
+  autoDetectRoutinePaths: true,
+  autoRebuildIndexOnActivation: true,
   indexExtensionlessRoutines: true,
   maxWorkspaceFiles: 2000
 };
@@ -119,9 +129,37 @@ const directoryEntries = new Map([
     ['NOLABEL.m', 1],
     ['EXTLESS', 1],
     ['README.txt', 1]
-  ]]
+  ]],
+  ['file:/var/worldvista/prod/hakeem/routines', [
+    ['XLFDT.m', 1]
+  ]],
+  ['file:/var/worldvista/prod/hakeem/localr', [
+    ['XUS4.m', 1]
+  ]],
+  ['file:/var/worldvista/prod/hakeem/localroutines', []],
+  ['file:/var/worldvista/prod/hakeem/r', []],
+  ['file:/var/worldvista/prod/hakeem/local', []],
+  ['file:/var/worldvista/prod/hakeem', [
+    ['routines', 2],
+    ['localr', 2],
+    ['objects', 2],
+    ['localo', 2]
+  ]],
+  ['file:/var/worldvista/prod/hakeem/objects', [
+    ['SKIPOBJ.m', 1]
+  ]],
+  ['file:/workspace/routines', [
+    ['XTV.m', 1]
+  ]],
+  ['file:/workspace/localr', []],
+  ['file:/workspace/localroutines', []],
+  ['file:/workspace/r', []],
+  ['file:/workspace/src/routines', []]
 ]);
 const outputLines = [];
+const updateCalls = [];
+const registeredCommands = new Map();
+let informationMessageResponse = 'Cancel';
 const output = { appendLine: (line) => outputLines.push(line), show: () => undefined, dispose: () => undefined };
 
 const originalLoad = Module._load;
@@ -143,9 +181,20 @@ Module._load = function patchedLoad(request, parent, isMain) {
           }
         },
         findFiles: async () => workspaceUris,
-        getConfiguration: () => ({ get: (name, fallback) => Object.prototype.hasOwnProperty.call(settings, name) ? settings[name] : fallback })
+        getConfiguration: () => ({
+          get: (name, fallback) => Object.prototype.hasOwnProperty.call(settings, name) ? settings[name] : fallback,
+          update: async (name, value, target) => updateCalls.push({ name, value, target })
+        })
       },
-      window: { showInputBox: async () => 'XPAR' }
+      window: {
+        showInputBox: async () => 'XPAR',
+        showInformationMessage: async () => informationMessageResponse
+      },
+      commands: {
+        registerCommand: (command, callback) => { registeredCommands.set(command, callback); return { dispose: () => undefined }; },
+        executeCommand: async (command, ...args) => registeredCommands.get(command)?.(...args)
+      },
+      ConfigurationTarget: { Global: 1, Workspace: 2, WorkspaceFolder: 3 }
     };
   }
   return originalLoad.call(this, request, parent, isMain);
@@ -157,6 +206,7 @@ const { MumpsDefinitionProvider } = require('../out/features/navigation/definiti
 const { MumpsDocumentLinkProvider } = require('../out/features/navigation/documentLinkProvider');
 const { MumpsReferenceProvider } = require('../out/features/navigation/referenceProvider');
 const { MumpsNavigationHoverProvider } = require('../out/features/navigation/navigationHoverProvider');
+const { registerNavigationDebugCommands } = require('../out/features/navigation/debugCommands');
 const { classifyMumpsSemanticTokens } = require('../out/features/semanticTokens/semanticTokenProvider');
 const { findMumpsReferenceAt, findMumpsReferencesInLine } = require('../out/parser/routineParser');
 
@@ -271,7 +321,32 @@ assert.equal(index.findRoutine('XPAR')?.uri.toString(), xparUri.toString(), 'con
 assert.equal(index.findRoutine('EXTLESS')?.uri.toString(), extensionlessUri.toString(), 'extensionless routines are indexed when mforge.indexExtensionlessRoutines is enabled');
 assert.equal(index.getLastDiagnostics().skippedByExtension >= 1, true, 'scan diagnostics count files skipped by unsupported extension');
 assert.equal(index.getLastDiagnostics().keyRoutineStatus.UJOWXUS2.includes('FOUND'), true, 'key routine diagnostics include UJOWXUS2 status');
+assert.equal(index.getLastDiagnostics().keyRoutineStatus.XLFDT.includes('FOUND'), true, 'key routine diagnostics include auto-detected XLFDT status');
+assert.equal(index.getLastDiagnostics().keyRoutineStatus.XUS4.includes('FOUND'), true, 'key routine diagnostics include auto-detected XUS4 status');
+assert.equal(index.getLastDiagnostics().keyRoutineStatus.XTV.includes('FOUND'), true, 'key routine diagnostics include workspace-relative XTV status');
 assert.equal(outputLines.some((line) => line.includes('Index contains UJOWXUS2')), true, 'debug logging includes UJOWXUS2 key routine status');
+const pathState = await index.getRoutinePathState(false);
+assert.equal(pathState.manualPaths.includes('/extra/routines'), true, 'manual routine paths remain part of the effective path state');
+assert.equal(pathState.autoDetectedPaths.includes('/var/worldvista/prod/hakeem/routines'), true, 'auto-detect finds common absolute WorldVistA routine path');
+assert.equal(pathState.autoDetectedPaths.includes('/workspace/routines'), true, 'auto-detect finds workspace-relative routines folder');
+assert.equal(pathState.effectivePaths.filter((entry) => entry === '/workspace/routines').length, 1, 'manual and auto-detected paths are deduplicated');
+assert.equal(index.findRoutine('SKIPOBJ'), undefined, 'objects/localo folders are excluded from auto-detected source folder scans');
+
+const autoOutputStart = outputLines.length;
+const autoIndex = new MumpsRoutineIndex(output);
+autoIndex.scheduleAutoRebuildOnActivation(0);
+autoIndex.scheduleAutoRebuildOnActivation(0);
+await new Promise((resolve) => setTimeout(resolve, 25));
+assert.equal(outputLines.slice(autoOutputStart).filter((line) => line.includes('Auto rebuilding MUMPS routine index after activation')).length, 1, 'auto rebuild is debounced to one activation rebuild');
+
+registerNavigationDebugCommands({ subscriptions: [] }, index, output);
+await registeredCommands.get('mforge.showRoutineIndexStatus')();
+assert.equal(outputLines.some((line) => line.includes('MUMPS Routine Index Status')), true, 'Show Routine Index Status logs a status header');
+assert.equal(outputLines.some((line) => line.includes('Effective routine paths:') && line.includes('/var/worldvista/prod/hakeem/routines')), true, 'Show Routine Index Status includes effective auto-detected paths');
+assert.equal(outputLines.some((line) => line.includes('XLFDT: FOUND')), true, 'Show Routine Index Status includes key XLFDT routine status');
+assert.equal(updateCalls.length, 0, 'Save Detected Routine Paths To Settings does not update settings unless the explicit command is run and confirmed');
+await registeredCommands.get('mforge.saveDetectedRoutinePathsToSettings')();
+assert.equal(updateCalls.length, 0, 'Save Detected Routine Paths To Settings respects cancellation');
 
 const definitionProvider = new MumpsDefinitionProvider(index);
 const line = localDoc.lineAt(0).text;

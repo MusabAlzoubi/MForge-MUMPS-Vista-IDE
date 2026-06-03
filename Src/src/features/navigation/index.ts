@@ -25,6 +25,7 @@ export function registerNavigationFeature(context: vscode.ExtensionContext, outp
   );
   registerNavigationDebugCommands(context, routineIndex, output);
   registerSymbolsFeature(context, routineIndex);
+  routineIndex.scheduleAutoRebuildOnActivation();
   return routineIndex;
 }
 

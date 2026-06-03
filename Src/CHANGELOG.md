@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.4.8 - 2026-06-03
+
+### Added
+
+- Added automatic routine path detection for common WorldVistA/Hakeem and workspace-relative routine folders, including `routines`, `localr`, `localroutines`, `r`, and `src/routines`.
+- Added `mforge.autoDetectRoutinePaths` and `mforge.autoRebuildIndexOnActivation` settings so MForge can detect routine folders and rebuild the index after activation without editing user settings.
+- Added **MForge: Show Routine Index Status** and **MForge: Save Detected Routine Paths To Settings** commands for routine-index troubleshooting and optional persistence of detected paths.
+- Added regression tests for automatic path detection, manual+auto path merging, excluded object folders, debounced activation rebuilds, status output, and save-command cancellation.
+
 ## 0.4.7 - 2026-06-03
 
 ### Fixed

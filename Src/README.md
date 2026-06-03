@@ -1,6 +1,6 @@
 # MForge MUMPS & VistA IDE
 
-MForge is a clean Visual Studio Code extension for MUMPS and VistA development. Current version: **0.4.7**.
+MForge is a clean Visual Studio Code extension for MUMPS and VistA development. Current version: **0.4.8**.
 
 ## Current status
 
@@ -47,8 +47,8 @@ See also:
 - Adds Workspace Symbols for routine names, label names, and `LABEL^ROUTINE` entries.
 - Adds Ctrl+Hover, Ctrl+Click, F12, Peek Definition, Document Links, and Find References for supported static label/routine references.
 - Adds basic same-document local variable definition navigation for `NEW` declarations and nearest prior `SET` assignments.
-- Adds **MForge: Rebuild Routine Index**, **MForge: Debug References In Current Line**, and **MForge: Find Routine In Index** troubleshooting commands for real-world navigation issues.
-- Supports `mforge.routineSearchPaths` for VistA routine folders outside the active workspace and optional extensionless routine indexing for YottaDB/GT.M exports.
+- Adds **MForge: Rebuild Routine Index**, **MForge: Debug References In Current Line**, **MForge: Find Routine In Index**, **MForge: Show Routine Index Status**, and **MForge: Save Detected Routine Paths To Settings** troubleshooting commands for real-world navigation issues.
+- Auto-detects common WorldVistA/Hakeem and workspace-relative routine folders, auto-rebuilds the routine index after activation, and still supports manual `mforge.routineSearchPaths` plus optional extensionless routine indexing for YottaDB/GT.M exports.
 - Adds a lightweight lazy routine index with configurable file limits, debounced dirty marking, URI-keyed caches, and default exclusions for `node_modules`, `.git`, `dist`, `out`, and `Old Extensions`.
 - Supports remote-safe navigation for `file:`, `vscode-remote:`, and MUMPS `untitled:` documents without assuming `fsPath` exists.
 - Ignores non-MUMPS, output, and `rendererLog` documents before parsing to avoid AST tracker noise and extension-host stalls.
@@ -88,10 +88,10 @@ npm run env:check
 npm run compile
 npm run test
 npm run package
-code --install-extension mforge-mumps-vista-ide-0.4.7.vsix
+code --install-extension mforge-mumps-vista-ide-0.4.8.vsix
 ```
 
-Expected VSIX filename for version 0.4.7: `mforge-mumps-vista-ide-0.4.7.vsix`. The exact VSIX filename is safer than `*.vsix` if your shell does not expand wildcards.
+Expected VSIX filename for version 0.4.8: `mforge-mumps-vista-ide-0.4.8.vsix`. The exact VSIX filename is safer than `*.vsix` if your shell does not expand wildcards.
 
 ### Packaging requirements and troubleshooting
 
@@ -105,7 +105,7 @@ Troubleshooting summary:
 - If `ReferenceError: File is not defined` appears, a Node-20-only dependency was installed. Remove `node_modules` and `package-lock.json`, verify `package.json` uses exact `"vsce": "2.11.0"` and override `"cheerio": "1.0.0-rc.12"`, then run `npm install` again.
 - If `env:check` expects the wrong version or reports `@vscode/vsce`, pull the latest changes and reinstall dependencies.
 - If the VSIX file is missing, packaging did not complete; do not run the install command until `npm run package` succeeds.
-- Avoid wildcard installs unless `mforge-mumps-vista-ide-0.4.7.vsix` exists.
+- Avoid wildcard installs unless `mforge-mumps-vista-ide-0.4.8.vsix` exists.
 
 
 ### Local Extension Development Host
@@ -121,8 +121,14 @@ Press `F5` / **Launch Extension**, open a `.m` file in the Extension Development
 
 ```bash
 code --uninstall-extension dopamind.mforge-mumps-vista-ide
-code --install-extension mforge-mumps-vista-ide-0.4.7.vsix
+code --install-extension mforge-mumps-vista-ide-0.4.8.vsix
 ```
+
+### Automatic routine path detection
+
+With `mforge.autoDetectRoutinePaths` enabled, MForge checks common WorldVistA/Hakeem paths such as `/var/worldvista/prod/hakeem/routines` and `/var/worldvista/prod/hakeem/localr`, plus workspace-relative folders such as `routines`, `localr`, `localroutines`, `r`, and `src/routines`. Detected folders are used internally and are not written to `settings.json` unless you explicitly run **MForge: Save Detected Routine Paths To Settings**.
+
+When `mforge.autoRebuildIndexOnActivation` is enabled, MForge waits briefly after activation, logs manual, auto-detected, and effective routine paths to the output channel, and rebuilds the routine index once. Use **MForge: Show Routine Index Status** to confirm key routines such as `UJOWXUS`, `XPAR`, `XLFSTR`, `DIE`, `DIQ`, `XLFDT`, `XUS4`, and `XTV` are indexed.
 
 ## Configuration
 
@@ -138,6 +144,8 @@ code --install-extension mforge-mumps-vista-ide-0.4.7.vsix
 | `mforge.semanticHighlighting.enabled` | `true` | Enables Stage 4.5 semantic highlighting. |
 | `mforge.maxWorkspaceFiles` | `2000` | Maximum supported routine files to scan lazily for the workspace index and configured routine search paths. |
 | `mforge.routineSearchPaths` | `[]` | Additional absolute or workspace-relative folders scanned for routines, such as `/var/worldvista/prod/hakeem/routines` and `/var/worldvista/prod/hakeem/localr`. |
+| `mforge.autoDetectRoutinePaths` | `true` | Automatically detects common VistA/YottaDB routine folders and uses them internally without editing user settings. |
+| `mforge.autoRebuildIndexOnActivation` | `true` | Automatically rebuilds the routine index shortly after activation when routine folders are detected. |
 | `mforge.indexExtensionlessRoutines` | `false` | Also index extensionless routine files for VistA/YottaDB exports that omit file extensions. |
 | `mforge.workspaceScanDebounceMs` | `250` | Debounce interval for file events before marking the workspace routine index dirty. |
 
@@ -153,10 +161,9 @@ Example settings:
   "mforge.signatureHelp.enabled": true,
   "mforge.semanticHighlighting.enabled": true,
   "mforge.maxWorkspaceFiles": 2000,
-  "mforge.routineSearchPaths": [
-    "/var/worldvista/prod/hakeem/routines",
-    "/var/worldvista/prod/hakeem/localr"
-  ],
+  "mforge.routineSearchPaths": [],
+  "mforge.autoDetectRoutinePaths": true,
+  "mforge.autoRebuildIndexOnActivation": true,
   "mforge.indexExtensionlessRoutines": false,
   "mforge.workspaceScanDebounceMs": 250,
   "mforge.trace.level": "off"

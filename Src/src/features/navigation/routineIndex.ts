@@ -5,13 +5,25 @@ import { parseMumpsRoutine } from '../../parser/routineParser';
 import { MumpsLabel, RoutineParseResult } from '../../parser/types';
 
 const DEFAULT_MAX_WORKSPACE_FILES = 2000;
-const EXCLUDED_SEGMENTS = new Set(['node_modules', '.git', 'dist', 'out', 'Old Extensions']);
+const EXCLUDED_SEGMENTS = new Set(['node_modules', '.git', 'dist', 'out', 'Old Extensions', 'objects', 'objects_org', 'localo', 'localo_org']);
 const EXTENSIONS = new Set<string>(SUPPORTED_EXTENSIONS.map((extension) => extension.toLowerCase()));
 const WATCHER_DEBOUNCE_MS = 250;
 const WORKSPACE_ROUTINE_GLOB = '**/*.{m,M,mumps,mps,rou,int}';
 const WORKSPACE_EXTENSIONLESS_GLOB = '**/*';
-const EXCLUDE_GLOB = '{**/node_modules/**,**/.git/**,**/dist/**,**/out/**,**/Old Extensions/**}';
-const KEY_ROUTINES = ['UJOWXUS', 'UJOWXUS2', 'XPAR', 'XLFSTR', 'DIE', 'DIQ'];
+const EXCLUDE_GLOB = '{**/node_modules/**,**/.git/**,**/dist/**,**/out/**,**/Old Extensions/**,**/objects/**,**/objects_org/**,**/localo/**,**/localo_org/**}';
+const KEY_ROUTINES = ['UJOWXUS', 'UJOWXUS2', 'XPAR', 'XLFSTR', 'DIE', 'DIQ', 'XLFDT', 'XUS4', 'XTV'];
+const AUTO_ABSOLUTE_ROUTINE_PATHS = [
+  '/var/worldvista/prod/hakeem/routines',
+  '/var/worldvista/prod/hakeem/localr',
+  '/var/worldvista/prod/hakeem/localroutines',
+  '/var/worldvista/prod/hakeem/r',
+  '/var/worldvista/prod/hakeem/local',
+  '/var/worldvista/prod/hakeem'
+];
+const AUTO_WORKSPACE_RELATIVE_ROUTINE_PATHS = ['routines', 'localr', 'localroutines', 'r', 'src/routines'];
+const AUTO_REBUILD_DELAY_MS = 1500;
+const AUTO_DETECT_SCAN_LIMIT = 200;
+const AUTO_DETECT_MAX_DEPTH = 3;
 const FILE_TYPE_FILE = 1;
 const FILE_TYPE_DIRECTORY = 2;
 
@@ -39,7 +51,13 @@ export interface RoutineIndexDiagnostics {
   excludePattern: string;
   maxWorkspaceFiles: number;
   routineSearchPaths: string[];
+  manualRoutineSearchPaths: string[];
+  autoDetectedRoutinePaths: string[];
+  effectiveRoutineSearchPaths: string[];
+  autoDetectRoutinePaths: boolean;
+  autoRebuildIndexOnActivation: boolean;
   indexExtensionlessRoutines: boolean;
+  lastRebuildTime: string | null;
   workspaceFilesDiscovered: number;
   searchPathFilesDiscovered: number;
   skippedByExtension: number;
@@ -124,6 +142,9 @@ export class MumpsRoutineIndex implements vscode.Disposable {
   private dirtyTimer: ReturnType<typeof setTimeout> | null = null;
   private buildPromise: Promise<void> | null = null;
   private rebuildGeneration = 0;
+  private autoRebuildTimer: ReturnType<typeof setTimeout> | null = null;
+  private autoDetectedRoutinePathUris: vscode.Uri[] = [];
+  private lastRebuildTime: string | null = null;
   private lastDiagnostics: RoutineIndexDiagnostics = createEmptyDiagnostics();
 
   constructor(private readonly output?: vscode.OutputChannel) {}
@@ -132,6 +153,9 @@ export class MumpsRoutineIndex implements vscode.Disposable {
     this.watcher?.dispose();
     if (this.dirtyTimer) {
       clearTimeout(this.dirtyTimer);
+    }
+    if (this.autoRebuildTimer) {
+      clearTimeout(this.autoRebuildTimer);
     }
   }
 
@@ -153,12 +177,24 @@ export class MumpsRoutineIndex implements vscode.Disposable {
           event.affectsConfiguration('mforge.maxWorkspaceFiles') ||
           event.affectsConfiguration('mforge.workspaceScanDebounceMs') ||
           event.affectsConfiguration('mforge.routineSearchPaths') ||
+          event.affectsConfiguration('mforge.autoDetectRoutinePaths') ||
+          event.affectsConfiguration('mforge.autoRebuildIndexOnActivation') ||
           event.affectsConfiguration('mforge.indexExtensionlessRoutines')
         ) {
+          this.autoDetectedRoutinePathUris = [];
           this.markDirty();
+          this.scheduleAutoRebuildOnActivation();
         }
       })
     );
+
+    if (typeof vscode.workspace.onDidChangeWorkspaceFolders === 'function') {
+      context.subscriptions.push(vscode.workspace.onDidChangeWorkspaceFolders(() => {
+        this.autoDetectedRoutinePathUris = [];
+        this.markDirty();
+        this.scheduleAutoRebuildOnActivation();
+      }));
+    }
 
     for (const document of vscode.workspace.textDocuments) {
       this.indexOpenDocument(document);
@@ -194,6 +230,32 @@ export class MumpsRoutineIndex implements vscode.Disposable {
 
   getLastDiagnostics(): RoutineIndexDiagnostics {
     return this.lastDiagnostics;
+  }
+
+  getLastRebuildTime(): string | null {
+    return this.lastRebuildTime;
+  }
+
+  scheduleAutoRebuildOnActivation(delayMs = AUTO_REBUILD_DELAY_MS): void {
+    if (!getAutoRebuildIndexOnActivation()) {
+      return;
+    }
+    if (this.autoRebuildTimer) {
+      clearTimeout(this.autoRebuildTimer);
+    }
+    this.autoRebuildTimer = setTimeout(async () => {
+      this.autoRebuildTimer = null;
+      const pathState = await this.getRoutinePathState(true);
+      if (pathState.effectivePaths.length === 0) {
+        this.output?.appendLine('[navigation] Auto routine path detection found no routine folders; lazy workspace indexing remains available.');
+        return;
+      }
+      this.output?.appendLine('[navigation] Auto rebuilding MUMPS routine index after activation.');
+      this.output?.appendLine(`[navigation] Manual routine paths: ${pathState.manualPaths.join(', ') || '(none)'}`);
+      this.output?.appendLine(`[navigation] Auto-detected routine paths: ${pathState.autoDetectedPaths.join(', ') || '(none)'}`);
+      this.output?.appendLine(`[navigation] Effective routine paths: ${pathState.effectivePaths.join(', ') || '(none)'}`);
+      await this.rebuild();
+    }, delayMs);
   }
 
   markDirtyDebounced(): void {
@@ -274,14 +336,19 @@ export class MumpsRoutineIndex implements vscode.Disposable {
     const generation = ++this.rebuildGeneration;
     const maxFiles = getMaxWorkspaceFiles();
     const includeExtensionless = getIndexExtensionlessRoutines();
-    const searchPaths = getRoutineSearchPaths();
+    const pathState = await this.getRoutinePathState(true);
     const includePattern = includeExtensionless ? WORKSPACE_EXTENSIONLESS_GLOB : WORKSPACE_ROUTINE_GLOB;
     const diagnostics = createEmptyDiagnostics();
     diagnostics.workspaceFolders = getWorkspaceFolders().map((folder) => folder.uri.toString());
-    diagnostics.includePatterns = [includePattern, ...searchPaths.map((configuredPath) => `${configuredPath}/**/*`)];
+    diagnostics.includePatterns = [includePattern, ...pathState.effectivePaths.map((configuredPath) => `${configuredPath}/**/*`)];
     diagnostics.excludePattern = EXCLUDE_GLOB;
     diagnostics.maxWorkspaceFiles = maxFiles;
-    diagnostics.routineSearchPaths = searchPaths;
+    diagnostics.routineSearchPaths = pathState.effectivePaths;
+    diagnostics.manualRoutineSearchPaths = pathState.manualPaths;
+    diagnostics.autoDetectedRoutinePaths = pathState.autoDetectedPaths;
+    diagnostics.effectiveRoutineSearchPaths = pathState.effectivePaths;
+    diagnostics.autoDetectRoutinePaths = getAutoDetectRoutinePaths();
+    diagnostics.autoRebuildIndexOnActivation = getAutoRebuildIndexOnActivation();
     diagnostics.indexExtensionlessRoutines = includeExtensionless;
 
     const seenUris = new Set<string>();
@@ -314,6 +381,8 @@ export class MumpsRoutineIndex implements vscode.Disposable {
       this.indexOpenDocument(document);
     }
     diagnostics.indexedFiles = this.routines.size;
+    this.lastRebuildTime = new Date().toISOString();
+    diagnostics.lastRebuildTime = this.lastRebuildTime;
     diagnostics.keyRoutineStatus = this.createKeyRoutineStatus();
     this.lastDiagnostics = diagnostics;
     this.built = true;
@@ -363,7 +432,7 @@ export class MumpsRoutineIndex implements vscode.Disposable {
   }
 
   private async findConfiguredRoutineUris(maxFiles: number, diagnostics: RoutineIndexDiagnostics): Promise<vscode.Uri[]> {
-    const roots = getConfiguredRoutineSearchRoots();
+    const roots = await this.getEffectiveRoutineSearchRootUris(false);
     const results: vscode.Uri[] = [];
     const seen = new Set<string>();
     for (const root of roots) {
@@ -373,6 +442,72 @@ export class MumpsRoutineIndex implements vscode.Disposable {
       }
     }
     return results;
+  }
+
+  async getRoutinePathState(refreshAuto = false): Promise<{ manualPaths: string[]; autoDetectedPaths: string[]; effectivePaths: string[] }> {
+    const manualUris = getManualRoutineSearchRoots();
+    const autoUris = getAutoDetectRoutinePaths() ? (refreshAuto || this.autoDetectedRoutinePathUris.length === 0 ? await this.detectAutoRoutinePaths() : this.autoDetectedRoutinePathUris) : [];
+    const effectiveUris = dedupeUris([...manualUris, ...autoUris]);
+    return {
+      manualPaths: manualUris.map(displayRoutinePath),
+      autoDetectedPaths: autoUris.map(displayRoutinePath),
+      effectivePaths: effectiveUris.map(displayRoutinePath)
+    };
+  }
+
+  async detectAutoRoutinePaths(): Promise<vscode.Uri[]> {
+    if (!getAutoDetectRoutinePaths()) {
+      this.autoDetectedRoutinePathUris = [];
+      return [];
+    }
+    const includeExtensionless = getIndexExtensionlessRoutines();
+    const candidates = getAutoRoutinePathCandidates();
+    const detected: vscode.Uri[] = [];
+    for (const candidate of candidates) {
+      if (await this.directoryContainsRoutineFile(candidate, includeExtensionless)) {
+        detected.push(candidate);
+      }
+    }
+    this.autoDetectedRoutinePathUris = dedupeUris(detected);
+    if (this.autoDetectedRoutinePathUris.length > 0) {
+      this.output?.appendLine(`[navigation] Auto-detected routine paths: ${this.autoDetectedRoutinePathUris.map(displayRoutinePath).join(', ')}`);
+    }
+    return this.autoDetectedRoutinePathUris;
+  }
+
+  private async getEffectiveRoutineSearchRootUris(refreshAuto: boolean): Promise<vscode.Uri[]> {
+    const pathState = await this.getRoutinePathState(refreshAuto);
+    return pathState.effectivePaths.map(pathToRoutineUri);
+  }
+
+  private async directoryContainsRoutineFile(root: vscode.Uri, includeExtensionless: boolean, depth = 0, visited = { count: 0 }): Promise<boolean> {
+    if (depth > AUTO_DETECT_MAX_DEPTH || visited.count >= AUTO_DETECT_SCAN_LIMIT || shouldIgnoreRoutinePath(uriPathLike(root))) {
+      return false;
+    }
+    try {
+      const entries = await vscode.workspace.fs.readDirectory(root);
+      for (const [name, type] of entries) {
+        if (visited.count >= AUTO_DETECT_SCAN_LIMIT) {
+          return false;
+        }
+        const child = vscode.Uri.joinPath(root, name);
+        const childPath = uriPathLike(child);
+        if (shouldIgnoreRoutinePath(childPath)) {
+          continue;
+        }
+        visited.count += 1;
+        if ((type & FILE_TYPE_FILE) === FILE_TYPE_FILE || type === 0) {
+          if (isSupportedRoutineFile(childPath, includeExtensionless)) {
+            return true;
+          }
+        } else if ((type & FILE_TYPE_DIRECTORY) === FILE_TYPE_DIRECTORY && await this.directoryContainsRoutineFile(child, includeExtensionless, depth + 1, visited)) {
+          return true;
+        }
+      }
+    } catch (error) {
+      this.debug(`Auto-detect skipped ${root.toString()}: ${String(error)}`);
+    }
+    return false;
   }
 
   private async collectDirectoryUris(
@@ -389,6 +524,10 @@ export class MumpsRoutineIndex implements vscode.Disposable {
       const entries = await vscode.workspace.fs.readDirectory(root);
       for (const [name, type] of entries) {
         const child = vscode.Uri.joinPath(root, name);
+        if (shouldIgnoreRoutinePath(uriPathLike(child))) {
+          diagnostics.skippedByExcludes += 1;
+          continue;
+        }
         if ((type & FILE_TYPE_DIRECTORY) === FILE_TYPE_DIRECTORY) {
           await this.collectDirectoryUris(child, results, seen, diagnostics, maxFiles);
         } else if ((type & FILE_TYPE_FILE) === FILE_TYPE_FILE || type === 0) {
@@ -438,7 +577,11 @@ export class MumpsRoutineIndex implements vscode.Disposable {
     this.output?.appendLine(`[navigation] Include patterns: ${diagnostics.includePatterns.join(', ')}`);
     this.output?.appendLine(`[navigation] Exclude pattern: ${diagnostics.excludePattern}`);
     this.output?.appendLine(`[navigation] mforge.maxWorkspaceFiles: ${diagnostics.maxWorkspaceFiles}`);
-    this.output?.appendLine(`[navigation] mforge.routineSearchPaths: ${diagnostics.routineSearchPaths.join(', ') || '(none)'}`);
+    this.output?.appendLine(`[navigation] mforge.routineSearchPaths (manual): ${diagnostics.manualRoutineSearchPaths.join(', ') || '(none)'}`);
+    this.output?.appendLine(`[navigation] auto-detected routine paths: ${diagnostics.autoDetectedRoutinePaths.join(', ') || '(none)'}`);
+    this.output?.appendLine(`[navigation] effective routine paths: ${diagnostics.effectiveRoutineSearchPaths.join(', ') || '(none)'}`);
+    this.output?.appendLine(`[navigation] mforge.autoDetectRoutinePaths: ${diagnostics.autoDetectRoutinePaths}`);
+    this.output?.appendLine(`[navigation] mforge.autoRebuildIndexOnActivation: ${diagnostics.autoRebuildIndexOnActivation}`);
     this.output?.appendLine(`[navigation] mforge.indexExtensionlessRoutines: ${diagnostics.indexExtensionlessRoutines}`);
     this.output?.appendLine(`[navigation] First routines: ${routines.slice(0, 20).map((routine) => routine.name).join(', ') || '(none)'}`);
     if (diagnostics.duplicateRoutineNameList.length > 0) {
@@ -472,9 +615,17 @@ function getWorkspaceScanDebounceMs(): number {
   return Number.isFinite(configured) && configured >= 0 ? Math.floor(configured) : WATCHER_DEBOUNCE_MS;
 }
 
-function getRoutineSearchPaths(): string[] {
+function getManualRoutineSearchPaths(): string[] {
   const configured = vscode.workspace.getConfiguration('mforge').get<string[]>('routineSearchPaths', []);
   return Array.isArray(configured) ? configured.filter((entry) => typeof entry === 'string' && entry.trim().length > 0).map((entry) => entry.trim()) : [];
+}
+
+function getAutoDetectRoutinePaths(): boolean {
+  return vscode.workspace.getConfiguration('mforge').get<boolean>('autoDetectRoutinePaths', true);
+}
+
+function getAutoRebuildIndexOnActivation(): boolean {
+  return vscode.workspace.getConfiguration('mforge').get<boolean>('autoRebuildIndexOnActivation', true);
 }
 
 function getIndexExtensionlessRoutines(): boolean {
@@ -485,10 +636,10 @@ function getWorkspaceFolders(): readonly vscode.WorkspaceFolder[] {
   return vscode.workspace.workspaceFolders ?? [];
 }
 
-function getConfiguredRoutineSearchRoots(): vscode.Uri[] {
+function getManualRoutineSearchRoots(): vscode.Uri[] {
   const folders = getWorkspaceFolders();
   const roots: vscode.Uri[] = [];
-  for (const configuredPath of getRoutineSearchPaths()) {
+  for (const configuredPath of getManualRoutineSearchPaths()) {
     if (/^[a-z][a-z0-9+.-]*:/iu.test(configuredPath) && typeof vscode.Uri.parse === 'function') {
       roots.push(vscode.Uri.parse(configuredPath));
     } else if (path.isAbsolute(configuredPath)) {
@@ -501,7 +652,44 @@ function getConfiguredRoutineSearchRoots(): vscode.Uri[] {
       roots.push(vscode.Uri.file(path.resolve(configuredPath)));
     }
   }
-  return roots;
+  return dedupeUris(roots);
+}
+
+function getAutoRoutinePathCandidates(): vscode.Uri[] {
+  const candidates = AUTO_ABSOLUTE_ROUTINE_PATHS.map((candidate) => vscode.Uri.file(candidate));
+  for (const folder of getWorkspaceFolders()) {
+    for (const relativePath of AUTO_WORKSPACE_RELATIVE_ROUTINE_PATHS) {
+      candidates.push(vscode.Uri.joinPath(folder.uri, relativePath));
+    }
+  }
+  return dedupeUris(candidates);
+}
+
+function pathToRoutineUri(value: string): vscode.Uri {
+  if (/^[a-z][a-z0-9+.-]*:/iu.test(value) && typeof vscode.Uri.parse === 'function') {
+    return vscode.Uri.parse(value);
+  }
+  return vscode.Uri.file(value);
+}
+
+function displayRoutinePath(uri: vscode.Uri): string {
+  if (uri.scheme === 'file') {
+    return uriPathLike(uri);
+  }
+  return uri.toString();
+}
+
+function dedupeUris(uris: vscode.Uri[]): vscode.Uri[] {
+  const seen = new Set<string>();
+  const result: vscode.Uri[] = [];
+  for (const uri of uris) {
+    const key = uriKey(uri).toUpperCase();
+    if (!seen.has(key)) {
+      seen.add(key);
+      result.push(uri);
+    }
+  }
+  return result;
 }
 
 function createEmptyDiagnostics(): RoutineIndexDiagnostics {
@@ -511,7 +699,13 @@ function createEmptyDiagnostics(): RoutineIndexDiagnostics {
     excludePattern: EXCLUDE_GLOB,
     maxWorkspaceFiles: DEFAULT_MAX_WORKSPACE_FILES,
     routineSearchPaths: [],
+    manualRoutineSearchPaths: [],
+    autoDetectedRoutinePaths: [],
+    effectiveRoutineSearchPaths: [],
+    autoDetectRoutinePaths: true,
+    autoRebuildIndexOnActivation: true,
     indexExtensionlessRoutines: false,
+    lastRebuildTime: null,
     workspaceFilesDiscovered: 0,
     searchPathFilesDiscovered: 0,
     skippedByExtension: 0,

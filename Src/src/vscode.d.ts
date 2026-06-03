@@ -83,8 +83,15 @@ declare module 'vscode' {
     affectsConfiguration(section: string): boolean;
   }
 
+  export enum ConfigurationTarget {
+    Global = 1,
+    Workspace = 2,
+    WorkspaceFolder = 3
+  }
+
   export interface WorkspaceConfiguration {
     get<T>(section: string, defaultValue: T): T;
+    update(section: string, value: unknown, configurationTarget?: ConfigurationTarget | boolean): Thenable<void>;
   }
 
   export interface WorkspaceFolder {
@@ -342,5 +349,6 @@ declare module 'vscode' {
     export function onDidSaveTextDocument(listener: (document: TextDocument) => unknown): Disposable;
     export function onDidCloseTextDocument(listener: (document: TextDocument) => unknown): Disposable;
     export function onDidChangeConfiguration(listener: (event: ConfigurationChangeEvent) => unknown): Disposable;
+    export const onDidChangeWorkspaceFolders: ((listener: () => unknown) => Disposable) | undefined;
   }
 }
