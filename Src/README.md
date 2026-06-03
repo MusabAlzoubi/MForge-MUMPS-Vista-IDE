@@ -1,6 +1,6 @@
 # MForge MUMPS & VistA IDE
 
-MForge is a clean Visual Studio Code extension for MUMPS and VistA development. Current version: **0.4.2**.
+MForge is a clean Visual Studio Code extension for MUMPS and VistA development. Current version: **0.4.3**.
 
 ## Current status
 
@@ -85,10 +85,10 @@ npm run env:check
 npm run compile
 npm run test
 npm run package
-code --install-extension mforge-mumps-vista-ide-0.4.2.vsix
+code --install-extension mforge-mumps-vista-ide-0.4.3.vsix
 ```
 
-Expected VSIX filename for version 0.4.2: `mforge-mumps-vista-ide-0.4.2.vsix`. The exact VSIX filename is safer than `*.vsix` if your shell does not expand wildcards.
+Expected VSIX filename for version 0.4.3: `mforge-mumps-vista-ide-0.4.3.vsix`. The exact VSIX filename is safer than `*.vsix` if your shell does not expand wildcards.
 
 ### Packaging requirements and troubleshooting
 
@@ -101,7 +101,7 @@ Troubleshooting summary:
 - If `ReferenceError: File is not defined` appears, a Node-20-only dependency was installed. Remove `node_modules` and `package-lock.json`, verify `package.json` uses exact `"vsce": "2.11.0"` and override `"cheerio": "1.0.0-rc.12"`, then run `npm install` again.
 - If `env:check` expects the wrong version or reports `@vscode/vsce`, pull the latest changes and reinstall dependencies.
 - If the VSIX file is missing, packaging did not complete; do not run the install command until `npm run package` succeeds.
-- Avoid wildcard installs unless `mforge-mumps-vista-ide-0.4.2.vsix` exists.
+- Avoid wildcard installs unless `mforge-mumps-vista-ide-0.4.3.vsix` exists.
 
 
 ### Local Extension Development Host
@@ -117,7 +117,7 @@ Press `F5` / **Launch Extension**, open a `.m` file in the Extension Development
 
 ```bash
 code --uninstall-extension dopamind.mforge-mumps-vista-ide
-code --install-extension mforge-mumps-vista-ide-0.4.2.vsix
+code --install-extension mforge-mumps-vista-ide-0.4.3.vsix
 ```
 
 ## Configuration

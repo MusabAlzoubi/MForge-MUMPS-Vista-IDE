@@ -72,6 +72,7 @@
 - [x] Add lazy indexing, parse/document cache, and debounced dirty marking.
 - [x] Add Stage 4.6 fixture tests.
 - [x] Update navigation documentation and version to 0.4.2.
+- [x] Fix inline command and no-parentheses extrinsic reference parsing for 0.4.3.
 
 ## Stage 5: Advanced analysis
 

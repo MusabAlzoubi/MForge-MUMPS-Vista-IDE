@@ -1,3 +1,4 @@
+import { isKnownMumpsCommand, normalizeMumpsCommand } from './mumpsCommands';
 import { parseMumpsDocument, parseMumpsLine } from './mumpsLineParser';
 import { MumpsLabel, MumpsReference, ParsedMumpsLine, RoutineParseResult } from './types';
 
@@ -73,77 +74,105 @@ export function findMumpsReferencesInLine(lineText: string): MumpsReference[] {
       continue;
     }
 
-    const char = code[index];
-    if (char === '^') {
-      const routine = readReferenceName(code, index + 1);
-      if (!routine || !isRoutineName(routine.text)) {
-        continue;
-      }
-
-      const label = readLabelBeforeRoutine(code, index);
-      references.push({
-        label: label?.text ?? null,
-        routine: routine.text,
-        startCharacter: label?.start ?? index,
-        endCharacter: routine.end,
-        routineStartCharacter: routine.start,
-        routineEndCharacter: routine.end,
-        labelStartCharacter: label?.start ?? null,
-        labelEndCharacter: label?.end ?? null,
-        raw: code.slice(label?.start ?? index, routine.end)
-      });
-      continue;
-    }
-
-    if (isDoOrGotoCommandAt(code, index, parsed)) {
-      const operandStart = skipSpaces(code, index + readCommandLength(code, index));
-      collectLocalCommandReferences(code, operandStart, references, parsed);
-      index = operandStart;
-      continue;
-    }
-
     if (code.startsWith('$$', index)) {
-      const label = readReferenceName(code, index + 2);
-      if (label) {
-        const routineStart = code[label.end] === '^' ? label.end + 1 : null;
-        const routine = routineStart === null ? null : readReferenceName(code, routineStart);
-        references.push({
-          label: label.text,
-          routine: routine?.text ?? null,
-          startCharacter: index,
-          endCharacter: routine?.end ?? label.end,
-          labelStartCharacter: label.start,
-          labelEndCharacter: label.end,
-          routineStartCharacter: routine?.start ?? null,
-          routineEndCharacter: routine?.end ?? null,
-          raw: code.slice(index, routine?.end ?? label.end)
-        });
-        index = routine?.end ?? label.end;
+      const reference = readExtrinsicReference(code, index);
+      if (reference) {
+        references.push(reference);
+        index = reference.endCharacter - 1;
       }
+      continue;
+    }
+
+    if (code[index] === '^') {
+      const reference = readCaretRoutineReference(code, index);
+      if (reference) {
+        references.push(reference);
+        index = reference.endCharacter - 1;
+      }
+      continue;
+    }
+
+    if (isDoOrGotoCommandTokenAt(code, index, parsed)) {
+      const operandStart = skipSpaces(code, index + readCommandLength(code, index));
+      collectCommandLabelReferences(code, operandStart, references, parsed);
     }
   }
 
-  return references;
+  return dedupeReferences(references);
 }
 
-function collectLocalCommandReferences(code: string, start: number, references: MumpsReference[], parsed: ParsedMumpsLine): void {
+function readExtrinsicReference(code: string, start: number): MumpsReference | null {
+  const label = readReferenceName(code, start + 2);
+  if (!label) {
+    return null;
+  }
+
+  const routineStart = code[label.end] === '^' ? label.end + 1 : null;
+  const routine = routineStart === null ? null : readReferenceName(code, routineStart);
+  return {
+    label: label.text,
+    routine: routine?.text ?? null,
+    startCharacter: start,
+    endCharacter: routine?.end ?? label.end,
+    labelStartCharacter: label.start,
+    labelEndCharacter: label.end,
+    routineStartCharacter: routine?.start ?? null,
+    routineEndCharacter: routine?.end ?? null,
+    raw: code.slice(start, routine?.end ?? label.end)
+  };
+}
+
+function readCaretRoutineReference(code: string, caretIndex: number): MumpsReference | null {
+  const routine = readReferenceName(code, caretIndex + 1);
+  if (!routine || !isRoutineName(routine.text)) {
+    return null;
+  }
+
+  const label = readLabelBeforeRoutine(code, caretIndex);
+  return {
+    label: label?.text ?? null,
+    routine: routine.text,
+    startCharacter: label?.start ?? caretIndex,
+    endCharacter: routine.end,
+    routineStartCharacter: routine.start,
+    routineEndCharacter: routine.end,
+    labelStartCharacter: label?.start ?? null,
+    labelEndCharacter: label?.end ?? null,
+    raw: code.slice(label?.start ?? caretIndex, routine.end)
+  };
+}
+
+function collectCommandLabelReferences(code: string, start: number, references: MumpsReference[], parsed: ParsedMumpsLine): void {
   let index = start;
   while (index < code.length) {
     if (isInsideString(index, parsed)) {
       index++;
       continue;
     }
+
     const char = code[index];
-    if (char === ' ' && code[index + 1] === ' ') {
-      break;
+    if (char === ' ' || char === '\t') {
+      const next = skipSpaces(code, index);
+      if (next >= code.length || isKnownCommandBoundaryAt(code, next)) {
+        break;
+      }
+      index = next;
+      continue;
     }
-    if (char === ',' || char === ':' || char === ' ' || char === '\t') {
+    if (char === ',') {
       index++;
+      continue;
+    }
+    if (char === ':') {
+      index = skipPostconditionalExpression(code, index + 1, parsed);
       continue;
     }
     if (char === '@') {
       index++;
       continue;
+    }
+    if (char === '$' || char === '^') {
+      break;
     }
 
     const label = readReferenceName(code, index);
@@ -166,7 +195,7 @@ function collectLocalCommandReferences(code: string, start: number, references: 
       routineEndCharacter: routine?.end ?? null,
       raw: code.slice(label.start, routine?.end ?? label.end)
     });
-    index = routine?.end ?? afterLabel;
+    index = routine ? skipCallArguments(code, routine.end) : afterLabel;
   }
 }
 
@@ -202,9 +231,76 @@ function isRoutineName(name: string): boolean {
   return ROUTINE_NAME_PATTERN.test(name);
 }
 
-function isDoOrGotoCommandAt(code: string, index: number, parsed: ParsedMumpsLine): boolean {
-  const command = parsed.commands.find((candidate) => candidate.start === index);
-  return command?.normalized === 'DO' || command?.normalized === 'GOTO';
+
+function isDoOrGotoCommandTokenAt(code: string, index: number, parsed: ParsedMumpsLine): boolean {
+  if (isInsideString(index, parsed) || !isCommandTokenBoundaryBefore(code, index)) {
+    return false;
+  }
+  const command = readReferenceName(code, index);
+  if (!command || !isCommandTokenBoundaryAfter(code, command.end)) {
+    return false;
+  }
+  const normalized = normalizeMumpsCommand(command.text);
+  return normalized === 'DO' || normalized === 'GOTO';
+}
+
+function isKnownCommandBoundaryAt(code: string, index: number): boolean {
+  if (!isCommandTokenBoundaryBefore(code, index)) {
+    return false;
+  }
+  const command = readReferenceName(code, index);
+  return Boolean(command && isCommandTokenBoundaryAfter(code, command.end) && isKnownCommandWord(command.text));
+}
+
+function isKnownCommandWord(token: string): boolean {
+  return isKnownMumpsCommand(token);
+}
+
+function isCommandTokenBoundaryBefore(code: string, index: number): boolean {
+  if (index === 0) {
+    return true;
+  }
+  const previous = code[index - 1] ?? '';
+  return /\s/u.test(previous) || previous === '.';
+}
+
+function isCommandTokenBoundaryAfter(code: string, index: number): boolean {
+  const next = code[index] ?? '';
+  return next === '' || /\s/u.test(next) || next === ':';
+}
+
+function skipPostconditionalExpression(code: string, start: number, parsed: ParsedMumpsLine): number {
+  let index = start;
+  let depth = 0;
+  while (index < code.length) {
+    if (isInsideString(index, parsed)) {
+      index++;
+      continue;
+    }
+    const char = code[index] ?? '';
+    if (char === '(') {
+      depth++;
+    } else if (char === ')') {
+      depth = Math.max(0, depth - 1);
+    } else if (depth === 0 && (char === ',' || /\s/u.test(char))) {
+      return index;
+    }
+    index++;
+  }
+  return index;
+}
+
+function dedupeReferences(references: MumpsReference[]): MumpsReference[] {
+  const seen = new Set<string>();
+  const deduped: MumpsReference[] = [];
+  for (const reference of references) {
+    const key = `${reference.startCharacter}:${reference.endCharacter}:${reference.label ?? ''}:${reference.routine ?? ''}`;
+    if (!seen.has(key)) {
+      seen.add(key);
+      deduped.push(reference);
+    }
+  }
+  return deduped.sort((left, right) => left.startCharacter - right.startCharacter || left.endCharacter - right.endCharacter);
 }
 
 function readCommandLength(code: string, index: number): number {

@@ -72,8 +72,10 @@ Stage 4.6 recognizes these static patterns outside comments and strings:
 | Local extrinsic | `$$VALUE()` | Opens local `VALUE` label. |
 | Routine reference | `^XUP` | Opens `XUP` routine file. |
 | Cross-routine label | `D EN^XUP` / `DO EN^XUP` | Opens `EN` label in `XUP`. |
+| Inline command call | `S FDA(200,IEN,2)=XUH D FILE^DIE("","FDA","ERR")` | Opens `FILE` in `DIE` even when the `DO` appears after another command. |
 | FileMan API call | `UPDATE^DIE`, `FILE^DIE`, `GET1^DIQ`, `FIND1^DIC` | Opens the label/routine if `DIE.m`, `DIQ.m`, or `DIC.m` exists in the workspace. |
-| Cross-routine extrinsic | `$$VALUE^ROUTINEB()` | Opens `VALUE` label in `ROUTINEB`. |
+| Cross-routine extrinsic with parentheses | `$$VALUE^ROUTINEB()` | Opens `VALUE` label in `ROUTINEB`. |
+| Cross-routine extrinsic without parentheses | `X=$$ACCEPT^UJOWXUS` | Opens `ACCEPT` label in `UJOWXUS`. |
 
 ## Remote workspace support
 
@@ -107,7 +109,7 @@ The navigation index avoids assuming that `uri.fsPath` is available. Workspace f
 - Dynamic indirection such as `D @TARGET` is not resolved.
 - Routine names are based on filenames without extensions.
 - FileMan API calls only navigate when the referenced routine file is present in the workspace.
-- Find References is static and limited to label/routine references.
+- Find References is static and limited to label/routine references. Static inline calls and no-parentheses extrinsics are supported; dynamic indirection is not.
 - Rename remains unimplemented until deeper semantic analysis is added.
 - Tree-sitter AST indexing is deferred to Stage 5.
 

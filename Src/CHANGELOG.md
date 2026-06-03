@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.4.3 - 2026-06-03
+
+### Fixed
+
+- Fixed MUMPS reference parsing for inline commands after another command on the same line, including `D FILE^DIE(...)` after `SET`/`S` and `IF` commands.
+- Fixed extrinsic routine references without parentheses, including `X=$$ACCEPT^UJOWXUS` and inline `SET X=$$ACCEPT^UJOWXUS IF ... DO DIRUT` forms.
+- Ensured reference parsing scans the executable portion of the full line, ignores comments and quoted strings, deduplicates overlapping command/caret detections, and preserves Stage 4.6 navigation providers.
+
 ## 0.4.2 - 2026-06-03
 
 ### Added
