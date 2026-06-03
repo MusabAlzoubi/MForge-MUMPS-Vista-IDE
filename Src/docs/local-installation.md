@@ -52,10 +52,10 @@ The convenience command below performs the environment check, compile, tests, an
 npm run package:local
 ```
 
-Expected VSIX filename for version 0.4.8:
+Expected VSIX filename for version 0.4.9:
 
 ```text
-mforge-mumps-vista-ide-0.4.8.vsix
+mforge-mumps-vista-ide-0.4.9.vsix
 ```
 
 ## Install local VSIX
@@ -63,7 +63,7 @@ mforge-mumps-vista-ide-0.4.8.vsix
 Prefer the exact VSIX filename because shell wildcard behavior can vary:
 
 ```bash
-code --install-extension mforge-mumps-vista-ide-0.4.8.vsix
+code --install-extension mforge-mumps-vista-ide-0.4.9.vsix
 ```
 
 The convenience script remains available when wildcard expansion works in your shell:
@@ -76,7 +76,7 @@ npm run install:local
 
 ```bash
 code --uninstall-extension dopamind.mforge-mumps-vista-ide
-code --install-extension mforge-mumps-vista-ide-0.4.8.vsix
+code --install-extension mforge-mumps-vista-ide-0.4.9.vsix
 ```
 
 ## Automatic routine path detection check
@@ -131,9 +131,9 @@ npm install
 | `npm ERR! Missing script: "package"` | The local checkout does not include the Stage 3 package scripts or the command is being run in the wrong folder. | Pull the latest changes and check `Src/package.json` scripts. Run commands from inside `Src`. |
 | `env:check` expects the wrong version | The checkout still has an older hardcoded environment check. | Pull the latest changes, remove `node_modules`, run `npm install`, and confirm `env:check` reads the installed `vsce` version dynamically. |
 | `ReferenceError: File is not defined` in `node_modules/undici/...` | A Node-20-only dependency was installed, usually from current `@vscode/vsce` or an incompatible transient dependency. | Remove `node_modules` and `package-lock.json`, verify `package.json` uses exact `"vsce": "2.11.0"` and override `"cheerio": "1.0.0-rc.12"`, then run `npm install`, `npm run env:check`, and `npm run package`. |
-| `Error: ENOENT no such file or directory, open '*.vsix'` | A VSIX was not created or the wildcard was not expanded. | Packaging did not complete. Do not run install before `npm run package` succeeds; then use `code --install-extension mforge-mumps-vista-ide-0.4.8.vsix`. |
+| `Error: ENOENT no such file or directory, open '*.vsix'` | A VSIX was not created or the wildcard was not expanded. | Packaging did not complete. Do not run install before `npm run package` succeeds; then use `code --install-extension mforge-mumps-vista-ide-0.4.9.vsix`. |
 | `Couldn't detect the repository where this extension is published` | `vsce` cannot rewrite relative README links without repository metadata. | Pull the latest changes and confirm `Src/package.json` includes `repository`, `bugs`, and `homepage` metadata. |
 | `vsce: not found` | Dependencies were not installed or `node_modules/.bin` is unavailable. | Run `npm install` inside `Src`, then rerun `npm run env:check` and `npm run package`. |
 | `cd: Src: No such file or directory` | The terminal is already inside `Src` or not at the repository root. | If already inside `Src`, skip `cd Src`. Otherwise return to the repository root before running `cd Src`. |
 
-Do not use wildcard install commands unless `mforge-mumps-vista-ide-0.4.8.vsix` exists.
+Do not use wildcard install commands unless `mforge-mumps-vista-ide-0.4.9.vsix` exists.

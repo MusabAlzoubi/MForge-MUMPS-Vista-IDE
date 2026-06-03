@@ -299,10 +299,10 @@ const semanticTokens = classifyMumpsSemanticTokens(semanticText, new Set(['XPAR'
 function hasSemantic(type, value, text = semanticText) {
   return semanticTokens.some((token) => token.type === type && text.slice(token.start, token.start + token.length) === value);
 }
-assert.equal(hasSemantic('mumps.navigableRoutineReference', 'GET^XPAR'), true, 'navigable routine references get a dedicated semantic token');
-assert.equal(hasSemantic('mumps.unresolvedRoutineReference', 'MISS^NOPE'), true, 'unresolved routine references get a dedicated semantic token');
-assert.equal(hasSemantic('mumps.intrinsic', '$O'), true, 'intrinsics keep intrinsic semantic token classification');
-assert.equal(hasSemantic('mumps.intrinsic', 'GET^XPAR'), false, 'routine references and intrinsics must not share token type');
+assert.equal(hasSemantic('mumps-navigable-routine-reference', 'GET^XPAR'), true, 'navigable routine references get a dedicated semantic token');
+assert.equal(hasSemantic('mumps-unresolved-routine-reference', 'MISS^NOPE'), true, 'unresolved routine references get a dedicated semantic token');
+assert.equal(hasSemantic('mumps-intrinsic', '$O'), true, 'intrinsics keep intrinsic semantic token classification');
+assert.equal(hasSemantic('mumps-intrinsic', 'GET^XPAR'), false, 'routine references and intrinsics must not share token type');
 
 const refs = findMumpsReferencesInLine(' D EN^XUP DO FILE^DIE G EXIT GOTO BUILD S X=$$GET1^DIQ() S Y=$$VALUE^ROUTINEB()');
 assert.equal(refs.some((ref) => ref.label === 'EN' && ref.routine === 'XUP'), true, 'DO cross-routine references are parsed');

@@ -1,8 +1,8 @@
 {
   "name": "mforge-mumps-vista-ide",
   "displayName": "MForge MUMPS & VistA IDE",
-  "description": "Complete IDE toolkit for MUMPS and VistA development in Visual Studio Code.",
-  "version": "0.4.8",
+  "description": "A modern VS Code IDE toolkit for MUMPS, GT.M/YottaDB, and VistA development with highlighting, navigation, IntelliSense, diagnostics, formatting, semantic tokens, and routine indexing.",
+  "version": "0.4.9",
   "publisher": "dopamind",
   "license": "MIT",
   "repository": {
@@ -17,6 +17,8 @@
   "categories": [
     "Programming Languages",
     "Formatters",
+    "Debuggers",
+    "Linters",
     "Snippets",
     "Other"
   ],
@@ -27,7 +29,18 @@
     "GT.M",
     "YottaDB",
     "FileMan",
-    "healthcare"
+    "M Language",
+    "Healthcare",
+    "CPRS",
+    "VA",
+    "WorldVistA",
+    "Hakeem",
+    "Routine",
+    "Globals",
+    "MUMPS IDE",
+    "MUMPS Debugger",
+    "MUMPS Formatter",
+    "VistA Toolkit"
   ],
   "engines": {
     "vscode": "^1.90.0"
@@ -50,13 +63,14 @@
     "env:check": "node scripts/check-env.js",
     "test:stage2": "node scripts/test-stage2.js",
     "test:stage3": "node scripts/test-stage3.js",
-    "test": "npm run test:stage2 && npm run test:stage3 && npm run test:stage4 && npm run test:stage45 && npm run test:stage46",
+    "test": "npm run test:semantic-contributions && npm run test:stage2 && npm run test:stage3 && npm run test:stage4 && npm run test:stage45 && npm run test:stage46",
     "package": "npm run env:check && npm run compile && npm run test && vsce package",
     "package:local": "npm run package",
-    "install:local": "code --install-extension mforge-mumps-vista-ide-0.4.8.vsix",
+    "install:local": "code --install-extension mforge-mumps-vista-ide-0.4.9.vsix",
     "test:stage4": "node scripts/test-stage4.js",
     "test:stage45": "node scripts/test-stage45.js",
-    "test:stage46": "node scripts/test-stage46.js"
+    "test:stage46": "node scripts/test-stage46.js",
+    "test:semantic-contributions": "node scripts/test-semantic-token-contributions.js"
   },
   "devDependencies": {
     "@types/node": "^18.19.1",
@@ -226,57 +240,57 @@
     ],
     "semanticTokenTypes": [
       {
-        "id": "mumps.label",
+        "id": "mumps-label",
         "superType": "function",
         "description": "MUMPS routine label definitions."
       },
       {
-        "id": "mumps.command",
+        "id": "mumps-command",
         "superType": "keyword",
         "description": "MUMPS commands and command abbreviations."
       },
       {
-        "id": "mumps.intrinsic",
+        "id": "mumps-intrinsic",
         "superType": "function",
         "description": "MUMPS intrinsic functions."
       },
       {
-        "id": "mumps.global",
+        "id": "mumps-global",
         "superType": "variable",
         "description": "MUMPS global variable references."
       },
       {
-        "id": "mumps.systemVariable",
+        "id": "mumps-system-variable",
         "superType": "variable",
         "description": "MUMPS system variables."
       },
       {
-        "id": "mumps.parameter",
+        "id": "mumps-parameter",
         "superType": "parameter",
         "description": "MUMPS label parameters."
       },
       {
-        "id": "mumps.localVariable",
+        "id": "mumps-local-variable",
         "superType": "variable",
         "description": "MUMPS local variables."
       },
       {
-        "id": "mumps.api",
+        "id": "mumps-api",
         "superType": "function",
         "description": "Common FileMan and VistA-style API entry points."
       },
       {
-        "id": "mumps.routineReference",
+        "id": "mumps-routine-reference",
         "superType": "namespace",
         "description": "MUMPS routine references."
       },
       {
-        "id": "mumps.navigableRoutineReference",
+        "id": "mumps-navigable-routine-reference",
         "superType": "namespace",
         "description": "MUMPS routine references that are likely navigable."
       },
       {
-        "id": "mumps.unresolvedRoutineReference",
+        "id": "mumps-unresolved-routine-reference",
         "superType": "namespace",
         "description": "MUMPS routine references whose target routine is not currently indexed."
       }
@@ -284,5 +298,6 @@
   },
   "overrides": {
     "cheerio": "1.0.0-rc.12"
-  }
+  },
+  "author": "Musab Alzoubi"
 }

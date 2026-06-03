@@ -7,6 +7,7 @@ src/**
 test-fixtures/**
 scripts/test-*.js
 docs/research/**
+docs/internal/**
 Old Extensions/**
 
 *.vsix
