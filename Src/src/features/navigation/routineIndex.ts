@@ -139,6 +139,17 @@ export class MumpsRoutineIndex implements vscode.Disposable {
     this.built = false;
   }
 
+  clear(): void {
+    this.routines.clear();
+    this.routinesByUri.clear();
+    this.documentCache.clear();
+    this.built = false;
+  }
+
+  getLabelCount(): number {
+    return this.getRoutines().reduce((total, routine) => total + routine.labels.length, 0);
+  }
+
   markDirtyDebounced(): void {
     if (this.dirtyTimer) {
       clearTimeout(this.dirtyTimer);
@@ -163,6 +174,10 @@ export class MumpsRoutineIndex implements vscode.Disposable {
 
   findLabel(routineName: string, labelName: string): MumpsLabel | undefined {
     return this.findRoutine(routineName)?.labels.find((label) => label.name.toUpperCase() === labelName.toUpperCase());
+  }
+
+  hasRoutine(name: string): boolean {
+    return this.routines.has(name.toUpperCase());
   }
 
   parseDocument(document: vscode.TextDocument): RoutineParseResult | null {
@@ -235,7 +250,8 @@ export class MumpsRoutineIndex implements vscode.Disposable {
       this.indexOpenDocument(document);
     }
     this.built = true;
-    this.output?.appendLine(`[navigation] Indexed ${this.routines.size} MUMPS routine(s).`);
+    this.output?.appendLine(`[navigation] Indexed ${this.routines.size} MUMPS routine(s), ${this.getLabelCount()} label(s).`);
+    this.logDebugIndexSummary();
   }
 
   private upsertRoutine(routine: IndexedRoutine): void {
@@ -245,6 +261,19 @@ export class MumpsRoutineIndex implements vscode.Disposable {
     }
     this.routines.set(routine.name.toUpperCase(), routine);
     this.routinesByUri.set(routine.uriKey, routine);
+  }
+
+  private logDebugIndexSummary(): void {
+    const traceLevel = vscode.workspace.getConfiguration('mforge').get<string>('trace.level', 'off');
+    if (traceLevel !== 'debug') {
+      return;
+    }
+    const routines = this.getRoutines();
+    this.output?.appendLine(`[navigation] First routines: ${routines.slice(0, 20).map((routine) => routine.name).join(', ') || '(none)'}`);
+    for (const name of ['UJOWXUS', 'XPAR', 'XLFSTR', 'DIE', 'DIQ']) {
+      const routine = this.findRoutine(name);
+      this.output?.appendLine(`[navigation] Index contains ${name}: ${routine ? `yes (${routine.uri.toString()})` : 'no'}`);
+    }
   }
 
   private debug(message: string): void {

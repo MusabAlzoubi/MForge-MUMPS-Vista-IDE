@@ -69,6 +69,15 @@ declare module 'vscode' {
     document: TextDocument;
   }
 
+  export interface Selection {
+    active: Position;
+  }
+
+  export interface TextEditor {
+    document: TextDocument;
+    selection: Selection;
+  }
+
   export interface ConfigurationChangeEvent {
     affectsConfiguration(section: string): boolean;
   }
@@ -120,6 +129,7 @@ declare module 'vscode' {
   export class MarkdownString {
     constructor(value?: string);
     value: string;
+    isTrusted?: boolean;
   }
 
   export class Hover {
@@ -265,6 +275,7 @@ declare module 'vscode' {
   }
 
   export namespace window {
+    export const activeTextEditor: TextEditor | undefined;
     export function createOutputChannel(name: string): OutputChannel;
     export function showInformationMessage(message: string, ...items: string[]): Promise<string | undefined>;
   }

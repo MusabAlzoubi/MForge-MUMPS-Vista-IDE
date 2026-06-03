@@ -75,6 +75,7 @@
 - [x] Fix inline command and no-parentheses extrinsic reference parsing for 0.4.3.
 - [x] Fix unary-NOT/logical extrinsic scanning and add basic local variable navigation for 0.4.4.
 - [x] Fix cursor-range matching and exact document-link ranges for inline routine references for 0.4.5.
+- [x] Add navigation debug commands, routine-top fallback, and semantic distinction for routine references for 0.4.6.
 
 ## Stage 5: Advanced analysis
 

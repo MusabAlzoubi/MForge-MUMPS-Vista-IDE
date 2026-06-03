@@ -57,7 +57,9 @@ for (const requiredType of [
   'mumps.parameter',
   'mumps.localVariable',
   'mumps.api',
-  'mumps.routineReference'
+  'mumps.routineReference',
+  'mumps.navigableRoutineReference',
+  'mumps.unresolvedRoutineReference'
 ]) {
   assert.equal(MUMPS_SEMANTIC_TOKEN_TYPES.includes(requiredType), true, `${requiredType} must be in the semantic legend`);
 }
@@ -71,6 +73,7 @@ assert.equal(has('mumps.global', '^TMP'), true, 'global must be classified');
 assert.equal(has('mumps.systemVariable', '$J'), true, 'system variable must be classified');
 assert.equal(has('mumps.localVariable', 'LOCAL'), true, 'local variable must be classified');
 assert.equal(has('mumps.api', 'UPDATE^DIE'), true, 'FileMan API must be classified');
-assert.equal(has('mumps.routineReference', 'EN^XUP') || has('mumps.routineReference', 'XUP'), true, 'routine reference must be classified');
+assert.equal(has('mumps.navigableRoutineReference', 'EN^XUP'), true, 'routine reference must be classified as navigable by default');
+assert.equal(has('mumps.intrinsic', '$O'), true, 'intrinsic and routine references must have distinct token types');
 
 console.log('Stage 4.5 semantic token fixture checks passed');

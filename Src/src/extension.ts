@@ -19,11 +19,11 @@ export function activate(context: vscode.ExtensionContext): void {
 
   registerFormatterFeature(context);
   registerDiagnosticsFeature(context);
-  registerNavigationFeature(context, output);
+  const routineIndex = registerNavigationFeature(context, output);
   registerHoverFeature(context, output);
   registerCompletionFeature(context, output);
   registerSignatureFeature(context, output);
-  registerSemanticTokenFeature(context, output);
+  registerSemanticTokenFeature(context, output, routineIndex ?? undefined);
 
   context.subscriptions.push(
     vscode.commands.registerCommand('mforge.showGettingStarted', async () => {

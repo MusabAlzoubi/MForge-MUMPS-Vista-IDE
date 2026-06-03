@@ -1,7 +1,9 @@
 import * as vscode from 'vscode';
 import { isMumpsUri } from '../../config/language';
 import { parseMumpsDocument } from '../../parser/mumpsLineParser';
+import { findMumpsReferencesInLine } from '../../parser/routineParser';
 import { isKnownMumpsCommand } from '../../parser/mumpsCommands';
+import { MumpsRoutineIndex } from '../navigation/routineIndex';
 
 export const MUMPS_SEMANTIC_TOKEN_TYPES = [
   'mumps.label',
@@ -12,7 +14,9 @@ export const MUMPS_SEMANTIC_TOKEN_TYPES = [
   'mumps.parameter',
   'mumps.localVariable',
   'mumps.api',
-  'mumps.routineReference'
+  'mumps.routineReference',
+  'mumps.navigableRoutineReference',
+  'mumps.unresolvedRoutineReference'
 ] as const;
 
 export type MumpsSemanticTokenType = typeof MUMPS_SEMANTIC_TOKEN_TYPES[number];
@@ -41,19 +45,22 @@ const IDENTIFIER_PATTERN = /%?[A-Za-z][A-Za-z0-9]*/g;
 export const MUMPS_SEMANTIC_LEGEND = new vscode.SemanticTokensLegend([...MUMPS_SEMANTIC_TOKEN_TYPES], []);
 
 export class MumpsSemanticTokenProvider implements vscode.DocumentSemanticTokensProvider {
+  constructor(private readonly routineIndex?: MumpsRoutineIndex) {}
+
   provideDocumentSemanticTokens(document: vscode.TextDocument): vscode.SemanticTokens {
     const builder = new vscode.SemanticTokensBuilder(MUMPS_SEMANTIC_LEGEND);
     if (!isMumpsUri(document.uri, document.languageId)) {
       return builder.build();
     }
-    for (const token of classifyMumpsSemanticTokens(document.getText())) {
+    const indexedRoutines = this.routineIndex ? new Set(this.routineIndex.getRoutines().map((routine) => routine.name.toUpperCase())) : undefined;
+    for (const token of classifyMumpsSemanticTokens(document.getText(), indexedRoutines)) {
       builder.push(token.line, token.start, token.length, tokenTypeOrder(token.type), 0);
     }
     return builder.build();
   }
 }
 
-export function classifyMumpsSemanticTokens(text: string): ClassifiedMumpsSemanticToken[] {
+export function classifyMumpsSemanticTokens(text: string, indexedRoutineNames?: Set<string>): ClassifiedMumpsSemanticToken[] {
   const parsedLines = parseMumpsDocument(text);
   const tokens: ClassifiedMumpsSemanticToken[] = [];
 
@@ -73,7 +80,7 @@ export function classifyMumpsSemanticTokens(text: string): ClassifiedMumpsSemant
       addToken(tokens, occupied, lineNumber, command.start, command.end, 'mumps.command');
     }
 
-    addPatternTokens(tokens, occupied, lineNumber, line.code, ROUTINE_REFERENCE_PATTERN, (value) => COMMON_FILEMAN_APIS.has(value.toUpperCase()) ? 'mumps.api' : 'mumps.routineReference');
+    addRoutineReferenceTokens(tokens, occupied, lineNumber, line.code, indexedRoutineNames);
 
     addPatternTokens(tokens, occupied, lineNumber, line.code, SYSTEM_VARIABLE_PATTERN, (value, _start, end) => SYSTEM_VARIABLES.has(value.toUpperCase()) && line.code[end] !== '(' ? 'mumps.systemVariable' : null);
     addPatternTokens(tokens, occupied, lineNumber, line.code, INTRINSIC_PATTERN, (value, _start, end) => !SYSTEM_VARIABLES.has(value.toUpperCase()) || line.code[end] === '(' ? 'mumps.intrinsic' : null);
@@ -82,6 +89,28 @@ export function classifyMumpsSemanticTokens(text: string): ClassifiedMumpsSemant
   }
 
   return tokens.sort((left, right) => left.line - right.line || left.start - right.start || tokenTypeOrder(left.type) - tokenTypeOrder(right.type));
+}
+
+
+function addRoutineReferenceTokens(
+  tokens: ClassifiedMumpsSemanticToken[],
+  occupied: Array<{ start: number; end: number }>,
+  line: number,
+  code: string,
+  indexedRoutineNames?: Set<string>
+): void {
+  for (const reference of findMumpsReferencesInLine(code)) {
+    if (!reference.routine || !reference.label) {
+      continue;
+    }
+    const raw = reference.raw.toUpperCase();
+    const type: MumpsSemanticTokenType = COMMON_FILEMAN_APIS.has(raw)
+      ? 'mumps.api'
+      : indexedRoutineNames
+        ? indexedRoutineNames.has(reference.routine.toUpperCase()) ? 'mumps.navigableRoutineReference' : 'mumps.unresolvedRoutineReference'
+        : 'mumps.navigableRoutineReference';
+    addToken(tokens, occupied, line, reference.startCharacter, reference.endCharacter, type);
+  }
 }
 
 function addLabelParameters(tokens: ClassifiedMumpsSemanticToken[], occupied: Array<{ start: number; end: number }>, line: number, code: string, start: number): void {

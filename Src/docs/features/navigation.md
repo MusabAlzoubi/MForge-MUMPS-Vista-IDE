@@ -14,6 +14,7 @@ MForge now provides:
 - Lazy workspace indexing with open-document and AST/document caches.
 - Remote-safe indexing for `file:`, `vscode-remote:`, and MUMPS `untitled:` documents.
 - Defensive filtering for non-MUMPS documents, output documents, and `rendererLog` documents.
+- Navigation debug commands for current-line scanner diagnostics and routine-index rebuilds.
 
 ## Feature comparison matrix
 
@@ -107,6 +108,16 @@ The navigation index avoids assuming that `uri.fsPath` is available. Workspace f
 | `mforge.navigation.enabled` | `true` | Enables document links, Ctrl+Click/F12 definitions, Find References, symbols, and routine indexing. |
 | `mforge.maxWorkspaceFiles` | `2000` | Maximum supported routine files to scan for the workspace index. |
 | `mforge.workspaceScanDebounceMs` | `250` | Debounce interval for file-system events before marking the index dirty. |
+
+## Debugging a missing routine link
+
+If `GET1^DIQ` works but another routine reference such as `ACCEPT^UJOWXUS` does not:
+
+1. Run **MForge: Rebuild Routine Index**.
+2. Run **MForge: Debug References In Current Line** on the failing line.
+3. Confirm the target routine exists in the opened workspace or remote workspace.
+4. Confirm the file language mode is `MForge MUMPS` / `mumps`.
+5. Confirm old/reference extensions such as `Old Extensions` experiments or `mumps-lsp` are disabled in the Extension Development Host.
 
 ## Known limitations
 

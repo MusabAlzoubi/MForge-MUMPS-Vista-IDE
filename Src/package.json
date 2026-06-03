@@ -2,7 +2,7 @@
   "name": "mforge-mumps-vista-ide",
   "displayName": "MForge MUMPS & VistA IDE",
   "description": "Complete IDE toolkit for MUMPS and VistA development in Visual Studio Code.",
-  "version": "0.4.5",
+  "version": "0.4.6",
   "publisher": "dopamind",
   "license": "MIT",
   "repository": {
@@ -48,7 +48,7 @@
     "test": "npm run test:stage2 && npm run test:stage3 && npm run test:stage4 && npm run test:stage45 && npm run test:stage46",
     "package": "npm run env:check && npm run compile && npm run test && vsce package",
     "package:local": "npm run package",
-    "install:local": "code --install-extension mforge-mumps-vista-ide-0.4.5.vsix",
+    "install:local": "code --install-extension mforge-mumps-vista-ide-0.4.6.vsix",
     "test:stage4": "node scripts/test-stage4.js",
     "test:stage45": "node scripts/test-stage45.js",
     "test:stage46": "node scripts/test-stage46.js"
@@ -97,6 +97,14 @@
       {
         "command": "mforge.showGettingStarted",
         "title": "MForge: Show Getting Started"
+      },
+      {
+        "command": "mforge.debugReferencesInCurrentLine",
+        "title": "MForge: Debug References In Current Line"
+      },
+      {
+        "command": "mforge.rebuildRoutineIndex",
+        "title": "MForge: Rebuild Routine Index"
       }
     ],
     "configurationDefaults": {
@@ -221,6 +229,16 @@
         "id": "mumps.routineReference",
         "superType": "namespace",
         "description": "MUMPS routine references."
+      },
+      {
+        "id": "mumps.navigableRoutineReference",
+        "superType": "namespace",
+        "description": "MUMPS routine references that are likely navigable."
+      },
+      {
+        "id": "mumps.unresolvedRoutineReference",
+        "superType": "namespace",
+        "description": "MUMPS routine references whose target routine is not currently indexed."
       }
     ]
   },

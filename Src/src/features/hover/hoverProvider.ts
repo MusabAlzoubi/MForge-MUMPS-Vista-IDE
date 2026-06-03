@@ -9,17 +9,17 @@ export function getMumpsHoverMarkdown(token: string): string | null {
   const normalized = token.toUpperCase();
   const command = getCommandDoc(normalized);
   if (command) {
-    return [`**${command.name}**`, '', command.description, '', `Syntax: \`${command.syntax}\``, '', 'Example:', `\`${command.example}\``].join('\n');
+    return [`### MUMPS Command`, '', `**${command.name}**`, '', command.description, '', `Syntax: \`${command.syntax}\``, '', 'Example:', `\`${command.example}\``].join('\n');
   }
 
   const intrinsic = getIntrinsicDoc(normalized);
   if (intrinsic) {
-    return [`**${intrinsic.name}**`, '', intrinsic.description, '', `Syntax: \`${intrinsic.syntax}\``, '', 'Example:', `\`${intrinsic.example}\``].join('\n');
+    return [`### MUMPS Intrinsic`, '', `**${intrinsic.name}**`, '', intrinsic.description, '', `Syntax: \`${intrinsic.syntax}\``, '', 'Example:', `\`${intrinsic.example}\``].join('\n');
   }
 
   const systemVariable = getSystemVariableDoc(normalized);
   if (systemVariable) {
-    return [`**${systemVariable.token}**`, '', systemVariable.description, '', 'Example:', `\`${systemVariable.example}\``].join('\n');
+    return [`### MUMPS System Variable`, '', `**${systemVariable.token}**`, '', systemVariable.description, '', 'Example:', `\`${systemVariable.example}\``].join('\n');
   }
 
   return null;

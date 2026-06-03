@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.4.6 - 2026-06-03
+
+### Fixed
+
+- Added navigation debug commands for rebuilding the routine index and inspecting references on the current line.
+- Improved routine resolution diagnostics, routine-top fallback when a target label is missing, and debug logging for key VistA/FileMan routines.
+- Added dedicated semantic token types and MForge Dark colors for navigable and unresolved routine references so navigation hovers/links are visually distinct from intrinsic documentation.
+- Added regression tests for scanner output, cursor positions, routine resolution, document links, semantic token distinction, remote URIs, and basic variable navigation.
+
 ## 0.4.5 - 2026-06-03
 
 ### Fixed

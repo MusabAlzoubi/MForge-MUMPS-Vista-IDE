@@ -6,11 +6,12 @@ import { MumpsDocumentLinkProvider } from './documentLinkProvider';
 import { MumpsReferenceProvider } from './referenceProvider';
 import { MumpsNavigationHoverProvider } from './navigationHoverProvider';
 import { MumpsRoutineIndex } from './routineIndex';
+import { registerNavigationDebugCommands } from './debugCommands';
 
-export function registerNavigationFeature(context: vscode.ExtensionContext, output?: vscode.OutputChannel): void {
+export function registerNavigationFeature(context: vscode.ExtensionContext, output?: vscode.OutputChannel): MumpsRoutineIndex | null {
   if (!isNavigationEnabled()) {
     output?.appendLine('Stage 4.6 navigation is disabled by mforge.navigation.enabled.');
-    return;
+    return null;
   }
 
   const routineIndex = new MumpsRoutineIndex(output);
@@ -22,8 +23,11 @@ export function registerNavigationFeature(context: vscode.ExtensionContext, outp
     vscode.languages.registerReferenceProvider(MUMPS_LANGUAGE_ID, new MumpsReferenceProvider(routineIndex)),
     vscode.languages.registerHoverProvider(MUMPS_LANGUAGE_ID, new MumpsNavigationHoverProvider(routineIndex, output))
   );
+  registerNavigationDebugCommands(context, routineIndex, output);
   registerSymbolsFeature(context, routineIndex);
+  return routineIndex;
 }
+
 
 function isNavigationEnabled(): boolean {
   return vscode.workspace.getConfiguration('mforge').get<boolean>('navigation.enabled', true);

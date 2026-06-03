@@ -28,6 +28,13 @@ class Uri {
   static file(filePath) { return new Uri('file', filePath); }
   toString() { return `${this.scheme}:${this.path}`; }
 }
+class SemanticTokensLegend {
+  constructor(tokenTypes, tokenModifiers = []) { this.tokenTypes = tokenTypes; this.tokenModifiers = tokenModifiers; }
+}
+class SemanticTokensBuilder {
+  push() {}
+  build() { return { data: [] }; }
+}
 
 function createDocument(uri, text, languageId = 'mumps') {
   const lines = text.split(/\r?\n/);
@@ -89,7 +96,7 @@ const originalLoad = Module._load;
 Module._load = function patchedLoad(request, parent, isMain) {
   if (request === 'vscode') {
     return {
-      Position, Range, Location, DocumentLink, MarkdownString, Hover, Uri,
+      Position, Range, Location, DocumentLink, MarkdownString, Hover, Uri, SemanticTokensLegend, SemanticTokensBuilder,
       workspace: {
         textDocuments: [],
         fs: { readFile: async (uri) => Buffer.from(texts.get(uri.toString()) ?? '') },
@@ -107,6 +114,7 @@ const { MumpsDefinitionProvider } = require('../out/features/navigation/definiti
 const { MumpsDocumentLinkProvider } = require('../out/features/navigation/documentLinkProvider');
 const { MumpsReferenceProvider } = require('../out/features/navigation/referenceProvider');
 const { MumpsNavigationHoverProvider } = require('../out/features/navigation/navigationHoverProvider');
+const { classifyMumpsSemanticTokens } = require('../out/features/semanticTokens/semanticTokenProvider');
 const { findMumpsReferenceAt, findMumpsReferencesInLine } = require('../out/parser/routineParser');
 
 function summarizeReferences(line) {
@@ -191,6 +199,17 @@ assert.deepEqual(summarizeReferences('S A=$$ONE^ROU1(),B=$$TWO^ROU2 D THREE^ROU3
   { label: 'TWO', routine: 'ROU2', raw: 'TWO^ROU2', start: 21, end: 29 },
   { label: 'THREE', routine: 'ROU3', raw: 'THREE^ROU3', start: 32, end: 42 }
 ], 'multiple extrinsic and inline DO references on one line must parse');
+
+
+const semanticText = ' S X=$$GET^XPAR() S Y=$O(^TMP($J)) S Z=$$MISS^NOPE()';
+const semanticTokens = classifyMumpsSemanticTokens(semanticText, new Set(['XPAR']));
+function hasSemantic(type, value, text = semanticText) {
+  return semanticTokens.some((token) => token.type === type && text.slice(token.start, token.start + token.length) === value);
+}
+assert.equal(hasSemantic('mumps.navigableRoutineReference', 'GET^XPAR'), true, 'navigable routine references get a dedicated semantic token');
+assert.equal(hasSemantic('mumps.unresolvedRoutineReference', 'MISS^NOPE'), true, 'unresolved routine references get a dedicated semantic token');
+assert.equal(hasSemantic('mumps.intrinsic', '$O'), true, 'intrinsics keep intrinsic semantic token classification');
+assert.equal(hasSemantic('mumps.intrinsic', 'GET^XPAR'), false, 'routine references and intrinsics must not share token type');
 
 const refs = findMumpsReferencesInLine(' D EN^XUP DO FILE^DIE G EXIT GOTO BUILD S X=$$GET1^DIQ() S Y=$$VALUE^ROUTINEB()');
 assert.equal(refs.some((ref) => ref.label === 'EN' && ref.routine === 'XUP'), true, 'DO cross-routine references are parsed');

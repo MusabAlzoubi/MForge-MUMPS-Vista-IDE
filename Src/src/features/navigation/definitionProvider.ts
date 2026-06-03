@@ -53,8 +53,8 @@ export class MumpsDefinitionProvider implements vscode.DefinitionProvider {
 
       const label = routine.labels.find((candidate) => candidate.name.toUpperCase() === reference.label?.toUpperCase());
       if (!label) {
-        this.debug(`Label '${reference.label}' not found in routine '${reference.routine}'.`);
-        return null;
+        this.debug(`Label '${reference.label}' not found in routine '${reference.routine}'; opening routine top.`);
+        return new vscode.Location(routine.uri, new vscode.Range(0, 0, 0, 0));
       }
       return new vscode.Location(routine.uri, new vscode.Range(label.line, label.nameStartCharacter, label.line, label.nameEndCharacter));
     }

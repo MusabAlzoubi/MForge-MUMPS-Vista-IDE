@@ -1,6 +1,6 @@
 # MForge MUMPS & VistA IDE
 
-MForge is a clean Visual Studio Code extension for MUMPS and VistA development. Current version: **0.4.5**.
+MForge is a clean Visual Studio Code extension for MUMPS and VistA development. Current version: **0.4.6**.
 
 ## Current status
 
@@ -47,6 +47,7 @@ See also:
 - Adds Workspace Symbols for routine names, label names, and `LABEL^ROUTINE` entries.
 - Adds Ctrl+Hover, Ctrl+Click, F12, Peek Definition, Document Links, and Find References for supported static label/routine references.
 - Adds basic same-document local variable definition navigation for `NEW` declarations and nearest prior `SET` assignments.
+- Adds **MForge: Rebuild Routine Index** and **MForge: Debug References In Current Line** troubleshooting commands for real-world navigation issues.
 - Adds a lightweight lazy routine index with configurable file limits, debounced dirty marking, URI-keyed caches, and default exclusions for `node_modules`, `.git`, `dist`, `out`, and `Old Extensions`.
 - Supports remote-safe navigation for `file:`, `vscode-remote:`, and MUMPS `untitled:` documents without assuming `fsPath` exists.
 - Ignores non-MUMPS, output, and `rendererLog` documents before parsing to avoid AST tracker noise and extension-host stalls.
@@ -86,10 +87,10 @@ npm run env:check
 npm run compile
 npm run test
 npm run package
-code --install-extension mforge-mumps-vista-ide-0.4.5.vsix
+code --install-extension mforge-mumps-vista-ide-0.4.6.vsix
 ```
 
-Expected VSIX filename for version 0.4.5: `mforge-mumps-vista-ide-0.4.5.vsix`. The exact VSIX filename is safer than `*.vsix` if your shell does not expand wildcards.
+Expected VSIX filename for version 0.4.6: `mforge-mumps-vista-ide-0.4.6.vsix`. The exact VSIX filename is safer than `*.vsix` if your shell does not expand wildcards.
 
 ### Packaging requirements and troubleshooting
 
@@ -102,7 +103,7 @@ Troubleshooting summary:
 - If `ReferenceError: File is not defined` appears, a Node-20-only dependency was installed. Remove `node_modules` and `package-lock.json`, verify `package.json` uses exact `"vsce": "2.11.0"` and override `"cheerio": "1.0.0-rc.12"`, then run `npm install` again.
 - If `env:check` expects the wrong version or reports `@vscode/vsce`, pull the latest changes and reinstall dependencies.
 - If the VSIX file is missing, packaging did not complete; do not run the install command until `npm run package` succeeds.
-- Avoid wildcard installs unless `mforge-mumps-vista-ide-0.4.5.vsix` exists.
+- Avoid wildcard installs unless `mforge-mumps-vista-ide-0.4.6.vsix` exists.
 
 
 ### Local Extension Development Host
@@ -118,7 +119,7 @@ Press `F5` / **Launch Extension**, open a `.m` file in the Extension Development
 
 ```bash
 code --uninstall-extension dopamind.mforge-mumps-vista-ide
-code --install-extension mforge-mumps-vista-ide-0.4.5.vsix
+code --install-extension mforge-mumps-vista-ide-0.4.6.vsix
 ```
 
 ## Configuration

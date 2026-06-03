@@ -7,7 +7,7 @@ import { MumpsDefinitionProvider } from './definitionProvider';
 export class MumpsNavigationHoverProvider implements vscode.HoverProvider {
   private readonly definitions: MumpsDefinitionProvider;
 
-  constructor(private readonly routineIndex: MumpsRoutineIndex, output?: vscode.OutputChannel) {
+  constructor(private readonly routineIndex: MumpsRoutineIndex, private readonly output?: vscode.OutputChannel) {
     this.definitions = new MumpsDefinitionProvider(routineIndex, output);
   }
 
@@ -19,13 +19,35 @@ export class MumpsNavigationHoverProvider implements vscode.HoverProvider {
     if (!reference) {
       return null;
     }
+    const range = new vscode.Range(position.line, reference.startCharacter, position.line, reference.endCharacter);
     const location = await this.definitions.resolveReference(document, reference);
     if (!location) {
+      if (this.isDebugTraceEnabled() && reference.routine) {
+        const debugMarkdown = new vscode.MarkdownString([
+          '### MForge Navigation Debug',
+          '',
+          `Reference detected but target not indexed: \`${reference.raw}\`.`,
+          '',
+          'Run **MForge: Rebuild Routine Index** and **MForge: Debug References In Current Line**.'
+        ].join('\n'));
+        return new vscode.Hover(debugMarkdown, range);
+      }
       return null;
     }
 
-    const range = new vscode.Range(position.line, reference.startCharacter, position.line, reference.endCharacter);
-    const markdown = new vscode.MarkdownString(`**MUMPS navigation**\n\nCtrl+Click / F12 opens \`${reference.raw}\`.`);
+    const markdown = new vscode.MarkdownString([
+      `### MForge Navigation`,
+      '',
+      `Ctrl+Click / F12 opens \`${reference.raw}\`.`,
+      '',
+      `[Open ${reference.raw}](command:editor.action.revealDefinition)`
+    ].join('\n'));
+    markdown.isTrusted = true;
     return new vscode.Hover(markdown, range);
+  }
+
+  private isDebugTraceEnabled(): boolean {
+    const traceLevel = vscode.workspace.getConfiguration('mforge').get<string>('trace.level', 'off');
+    return traceLevel === 'debug';
   }
 }
