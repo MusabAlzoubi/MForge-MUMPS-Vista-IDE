@@ -71,6 +71,13 @@ async function rebuildRoutineIndex(routineIndex: MumpsRoutineIndex, output?: vsc
   output?.appendLine(`[navigation-debug] Include patterns: ${diagnostics.includePatterns.join(', ') || '(none)'}`);
   output?.appendLine(`[navigation-debug] Exclude patterns: ${diagnostics.excludePattern}`);
   output?.appendLine(`[navigation-debug] mforge.maxWorkspaceFiles: ${diagnostics.maxWorkspaceFiles}`);
+  output?.appendLine(`[navigation-debug] mforge.maxRoutineSearchPathFiles: ${diagnostics.maxRoutineSearchPathFiles}`);
+  output?.appendLine(`[navigation-debug] Elapsed indexing time: ${diagnostics.elapsedMs}ms`);
+  output?.appendLine(`[navigation-debug] Limit reached: workspace=${diagnostics.workspaceLimitReached}, searchPaths=${diagnostics.searchPathLimitReached}`);
+  output?.appendLine(`[navigation-debug] Indexed source paths: ${diagnostics.indexedSourcePaths.join(', ') || '(none)'}`);
+  for (const warning of diagnostics.broadPathWarnings) {
+    output?.appendLine(`[navigation-debug] ${warning}`);
+  }
   output?.appendLine(`[navigation-debug] manual routine paths: ${diagnostics.manualRoutineSearchPaths.join(', ') || '(none)'}`);
   output?.appendLine(`[navigation-debug] auto-detected routine paths: ${diagnostics.autoDetectedRoutinePaths.join(', ') || '(none)'}`);
   output?.appendLine(`[navigation-debug] effective routine paths: ${diagnostics.effectiveRoutineSearchPaths.join(', ') || '(none)'}`);
@@ -78,10 +85,10 @@ async function rebuildRoutineIndex(routineIndex: MumpsRoutineIndex, output?: vsc
   output?.appendLine(`[navigation-debug] mforge.autoRebuildIndexOnActivation: ${diagnostics.autoRebuildIndexOnActivation}`);
   output?.appendLine(`[navigation-debug] mforge.indexExtensionlessRoutines: ${diagnostics.indexExtensionlessRoutines}`);
   output?.appendLine(`[navigation-debug] Files discovered: workspace=${diagnostics.workspaceFilesDiscovered}, searchPaths=${diagnostics.searchPathFilesDiscovered}`);
-  output?.appendLine(`[navigation-debug] Files skipped: extension=${diagnostics.skippedByExtension}, excludes=${diagnostics.skippedByExcludes}`);
-  output?.appendLine(`[navigation-debug] Duplicate routine names: ${diagnostics.duplicateRoutineNames}${diagnostics.duplicateRoutineNameList.length ? ` (${diagnostics.duplicateRoutineNameList.join(', ')})` : ''}`);
+  output?.appendLine(`[navigation-debug] Files skipped: extension=${diagnostics.skippedByExtension}, excludes=${diagnostics.skippedByExcludes}, content=${diagnostics.skippedByContent}`);
   const traceLevel = vscode.workspace.getConfiguration('mforge').get<string>('trace.level', 'off');
   if (traceLevel === 'debug') {
+    output?.appendLine(`[navigation-debug] Duplicate routine names: ${diagnostics.duplicateRoutineNames}${diagnostics.duplicateRoutineNameList.length ? ` (${diagnostics.duplicateRoutineNameList.join(', ')})` : ''}`);
     output?.appendLine(`[navigation-debug] First routines: ${routines.slice(0, 20).map((routine) => routine.name).join(', ') || '(none)'}`);
   }
   for (const name of IMPORTANT_ROUTINES) {
@@ -128,6 +135,12 @@ async function showRoutineIndexStatus(routineIndex: MumpsRoutineIndex, output?: 
   output?.appendLine(`[navigation-debug] Indexed routines: ${routineIndex.getRoutines().length}`);
   output?.appendLine(`[navigation-debug] Indexed labels: ${routineIndex.getLabelCount()}`);
   output?.appendLine(`[navigation-debug] Last rebuild time: ${routineIndex.getLastRebuildTime() ?? '(not rebuilt yet)'}`);
+  output?.appendLine(`[navigation-debug] Elapsed indexing time: ${diagnostics.elapsedMs}ms`);
+  output?.appendLine(`[navigation-debug] Limit reached: workspace=${diagnostics.workspaceLimitReached}, searchPaths=${diagnostics.searchPathLimitReached}`);
+  output?.appendLine(`[navigation-debug] Indexed source paths: ${diagnostics.indexedSourcePaths.join(', ') || '(none)'}`);
+  for (const warning of diagnostics.broadPathWarnings) {
+    output?.appendLine(`[navigation-debug] ${warning}`);
+  }
   output?.appendLine(`[navigation-debug] Auto-detection enabled: ${diagnostics.autoDetectRoutinePaths}`);
   output?.appendLine(`[navigation-debug] Auto-rebuild on activation enabled: ${diagnostics.autoRebuildIndexOnActivation}`);
   output?.appendLine(`[navigation-debug] Manual routine paths: ${pathState.manualPaths.join(', ') || '(none)'}`);
@@ -137,6 +150,13 @@ async function showRoutineIndexStatus(routineIndex: MumpsRoutineIndex, output?: 
     const routine = routineIndex.findRoutine(name);
     output?.appendLine(`[navigation-debug] ${name}: ${routine ? `FOUND ${routine.uri.toString()} (${routine.labels.length} label(s))` : 'not indexed'}`);
   }
+  if (diagnostics.workspaceLimitReached || diagnostics.searchPathLimitReached) {
+    output?.appendLine('[navigation-debug] Next action: increase mforge.maxWorkspaceFiles or mforge.maxRoutineSearchPathFiles if important routines are missing.');
+  }
+  if (diagnostics.broadPathWarnings.length > 0) {
+    output?.appendLine('[navigation-debug] Next action: remove broad parent folders and use routines/localr routine source folders.');
+  }
+  output?.appendLine('[navigation-debug] Next action: run MForge: Rebuild Routine Index after changing routine search paths.');
   output?.show();
 }
 

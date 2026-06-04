@@ -71,6 +71,7 @@ const extensionlessUri = Uri.file('/extra/routines/EXTLESS');
 const xlfdtUri = Uri.file('/var/worldvista/prod/hakeem/routines/XLFDT.m');
 const xus4Uri = Uri.file('/var/worldvista/prod/hakeem/localr/XUS4.m');
 const xtvUri = Uri.file('/workspace/routines/XTV.m');
+const localrXtvUri = Uri.file('/workspace/localr/XTV.m');
 const skippedObjectUri = Uri.file('/var/worldvista/prod/hakeem/objects/SKIPOBJ.m');
 const rou1Uri = remoteRoutineUri('ROU1');
 const rou2Uri = remoteRoutineUri('ROU2');
@@ -93,6 +94,7 @@ const texts = new Map([
   [xlfdtUri.toString(), 'NOW() Q'],
   [xus4Uri.toString(), 'VALID() Q'],
   [xtvUri.toString(), 'TEST Q'],
+  [localrXtvUri.toString(), 'LOCALR Q'],
   [skippedObjectUri.toString(), 'BAD Q'],
   [rou1Uri.toString(), 'ONE() Q 1'],
   [rou2Uri.toString(), 'TWO Q 2'],
@@ -117,7 +119,8 @@ const settings = {
   autoDetectRoutinePaths: true,
   autoRebuildIndexOnActivation: true,
   indexExtensionlessRoutines: true,
-  maxWorkspaceFiles: 2000
+  maxWorkspaceFiles: 2000,
+  maxRoutineSearchPathFiles: 30000
 };
 const directoryEntries = new Map([
   ['file:/extra/routines', [
@@ -151,7 +154,9 @@ const directoryEntries = new Map([
   ['file:/workspace/routines', [
     ['XTV.m', 1]
   ]],
-  ['file:/workspace/localr', []],
+  ['file:/workspace/localr', [
+    ['XTV.m', 1]
+  ]],
   ['file:/workspace/localroutines', []],
   ['file:/workspace/r', []],
   ['file:/workspace/src/routines', []]
@@ -201,7 +206,7 @@ Module._load = function patchedLoad(request, parent, isMain) {
 };
 
 const { isMumpsUri } = require('../out/config/language');
-const { MumpsRoutineIndex, buildRoutineIndexFromFiles, routineNameFromUri } = require('../out/features/navigation/routineIndex');
+const { MumpsRoutineIndex, buildRoutineIndexFromFiles, routineNameFromUri, isSupportedRoutineFile } = require('../out/features/navigation/routineIndex');
 const { MumpsDefinitionProvider } = require('../out/features/navigation/definitionProvider');
 const { MumpsDocumentLinkProvider } = require('../out/features/navigation/documentLinkProvider');
 const { MumpsReferenceProvider } = require('../out/features/navigation/referenceProvider');
@@ -319,6 +324,7 @@ index.indexOpenDocument(localDoc);
 assert.equal(index.findRoutine('UJOWXUS')?.uri.toString(), ujowxusUri.toString(), 'routineSearchPaths index routines outside the workspace root');
 assert.equal(index.findRoutine('XPAR')?.uri.toString(), xparUri.toString(), 'configured routineSearchPaths index XPAR outside the workspace root');
 assert.equal(index.findRoutine('EXTLESS')?.uri.toString(), extensionlessUri.toString(), 'extensionless routines are indexed when mforge.indexExtensionlessRoutines is enabled');
+assert.equal(index.findRoutine('XTV')?.uri.toString(), localrXtvUri.toString(), 'localr duplicate routines override routines folder copies');
 assert.equal(index.getLastDiagnostics().skippedByExtension >= 1, true, 'scan diagnostics count files skipped by unsupported extension');
 assert.equal(index.getLastDiagnostics().keyRoutineStatus.UJOWXUS2.includes('FOUND'), true, 'key routine diagnostics include UJOWXUS2 status');
 assert.equal(index.getLastDiagnostics().keyRoutineStatus.XLFDT.includes('FOUND'), true, 'key routine diagnostics include auto-detected XLFDT status');
@@ -328,9 +334,16 @@ assert.equal(outputLines.some((line) => line.includes('Index contains UJOWXUS2')
 const pathState = await index.getRoutinePathState(false);
 assert.equal(pathState.manualPaths.includes('/extra/routines'), true, 'manual routine paths remain part of the effective path state');
 assert.equal(pathState.autoDetectedPaths.includes('/var/worldvista/prod/hakeem/routines'), true, 'auto-detect finds common absolute WorldVistA routine path');
+assert.equal(pathState.autoDetectedPaths.includes('/var/worldvista/prod/hakeem'), false, 'auto-detect does not include broad Hakeem project root');
 assert.equal(pathState.autoDetectedPaths.includes('/workspace/routines'), true, 'auto-detect finds workspace-relative routines folder');
+assert.equal(pathState.autoDetectedPaths.includes('/var/worldvista/prod/hakeem/localr'), true, 'auto-detect finds common localr routine path');
 assert.equal(pathState.effectivePaths.filter((entry) => entry === '/workspace/routines').length, 1, 'manual and auto-detected paths are deduplicated');
 assert.equal(index.findRoutine('SKIPOBJ'), undefined, 'objects/localo folders are excluded from auto-detected source folder scans');
+assert.equal(isSupportedRoutineFile('/tmp/.gitignore', true, 'BAD Q'), false, 'extensionless safety rejects dotfiles');
+assert.equal(isSupportedRoutineFile('/tmp/LICENSE', true, 'LICENSE Q'), false, 'extensionless safety rejects LICENSE');
+assert.equal(isSupportedRoutineFile('/tmp/CNAME', true, 'CNAME Q'), false, 'extensionless safety rejects CNAME');
+assert.equal(isSupportedRoutineFile('/tmp/package', true, 'PACKAGE Q'), false, 'extensionless safety rejects package files');
+assert.equal(isSupportedRoutineFile('/tmp/1', true, '1 Q'), false, 'extensionless safety rejects numeric names');
 
 const autoOutputStart = outputLines.length;
 const autoIndex = new MumpsRoutineIndex(output);
@@ -338,15 +351,37 @@ autoIndex.scheduleAutoRebuildOnActivation(0);
 autoIndex.scheduleAutoRebuildOnActivation(0);
 await new Promise((resolve) => setTimeout(resolve, 25));
 assert.equal(outputLines.slice(autoOutputStart).filter((line) => line.includes('Auto rebuilding MUMPS routine index after activation')).length, 1, 'auto rebuild is debounced to one activation rebuild');
+autoIndex.scheduleAutoRebuildOnActivation(0);
+await new Promise((resolve) => setTimeout(resolve, 25));
+assert.equal(outputLines.slice(autoOutputStart).filter((line) => line.includes('Auto rebuilding MUMPS routine index after activation')).length, 1, 'auto rebuild runs only once after activation');
 
 registerNavigationDebugCommands({ subscriptions: [] }, index, output);
 await registeredCommands.get('mforge.showRoutineIndexStatus')();
 assert.equal(outputLines.some((line) => line.includes('MUMPS Routine Index Status')), true, 'Show Routine Index Status logs a status header');
 assert.equal(outputLines.some((line) => line.includes('Effective routine paths:') && line.includes('/var/worldvista/prod/hakeem/routines')), true, 'Show Routine Index Status includes effective auto-detected paths');
 assert.equal(outputLines.some((line) => line.includes('XLFDT: FOUND')), true, 'Show Routine Index Status includes key XLFDT routine status');
+assert.equal(outputLines.some((line) => line.includes('Elapsed indexing time:')), true, 'Show Routine Index Status includes elapsed indexing time');
+assert.equal(outputLines.some((line) => line.includes('Limit reached:')), true, 'Show Routine Index Status includes limit status');
+assert.equal(outputLines.some((line) => line.includes('Indexed source paths:')), true, 'Show Routine Index Status includes indexed source paths');
 assert.equal(updateCalls.length, 0, 'Save Detected Routine Paths To Settings does not update settings unless the explicit command is run and confirmed');
 await registeredCommands.get('mforge.saveDetectedRoutinePathsToSettings')();
 assert.equal(updateCalls.length, 0, 'Save Detected Routine Paths To Settings respects cancellation');
+
+settings.routineSearchPaths = ['/var/worldvista/prod/hakeem'];
+settings.indexExtensionlessRoutines = false;
+settings.maxRoutineSearchPathFiles = 1;
+settings['trace.level'] = 'info';
+const broadOutputStart = outputLines.length;
+const broadIndex = new MumpsRoutineIndex(output);
+await broadIndex.rebuild();
+assert.equal(broadIndex.getLastDiagnostics().broadPathWarnings.length, 1, 'manual broad Hakeem root emits a broad-path warning');
+assert.equal(broadIndex.getLastDiagnostics().searchPathLimitReached, true, 'maxRoutineSearchPathFiles limit warning is recorded');
+assert.equal(outputLines.some((line) => line.includes('Routine index file limit reached')), true, 'limit reached warning is logged');
+assert.equal(outputLines.slice(broadOutputStart).some((line) => line.includes('[navigation] Duplicate routine names')), false, 'duplicate routine names are not logged in normal info mode');
+settings.routineSearchPaths = ['/extra/routines', '/workspace/routines'];
+settings.indexExtensionlessRoutines = true;
+settings.maxRoutineSearchPathFiles = 30000;
+settings['trace.level'] = 'debug';
 
 const definitionProvider = new MumpsDefinitionProvider(index);
 const line = localDoc.lineAt(0).text;

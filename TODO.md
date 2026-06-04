@@ -85,6 +85,7 @@
 - [x] Stage 5.1: Implement robust Find References for local labels, indexed cross-routine `LABEL^ROUTINE` calls, common FileMan/VistA APIs, and same-document local variables.
 - [x] Stage 5.1: Add reference settings and `npm run test:stage5` coverage.
 - [x] Stage 5.1: Document references and deferred Stage 5 safety limits.
+- [x] Stage 5.1 stabilization: make Hakeem/WorldVistA indexing deterministic, safe for extensionless files, and reliable for Find References.
 - [ ] Stage 5.2: Implement safe Rename Symbol for local labels and same-document local variables.
 - [ ] Stage 5.3: Implement Call Hierarchy.
 - [ ] Stage 5.4: Implement routine dependency analyzer.

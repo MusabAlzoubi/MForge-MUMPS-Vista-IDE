@@ -12,3 +12,7 @@ Navigation is static and parser-based. It resolves local labels, local variable 
 - Strings, comments, and ignored folders are skipped.
 
 See [Find References](references.md) for reference-specific settings and limitations.
+
+## Hakeem / WorldVistA indexing
+
+Auto-detection now selects only routine source folders such as `/var/worldvista/prod/hakeem/routines` and `/var/worldvista/prod/hakeem/localr`; it does not auto-detect the broad `/var/worldvista/prod/hakeem` project root.

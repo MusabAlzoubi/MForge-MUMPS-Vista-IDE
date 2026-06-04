@@ -2,7 +2,7 @@
 
 MForge is a modern Visual Studio Code extension for MUMPS, GT.M/YottaDB, and VistA developers. It provides syntax highlighting, snippets, formatting, diagnostics, IntelliSense, semantic highlighting, routine indexing, Ctrl+Click navigation, and VistA-friendly development tools.
 
-**Version:** 0.5.0<br>
+**Version:** 0.5.1<br>
 **VS Code:** ^1.90.0<br>
 **License:** MIT<br>
 **Focus:** MUMPS / VistA / YottaDB
@@ -48,7 +48,7 @@ MForge is a modern Visual Studio Code extension for MUMPS, GT.M/YottaDB, and Vis
 
 ## Stage 5 Advanced Code Intelligence Status
 
-MForge 0.5.0 starts Stage 5 with **Stage 5.1 Find References**. Shift+F12 now supports local labels, cross-routine `LABEL^ROUTINE` calls, common FileMan/VistA APIs (`GET1^DIQ`, `FILE^DIE`, `UPDATE^DIE`, `FIND1^DIC`, `GET^XPAR`, `UP^XLFSTR`), and same-document local variables.
+MForge 0.5.1 starts Stage 5 with **Stage 5.1 Find References**. Shift+F12 now supports local labels, cross-routine `LABEL^ROUTINE` calls, common FileMan/VistA APIs (`GET1^DIQ`, `FILE^DIE`, `UPDATE^DIE`, `FIND1^DIC`, `GET^XPAR`, `UP^XLFSTR`), and same-document local variables.
 
 Deferred Stage 5 items are **Rename Symbol**, **Call Hierarchy**, **Routine Dependency Analyzer**, and **Routine Metrics**. They are documented as planned safe follow-up work and are not implemented in this release. Debugger/runtime and VistA explorers remain out of scope.
 
@@ -98,13 +98,15 @@ Safety notes: references are static, ignore strings and comments, skip ignored f
     "/var/worldvista/prod/hakeem/routines",
     "/var/worldvista/prod/hakeem/localr"
   ],
-  "mforge.maxWorkspaceFiles": 10000,
-  "mforge.indexExtensionlessRoutines": true,
+  "mforge.indexExtensionlessRoutines": false,
+  "mforge.maxRoutineSearchPathFiles": 30000,
   "mforge.references.enabled": true,
   "mforge.references.maxResults": 5000,
   "mforge.trace.level": "info"
 }
 ```
+
+Do not add `/var/worldvista/prod/hakeem` as a routine search path unless necessary. Use the `routines` and `localr` source folders instead so indexing stays fast and avoids non-routine project files.
 
 ## Navigation Examples
 
@@ -143,7 +145,8 @@ Use Ctrl+Click, F12, Peek Definition, or Shift+F12 Find References on labels, lo
 | `mforge.completion.enabled` | `true` | Enables completion for commands, intrinsics, system variables, labels, and routines. |
 | `mforge.signatureHelp.enabled` | `true` | Enables intrinsic function signature help. |
 | `mforge.semanticHighlighting.enabled` | `true` | Enables semantic highlighting for MUMPS files. |
-| `mforge.maxWorkspaceFiles` | `2000` | Maximum number of MUMPS routine files to scan lazily in a workspace. |
+| `mforge.maxWorkspaceFiles` | `5000` | Maximum number of MUMPS routine files to scan lazily in the active workspace. |
+| `mforge.maxRoutineSearchPathFiles` | `30000` | Maximum number of MUMPS routine files to scan in configured or auto-detected routine search paths. |
 | `mforge.workspaceScanDebounceMs` | `250` | Debounce interval before marking the workspace routine index dirty after file events. |
 | `mforge.routineSearchPaths` | `[]` | Additional absolute or workspace-relative folders to scan for MUMPS routine files. |
 | `mforge.indexExtensionlessRoutines` | `false` | Indexes extensionless routine files for VistA/YottaDB exports when enabled. |
@@ -170,7 +173,7 @@ code --install-extension mforge-mumps-vista-ide-x.y.z.vsix
 For this release, the expected local VSIX name is:
 
 ```bash
-code --install-extension mforge-mumps-vista-ide-0.5.0.vsix
+code --install-extension mforge-mumps-vista-ide-0.5.1.vsix
 ```
 
 ## Troubleshooting
@@ -181,7 +184,7 @@ Open a supported MUMPS file such as `.m`, `.M`, `.int`, `.rou`, `.mps`, or `.mum
 
 ### Semantic token errors
 
-MForge uses VS Code-compatible semantic token IDs with letters, numbers, hyphens, and underscores only. If VS Code reports semantic token schema errors, reinstall the latest VSIX and confirm the installed extension is version 0.5.0 or newer.
+MForge uses VS Code-compatible semantic token IDs with letters, numbers, hyphens, and underscores only. If VS Code reports semantic token schema errors, reinstall the latest VSIX and confirm the installed extension is version 0.5.1 or newer.
 
 ### Ctrl+Click does not work
 

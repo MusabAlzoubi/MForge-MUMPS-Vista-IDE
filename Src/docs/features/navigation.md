@@ -106,8 +106,9 @@ The navigation index avoids assuming that `uri.fsPath` is available. Workspace f
 | Setting | Default | Description |
 | --- | --- | --- |
 | `mforge.navigation.enabled` | `true` | Enables document links, Ctrl+Click/F12 definitions, Find References, symbols, and routine indexing. |
-| `mforge.maxWorkspaceFiles` | `2000` | Maximum supported routine files to scan for the workspace index and configured routine search paths. |
+| `mforge.maxWorkspaceFiles` | `5000` | Maximum supported routine files to scan for the workspace index and configured routine search paths. |
 | `mforge.routineSearchPaths` | `[]` | Additional absolute or workspace-relative folders to scan for MUMPS routine files outside the active workspace root. |
+| `mforge.maxRoutineSearchPathFiles` | `30000` | Maximum supported routine files to scan in configured and auto-detected routine search paths. |
 | `mforge.autoDetectRoutinePaths` | `true` | Automatically detects common VistA/YottaDB routine folders and uses them internally without modifying settings. |
 | `mforge.autoRebuildIndexOnActivation` | `true` | Rebuilds the routine index shortly after activation when routine folders are detected. |
 | `mforge.indexExtensionlessRoutines` | `false` | Also index extensionless routine files when your VistA/YottaDB export omits file extensions. |
@@ -115,11 +116,32 @@ The navigation index avoids assuming that `uri.fsPath` is available. Workspace f
 
 ### Automatic routine path detection
 
-When `mforge.autoDetectRoutinePaths` is enabled, MForge probes common absolute WorldVistA/Hakeem folders (`/var/worldvista/prod/hakeem/routines`, `/var/worldvista/prod/hakeem/localr`, `/var/worldvista/prod/hakeem/localroutines`, `/var/worldvista/prod/hakeem/r`, `/var/worldvista/prod/hakeem/local`, and `/var/worldvista/prod/hakeem`) and workspace-relative folders (`routines`, `localr`, `localroutines`, `r`, and `src/routines`). A candidate is only used when it exists and contains supported MUMPS routine files.
+When `mforge.autoDetectRoutinePaths` is enabled, MForge probes common absolute WorldVistA/Hakeem folders (`/var/worldvista/prod/hakeem/routines`, `/var/worldvista/prod/hakeem/localr`, `/var/worldvista/prod/hakeem/localroutines`, `/var/worldvista/prod/hakeem/r`, `/var/worldvista/prod/hakeem/local`) and workspace-relative folders (`routines`, `localr`, `localroutines`, `r`, and `src/routines`). A candidate is only used when it exists and contains supported MUMPS routine files.
 
 MForge combines manual `mforge.routineSearchPaths` with auto-detected paths, deduplicates them, and keeps manual paths first. It does not edit user settings automatically. Run **MForge: Save Detected Routine Paths To Settings** only when you want to persist the detected paths into `mforge.routineSearchPaths`.
 
 With `mforge.autoRebuildIndexOnActivation`, the extension waits briefly after activation, logs manual paths, detected paths, effective paths, indexed routine count, and label count, then rebuilds once. **MForge: Show Routine Index Status** logs the last rebuild time and key routine status for `UJOWXUS`, `XPAR`, `XLFSTR`, `DIE`, `DIQ`, `XLFDT`, `XUS4`, and `XTV`.
+
+
+### Recommended Hakeem / WorldVistA settings
+
+Use explicit routine source folders and avoid broad parent folders:
+
+```json
+{
+  "mforge.autoDetectRoutinePaths": true,
+  "mforge.autoRebuildIndexOnActivation": true,
+  "mforge.routineSearchPaths": [
+    "/var/worldvista/prod/hakeem/routines",
+    "/var/worldvista/prod/hakeem/localr"
+  ],
+  "mforge.indexExtensionlessRoutines": false,
+  "mforge.maxRoutineSearchPathFiles": 30000,
+  "mforge.trace.level": "info"
+}
+```
+
+Do not add `/var/worldvista/prod/hakeem` as a routine search path unless absolutely necessary. It is a broad project root and can contain config, license, object, generated, and other non-routine files. MForge now warns when this broad root is manually configured.
 
 ### Configuring VistA routine search paths
 

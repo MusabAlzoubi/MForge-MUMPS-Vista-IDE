@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.5.1 - 2026-06-04
+
+### Fixed
+
+- Stabilized routine indexing for large Hakeem/WorldVistA workspaces by removing broad project-root auto-detection and scanning only likely routine source folders.
+- Added strict extensionless routine safety checks so dotfiles, license files, package/config files, CNAME, and numeric names are not indexed as routines.
+- Added `mforge.maxRoutineSearchPathFiles`, file-limit warnings, elapsed indexing diagnostics, indexed source path reporting, broad-path warnings, and quieter normal-mode index logs.
+- Improved duplicate handling so `localr` routines override `routines` copies and duplicate details are debug-only.
+- Improved Find References guidance when a target routine is not indexed.
+
 ## 0.5.0 - 2026-06-04
 
 ### Added

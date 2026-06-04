@@ -29,3 +29,7 @@ Stage 5.1 adds a dedicated MForge Find References provider registered with `vsco
 ## Troubleshooting
 
 If cross-routine references are missing, run **MForge: Rebuild Routine Index**, check **MForge: Show Routine Index Status**, and add missing VistA routine folders to `mforge.routineSearchPaths`.
+
+## Index reliability guidance
+
+For large Hakeem/WorldVistA trees, keep `mforge.indexExtensionlessRoutines` disabled when `.m` files exist and configure only routine source folders such as `/var/worldvista/prod/hakeem/routines` and `/var/worldvista/prod/hakeem/localr`. Do not configure `/var/worldvista/prod/hakeem` unless necessary; it is broad and can slow indexing. If Shift+F12 reports that a routine is not indexed, run **MForge: Show Routine Index Status**, remove broad paths, and run **MForge: Rebuild Routine Index**.

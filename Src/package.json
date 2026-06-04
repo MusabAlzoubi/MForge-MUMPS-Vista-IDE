@@ -2,7 +2,7 @@
   "name": "mforge-mumps-vista-ide",
   "displayName": "MForge MUMPS & VistA IDE",
   "description": "A modern VS Code IDE toolkit for MUMPS, GT.M/YottaDB, and VistA development with highlighting, navigation, IntelliSense, diagnostics, formatting, semantic tokens, and routine indexing.",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "publisher": "dopamind",
   "license": "MIT",
   "repository": {
@@ -66,7 +66,7 @@
     "test": "npm run test:semantic-contributions && npm run test:stage2 && npm run test:stage3 && npm run test:stage4 && npm run test:stage45 && npm run test:stage46 && npm run test:stage5",
     "package": "npm run env:check && npm run compile && npm run test && vsce package",
     "package:local": "npm run package",
-    "install:local": "code --install-extension mforge-mumps-vista-ide-0.5.0.vsix",
+    "install:local": "code --install-extension mforge-mumps-vista-ide-0.5.1.vsix",
     "test:stage4": "node scripts/test-stage4.js",
     "test:stage45": "node scripts/test-stage45.js",
     "test:stage46": "node scripts/test-stage46.js",
@@ -177,9 +177,9 @@
         },
         "mforge.maxWorkspaceFiles": {
           "type": "number",
-          "default": 2000,
+          "default": 5000,
           "minimum": 1,
-          "description": "Maximum number of supported MUMPS routine files to scan lazily for the workspace routine index."
+          "description": "Maximum number of supported MUMPS routine files to scan from the active workspace. Configured routine search paths use mforge.maxRoutineSearchPathFiles."
         },
         "mforge.hover.enabled": {
           "type": "boolean",
@@ -245,6 +245,12 @@
           "default": 5000,
           "minimum": 1,
           "description": "Maximum number of locations returned by MForge Find References before truncating results."
+        },
+        "mforge.maxRoutineSearchPathFiles": {
+          "type": "number",
+          "default": 30000,
+          "minimum": 1,
+          "description": "Maximum number of supported MUMPS routine files to scan from configured or auto-detected routine search paths."
         }
       }
     },

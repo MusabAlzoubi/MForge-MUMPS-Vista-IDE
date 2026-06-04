@@ -24,6 +24,13 @@ export class MForgeReferenceProvider implements vscode.ReferenceProvider {
     }
 
     this.debug(`Finding references for ${target.kind} '${target.name}' in ${document.uri.toString()}.`);
+    if (target.reference?.routine) {
+      await this.routineIndex.ensureBuilt();
+      if (!this.routineIndex.findRoutine(target.reference.routine)) {
+        this.output?.appendLine(`[references] Routine ${target.reference.routine} is not indexed. Add routine folder or run Rebuild Routine Index.`);
+      }
+    }
+
     const includeDeclarations = context.includeDeclaration && getIncludeDeclarations();
     return findReferencesForTarget(document, target, this.routineIndex, {
       includeDeclarations,
