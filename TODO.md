@@ -82,14 +82,14 @@
 
 ## Stage 5: Advanced analysis
 
-- [ ] Stage 5 remains next after pre-release Marketplace polish.
-- [x] Implement static routine/label find references.
-- [ ] Implement deeper variable/global find references and safe variable rename.
-- [ ] Implement routine dependency analyzer.
-- [ ] Implement code metrics.
-- [ ] Add analysis reports.
-- [ ] Add analysis tests.
-- [ ] Document advanced analysis.
+- [x] Stage 5.1: Implement robust Find References for local labels, indexed cross-routine `LABEL^ROUTINE` calls, common FileMan/VistA APIs, and same-document local variables.
+- [x] Stage 5.1: Add reference settings and `npm run test:stage5` coverage.
+- [x] Stage 5.1: Document references and deferred Stage 5 safety limits.
+- [ ] Stage 5.2: Implement safe Rename Symbol for local labels and same-document local variables.
+- [ ] Stage 5.3: Implement Call Hierarchy.
+- [ ] Stage 5.4: Implement routine dependency analyzer.
+- [ ] Stage 5.5: Implement code metrics.
+- [ ] Add analysis reports after dependency and metrics commands land.
 
 ## Stage 6: Runtime and debugging
 

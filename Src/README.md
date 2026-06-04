@@ -2,7 +2,7 @@
 
 MForge is a modern Visual Studio Code extension for MUMPS, GT.M/YottaDB, and VistA developers. It provides syntax highlighting, snippets, formatting, diagnostics, IntelliSense, semantic highlighting, routine indexing, Ctrl+Click navigation, and VistA-friendly development tools.
 
-**Version:** 0.4.10<br>
+**Version:** 0.5.0<br>
 **VS Code:** ^1.90.0<br>
 **License:** MIT<br>
 **Focus:** MUMPS / VistA / YottaDB
@@ -30,6 +30,7 @@ MForge is a modern Visual Studio Code extension for MUMPS, GT.M/YottaDB, and Vis
 - Ctrl+Click / F12 navigation for local and cross-routine references.
 - Peek Definition support through VS Code definition providers.
 - Document links for resolvable MUMPS references.
+- Find References for local labels, indexed `LABEL^ROUTINE` calls, common FileMan/VistA APIs, and same-document local variables.
 - Local label navigation.
 - Cross-routine navigation.
 - Local variable navigation.
@@ -43,6 +44,15 @@ MForge is a modern Visual Studio Code extension for MUMPS, GT.M/YottaDB, and Vis
 - Completion for commands, intrinsics, and system variables.
 - Label and routine completion from the current document and routine index.
 - Signature help for common intrinsic functions.
+
+
+## Stage 5 Advanced Code Intelligence Status
+
+MForge 0.5.0 starts Stage 5 with **Stage 5.1 Find References**. Shift+F12 now supports local labels, cross-routine `LABEL^ROUTINE` calls, common FileMan/VistA APIs (`GET1^DIQ`, `FILE^DIE`, `UPDATE^DIE`, `FIND1^DIC`, `GET^XPAR`, `UP^XLFSTR`), and same-document local variables.
+
+Deferred Stage 5 items are **Rename Symbol**, **Call Hierarchy**, **Routine Dependency Analyzer**, and **Routine Metrics**. They are documented as planned safe follow-up work and are not implemented in this release. Debugger/runtime and VistA explorers remain out of scope.
+
+Safety notes: references are static, ignore strings and comments, skip ignored folders such as `objects` and `localo`, use the cached routine index for cross-routine searches, respect `mforge.maxWorkspaceFiles`, and cap results with `mforge.references.maxResults`. Dynamic indirection and cross-document variable references are intentionally not resolved.
 
 ## VistA / YottaDB Support
 
@@ -90,6 +100,8 @@ MForge is a modern Visual Studio Code extension for MUMPS, GT.M/YottaDB, and Vis
   ],
   "mforge.maxWorkspaceFiles": 10000,
   "mforge.indexExtensionlessRoutines": true,
+  "mforge.references.enabled": true,
+  "mforge.references.maxResults": 5000,
   "mforge.trace.level": "info"
 }
 ```
@@ -103,7 +115,7 @@ S FDA(200,IEN,2)=XUH D FILE^DIE("","FDA","ERR")
 I '$D(ASKINGVC)!'$$GET^XPAR("SYS","XU VC CASE SENSITIVE") S X=$$UP^XLFSTR(X)
 ```
 
-Use Ctrl+Click, F12, or Peek Definition on labels, local variables, and routine references when the target is in the current document or indexed routine paths.
+Use Ctrl+Click, F12, Peek Definition, or Shift+F12 Find References on labels, local variables, and routine references when the target is in the current document or indexed routine paths.
 
 ## Commands
 
@@ -123,7 +135,10 @@ Use Ctrl+Click, F12, or Peek Definition on labels, local variables, and routine 
 | `mforge.trace.level` | `off` | Controls diagnostic logging for MForge extension features. |
 | `mforge.formatter.enabled` | `true` | Enables the conservative MForge document formatter for MUMPS files. |
 | `mforge.diagnostics.enabled` | `true` | Enables basic diagnostics for MUMPS files. |
-| `mforge.navigation.enabled` | `true` | Enables document links, Ctrl+Click, definitions, references, routine indexing, document symbols, and workspace symbols. |
+| `mforge.navigation.enabled` | `true` | Enables document links, Ctrl+Click, definitions, routine indexing, document symbols, and workspace symbols. |
+| `mforge.references.enabled` | `true` | Enables Stage 5.1 Find References. |
+| `mforge.references.includeDeclarations` | `true` | Includes label declarations or routine-top fallbacks when VS Code requests declarations. |
+| `mforge.references.maxResults` | `5000` | Caps Find References result counts. |
 | `mforge.hover.enabled` | `true` | Enables hover help for commands, intrinsic functions, and system variables. |
 | `mforge.completion.enabled` | `true` | Enables completion for commands, intrinsics, system variables, labels, and routines. |
 | `mforge.signatureHelp.enabled` | `true` | Enables intrinsic function signature help. |
@@ -155,7 +170,7 @@ code --install-extension mforge-mumps-vista-ide-x.y.z.vsix
 For this release, the expected local VSIX name is:
 
 ```bash
-code --install-extension mforge-mumps-vista-ide-0.4.10.vsix
+code --install-extension mforge-mumps-vista-ide-0.5.0.vsix
 ```
 
 ## Troubleshooting
@@ -166,7 +181,7 @@ Open a supported MUMPS file such as `.m`, `.M`, `.int`, `.rou`, `.mps`, or `.mum
 
 ### Semantic token errors
 
-MForge uses VS Code-compatible semantic token IDs with letters, numbers, hyphens, and underscores only. If VS Code reports semantic token schema errors, reinstall the latest VSIX and confirm the installed extension is version 0.4.10 or newer.
+MForge uses VS Code-compatible semantic token IDs with letters, numbers, hyphens, and underscores only. If VS Code reports semantic token schema errors, reinstall the latest VSIX and confirm the installed extension is version 0.5.0 or newer.
 
 ### Ctrl+Click does not work
 

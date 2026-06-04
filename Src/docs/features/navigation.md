@@ -172,3 +172,11 @@ If `GET1^DIQ` works but another routine reference such as `ACCEPT^UJOWXUS` does 
 | Large workspace feels slow | Lower `mforge.maxWorkspaceFiles` or narrow the opened workspace folder. |
 | Output/renderer logs show parser messages | Update to Stage 4.6; these URI schemes/names are filtered before parsing. |
 | `GET1^DIQ` works but `XPAR`/`DIE` does not | Rebuild the index, inspect key routine status, add production/local routine directories to `mforge.routineSearchPaths`, then run **MForge: Find Routine In Index**. |
+
+## Stage 5.1 Find References
+
+Find References now uses the Stage 5.1 provider for local labels, indexed `LABEL^ROUTINE` calls, common FileMan/VistA APIs, and same-document local variables. It shares the scanner used by navigation for inline calls, no-parentheses extrinsics, unary-NOT/logical extrinsics, and multiple references on one line.
+
+Reference searches use the cached routine index for cross-routine results, respect `mforge.maxWorkspaceFiles`, cap locations with `mforge.references.maxResults`, and skip comments, strings, and ignored folders such as `objects` and `localo`.
+
+Rename Symbol, Call Hierarchy, dependency analysis, and metrics remain deferred beyond Stage 5.1.

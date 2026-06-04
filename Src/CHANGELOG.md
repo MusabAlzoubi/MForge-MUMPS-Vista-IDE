@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.5.0 - 2026-06-04
+
+### Added
+
+- Started Stage 5 Advanced Code Intelligence with Stage 5.1 Find References.
+- Added a dedicated references feature using MForge's native TypeScript scanner and routine index.
+- Added reference support for local labels, indexed cross-routine `LABEL^ROUTINE` calls, common FileMan/VistA APIs, and same-document local variables.
+- Added `mforge.references.enabled`, `mforge.references.includeDeclarations`, and `mforge.references.maxResults` settings.
+- Added `npm run test:stage5` fixture coverage for local labels, FileMan APIs, no-parentheses extrinsics, unary-NOT/logical extrinsics, multiple references per line, local variables, string/comment safety, remote URIs, ignored folders, and max-result limiting.
+
+### Deferred
+
+- Rename Symbol, Call Hierarchy, Routine Dependency Analyzer, Routine Metrics, debugger/runtime integration, and VistA explorers remain deferred for later safe sub-stages.
+
 ## 0.4.10 - 2026-06-03
 
 ### Fixed

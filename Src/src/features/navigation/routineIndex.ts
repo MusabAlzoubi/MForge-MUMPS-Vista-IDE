@@ -5,12 +5,12 @@ import { parseMumpsRoutine } from '../../parser/routineParser';
 import { MumpsLabel, RoutineParseResult } from '../../parser/types';
 
 const DEFAULT_MAX_WORKSPACE_FILES = 2000;
-const EXCLUDED_SEGMENTS = new Set(['node_modules', '.git', 'dist', 'out', 'Old Extensions', 'objects', 'objects_org', 'localo', 'localo_org']);
+const EXCLUDED_SEGMENTS = new Set(['node_modules', '.git', 'dist', 'out', 'Old Extensions', 'objects', 'objects_org', 'localo', 'localo_org', 'generated']);
 const EXTENSIONS = new Set<string>(SUPPORTED_EXTENSIONS.map((extension) => extension.toLowerCase()));
 const WATCHER_DEBOUNCE_MS = 250;
 const WORKSPACE_ROUTINE_GLOB = '**/*.{m,M,mumps,mps,rou,int}';
 const WORKSPACE_EXTENSIONLESS_GLOB = '**/*';
-const EXCLUDE_GLOB = '{**/node_modules/**,**/.git/**,**/dist/**,**/out/**,**/Old Extensions/**,**/objects/**,**/objects_org/**,**/localo/**,**/localo_org/**}';
+const EXCLUDE_GLOB = '{**/node_modules/**,**/.git/**,**/dist/**,**/out/**,**/Old Extensions/**,**/objects/**,**/objects_org/**,**/localo/**,**/localo_org/**,**/generated/**}';
 const KEY_ROUTINES = ['UJOWXUS', 'UJOWXUS2', 'XPAR', 'XLFSTR', 'DIE', 'DIQ', 'XLFDT', 'XUS4', 'XTV'];
 const AUTO_ABSOLUTE_ROUTINE_PATHS = [
   '/var/worldvista/prod/hakeem/routines',
