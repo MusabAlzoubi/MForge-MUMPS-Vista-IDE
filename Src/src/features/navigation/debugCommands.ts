@@ -20,6 +20,9 @@ export function registerNavigationDebugCommands(context: vscode.ExtensionContext
     vscode.commands.registerCommand('mforge.showRoutineIndexStatus', async () => {
       await showRoutineIndexStatus(routineIndex, output);
     }),
+    vscode.commands.registerCommand('mforge.showNavigationDiagnostics', async () => {
+      await showNavigationDiagnostics(routineIndex, output);
+    }),
     vscode.commands.registerCommand('mforge.saveDetectedRoutinePathsToSettings', async () => {
       await saveDetectedRoutinePathsToSettings(routineIndex, output);
     })
@@ -124,6 +127,23 @@ async function findRoutineInIndex(routineIndex: MumpsRoutineIndex, output?: vsco
       output?.appendLine(`[navigation-debug] possible match: ${candidate.toString()}`);
     }
   }
+  output?.show();
+}
+
+
+async function showNavigationDiagnostics(routineIndex: MumpsRoutineIndex, output?: vscode.OutputChannel): Promise<void> {
+  await routineIndex.ensureBuilt();
+  const diagnostics = routineIndex.getLastDiagnostics();
+  output?.appendLine('[navigation-debug] MForge Navigation Diagnostics');
+  output?.appendLine(`[navigation-debug] Indexed routines: ${routineIndex.getRoutines().length}`);
+  output?.appendLine(`[navigation-debug] Indexed labels: ${routineIndex.getLabelCount()}`);
+  output?.appendLine(`[navigation-debug] Index source folders: ${diagnostics.indexedSourcePaths.join(', ') || '(none)'}`);
+  output?.appendLine(`[navigation-debug] Duplicates removed: ${diagnostics.duplicatesRemoved}`);
+  output?.appendLine(`[navigation-debug] Index build time: ${diagnostics.elapsedMs}ms`);
+  output?.appendLine(`[navigation-debug] Localr indexed: ${diagnostics.localrIndexed}`);
+  output?.appendLine(`[navigation-debug] Routines indexed: ${diagnostics.routinesIndexed}`);
+  output?.appendLine(`[navigation-debug] Cache hits: ${diagnostics.cacheHits}`);
+  output?.appendLine(`[navigation-debug] Cache misses: ${diagnostics.cacheMisses}`);
   output?.show();
 }
 

@@ -95,7 +95,7 @@ The navigation index avoids assuming that `uri.fsPath` is available. Workspace f
 ## Performance safeguards
 
 - Workspace scanning is lazy.
-- Workspace scan size is capped by `mforge.maxWorkspaceFiles`.
+- Navigation indexing does not scan the workspace root; it only scans `mforge.routineSearchPaths` and auto-detected routine source folders.
 - File-system watcher events mark the index dirty through `mforge.workspaceScanDebounceMs`.
 - Open document parses are cached and updated on document changes.
 - Non-MUMPS documents, output documents, and `rendererLog` documents are ignored before parsing.
@@ -106,7 +106,7 @@ The navigation index avoids assuming that `uri.fsPath` is available. Workspace f
 | Setting | Default | Description |
 | --- | --- | --- |
 | `mforge.navigation.enabled` | `true` | Enables document links, Ctrl+Click/F12 definitions, Find References, symbols, and routine indexing. |
-| `mforge.maxWorkspaceFiles` | `5000` | Maximum supported routine files to scan for the workspace index and configured routine search paths. |
+| `mforge.maxWorkspaceFiles` | `5000` | Maximum supported files for non-navigation workspace scans. Navigation routine indexing does not use workspace-root scans. |
 | `mforge.routineSearchPaths` | `[]` | Additional absolute or workspace-relative folders to scan for MUMPS routine files outside the active workspace root. |
 | `mforge.maxRoutineSearchPathFiles` | `30000` | Maximum supported routine files to scan in configured and auto-detected routine search paths. |
 | `mforge.autoDetectRoutinePaths` | `true` | Automatically detects common VistA/YottaDB routine folders and uses them internally without modifying settings. |
@@ -118,7 +118,7 @@ The navigation index avoids assuming that `uri.fsPath` is available. Workspace f
 
 When `mforge.autoDetectRoutinePaths` is enabled, MForge probes common absolute WorldVistA/Hakeem folders (`/var/worldvista/prod/hakeem/routines`, `/var/worldvista/prod/hakeem/localr`, `/var/worldvista/prod/hakeem/localroutines`, `/var/worldvista/prod/hakeem/r`, `/var/worldvista/prod/hakeem/local`) and workspace-relative folders (`routines`, `localr`, `localroutines`, `r`, and `src/routines`). A candidate is only used when it exists and contains supported MUMPS routine files.
 
-MForge combines manual `mforge.routineSearchPaths` with auto-detected paths, deduplicates them, and keeps manual paths first. It does not edit user settings automatically. Run **MForge: Save Detected Routine Paths To Settings** only when you want to persist the detected paths into `mforge.routineSearchPaths`.
+MForge combines manual `mforge.routineSearchPaths` with auto-detected paths, deduplicates them, keeps manual paths first, and on first activation can save detected routine source folders into `mforge.routineSearchPaths` when the setting is empty. Run **MForge: Save Detected Routine Paths To Settings** when you want to persist detected paths explicitly.
 
 With `mforge.autoRebuildIndexOnActivation`, the extension waits briefly after activation, logs manual paths, detected paths, effective paths, indexed routine count, and label count, then rebuilds once. **MForge: Show Routine Index Status** logs the last rebuild time and key routine status for `UJOWXUS`, `XPAR`, `XLFSTR`, `DIE`, `DIQ`, `XLFDT`, `XUS4`, and `XTV`.
 
@@ -153,7 +153,7 @@ Use `mforge.routineSearchPaths` when production or local routine folders are not
   "mforge.autoDetectRoutinePaths": true,
   "mforge.autoRebuildIndexOnActivation": true,
   "mforge.indexExtensionlessRoutines": false,
-  "mforge.maxWorkspaceFiles": 10000
+  "mforge.maxRoutineSearchPathFiles": 30000
 }
 ```
 
@@ -177,7 +177,7 @@ If `GET1^DIQ` works but another routine reference such as `ACCEPT^UJOWXUS` does 
 
 - Dynamic indirection such as `D @TARGET` is not resolved.
 - Routine names are based on filenames without extensions.
-- FileMan API calls navigate when the referenced routine file is present in the workspace or in `mforge.routineSearchPaths`.
+- FileMan API calls navigate when the referenced routine file is present in `mforge.routineSearchPaths`, an auto-detected routine source folder, or an open document.
 - Find References is static and limited to label/routine references. Static inline calls, unary-NOT/logical extrinsics, and no-parentheses extrinsics are supported; dynamic indirection is not.
 - Local variable navigation is intentionally basic: it is same-document only, recognizes `NEW` and `SET`, and does not yet implement full MUMPS scoping, variable references, or rename.
 - Rename remains unimplemented until deeper semantic analysis is added.
@@ -189,9 +189,9 @@ If `GET1^DIQ` works but another routine reference such as `ACCEPT^UJOWXUS` does 
 | --- | --- |
 | No Outline labels appear | Confirm the file language mode is `MForge MUMPS` / `mumps` and `mforge.navigation.enabled` is `true`. |
 | `Ctrl+Click` or `F12` does nothing | Confirm the reference is one of the supported static patterns and is not inside a comment or string. |
-| Cross-routine navigation fails | Run **MForge: Rebuild Routine Index**, add the folder to `mforge.routineSearchPaths`, increase `mforge.maxWorkspaceFiles`, and ensure the file extension is supported. |
+| Cross-routine navigation fails | Run **MForge: Rebuild Routine Index**, add the folder to `mforge.routineSearchPaths`, increase `mforge.maxRoutineSearchPathFiles`, and ensure the file extension is supported. |
 | Remote navigation fails | Confirm the routine exists in the remote workspace, configured search paths are visible to the remote extension host, and the URI is `file:` or `vscode-remote:`. |
-| Large workspace feels slow | Lower `mforge.maxWorkspaceFiles` or narrow the opened workspace folder. |
+| Large Hakeem tree feels slow | Remove broad parent folders from `mforge.routineSearchPaths`; use `localr` and `routines` source folders only. |
 | Output/renderer logs show parser messages | Update to Stage 4.6; these URI schemes/names are filtered before parsing. |
 | `GET1^DIQ` works but `XPAR`/`DIE` does not | Rebuild the index, inspect key routine status, add production/local routine directories to `mforge.routineSearchPaths`, then run **MForge: Find Routine In Index**. |
 
@@ -199,6 +199,10 @@ If `GET1^DIQ` works but another routine reference such as `ACCEPT^UJOWXUS` does 
 
 Find References now uses the Stage 5.1 provider for local labels, indexed `LABEL^ROUTINE` calls, common FileMan/VistA APIs, and same-document local variables. It shares the scanner used by navigation for inline calls, no-parentheses extrinsics, unary-NOT/logical extrinsics, and multiple references on one line.
 
-Reference searches use the cached routine index for cross-routine results, respect `mforge.maxWorkspaceFiles`, cap locations with `mforge.references.maxResults`, and skip comments, strings, and ignored folders such as `objects` and `localo`.
+Reference searches use the cached routine index for cross-routine results, respect `mforge.maxRoutineSearchPathFiles`, cap locations with `mforge.references.maxResults`, and skip comments, strings, and ignored folders such as `objects` and `localo`.
 
 Rename Symbol, Call Hierarchy, dependency analysis, and metrics remain deferred beyond Stage 5.1.
+
+## Old extension review
+
+Stage 5.2 reviewed `Old Extensions/mumps-lsp`, `Old Extensions/tree-sitter-m-vscode`, and `Old Extensions/mumps-debugger---upgrade`. The old Python LSP indexes a whole workspace glob, the tree-sitter extension focuses on semantic tokens/parser integration, and the debugger extension provides document-level symbols/definition helpers. None provided a faster Hakeem-specific routine-source index, so MForge keeps its native TypeScript index and adds localr-first, routine-search-path-only, incremental caching.

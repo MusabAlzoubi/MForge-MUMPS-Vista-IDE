@@ -37,6 +37,7 @@ export interface IndexedRoutine {
   uriKey: string;
   labels: MumpsLabel[];
   sourcePriority?: number;
+  mtime?: number;
 }
 
 export interface RoutineIndexData {
@@ -48,6 +49,8 @@ export interface FileIndexInput {
   text: string;
   uri?: vscode.Uri;
   sourcePriority?: number;
+  labels?: MumpsLabel[];
+  mtime?: number;
 }
 
 export interface RoutineIndexDiagnostics {
@@ -75,6 +78,11 @@ export interface RoutineIndexDiagnostics {
   searchPathLimitReached: boolean;
   indexedSourcePaths: string[];
   broadPathWarnings: string[];
+  duplicatesRemoved: number;
+  localrIndexed: number;
+  routinesIndexed: number;
+  cacheHits: number;
+  cacheMisses: number;
   duplicateRoutineNames: number;
   duplicateRoutineNameList: string[];
   keyRoutineStatus: Record<string, string>;
@@ -82,6 +90,15 @@ export interface RoutineIndexDiagnostics {
 
 interface BuildRoutineIndexOptions {
   includeExtensionless?: boolean;
+}
+
+interface RoutineFileCacheEntry {
+  mtime: number | null;
+  labels: MumpsLabel[];
+  routineName: string;
+  filePath: string;
+  uri: vscode.Uri;
+  sourcePriority: number;
 }
 
 export function isSupportedRoutineFile(filePath: string, includeExtensionless = false, text?: string): boolean {
@@ -164,8 +181,9 @@ export function buildRoutineIndexFromFiles(files: FileIndexInput[], options: Bui
         uri,
         filePath: file.filePath,
         uriKey: uriKey(uri),
-        labels: parseMumpsRoutine(file.text, name).labels,
-        sourcePriority: file.sourcePriority ?? routineSourcePriority(uri, file.filePath)
+        labels: file.labels ?? parseMumpsRoutine(file.text, name).labels,
+        sourcePriority: file.sourcePriority ?? routineSourcePriority(uri, file.filePath),
+        mtime: file.mtime
       };
     })
     .sort((left, right) => left.name.localeCompare(right.name));
@@ -177,6 +195,9 @@ export class MumpsRoutineIndex implements vscode.Disposable {
   private routines = new Map<string, IndexedRoutine>();
   private routinesByUri = new Map<string, IndexedRoutine>();
   private documentCache = new Map<string, RoutineParseResult>();
+  private fileCache = new Map<string, RoutineFileCacheEntry>();
+  private cacheHits = 0;
+  private cacheMisses = 0;
   private built = false;
   private watcher: vscode.FileSystemWatcher | null = null;
   private dirtyTimer: ReturnType<typeof setTimeout> | null = null;
@@ -292,6 +313,7 @@ export class MumpsRoutineIndex implements vscode.Disposable {
         this.debug('Skipped activation auto rebuild because the routine index is already current.');
         return;
       }
+      await this.saveAutoDetectedPathsToSettingsIfUnset(pathState.manualPaths, pathState.autoDetectedPaths);
       if (pathState.effectivePaths.length === 0) {
         this.output?.appendLine('[navigation] Auto routine path detection found no routine folders; lazy workspace indexing remains available.');
         return;
@@ -304,6 +326,21 @@ export class MumpsRoutineIndex implements vscode.Disposable {
       this.debug(`Effective routine paths: ${pathState.effectivePaths.join(', ') || '(none)'}`);
       await this.rebuild();
     }, delayMs);
+  }
+
+
+  private async saveAutoDetectedPathsToSettingsIfUnset(manualPaths: string[], autoDetectedPaths: string[]): Promise<void> {
+    if (manualPaths.length > 0 || autoDetectedPaths.length === 0) {
+      return;
+    }
+    const preferred = autoDetectedPaths.filter((entry) => /(?:^|[\/])(?:localr|routines)$/iu.test(entry));
+    const toSave = preferred.length > 0 ? preferred : autoDetectedPaths;
+    try {
+      await vscode.workspace.getConfiguration('mforge').update('routineSearchPaths', toSave, vscode.ConfigurationTarget.Global);
+      this.output?.appendLine(`[navigation] Saved detected routine paths to mforge.routineSearchPaths: ${toSave.join(', ')}`);
+    } catch (error) {
+      this.debug(`Could not save detected routine paths: ${String(error)}`);
+    }
   }
 
   markDirtyDebounced(): void {
@@ -394,6 +431,8 @@ export class MumpsRoutineIndex implements vscode.Disposable {
 
   private async rebuildIndex(): Promise<void> {
     const startTime = Date.now();
+    this.cacheHits = 0;
+    this.cacheMisses = 0;
     const generation = ++this.rebuildGeneration;
     const maxFiles = getMaxWorkspaceFiles();
     const maxRoutineSearchPathFiles = getMaxRoutineSearchPathFiles();
@@ -402,7 +441,7 @@ export class MumpsRoutineIndex implements vscode.Disposable {
     const includePattern = includeExtensionless ? WORKSPACE_EXTENSIONLESS_GLOB : WORKSPACE_ROUTINE_GLOB;
     const diagnostics = createEmptyDiagnostics();
     diagnostics.workspaceFolders = getWorkspaceFolders().map((folder) => folder.uri.toString());
-    diagnostics.includePatterns = [includePattern, ...pathState.effectivePaths.map((configuredPath) => `${configuredPath}/**/*`)];
+    diagnostics.includePatterns = pathState.effectivePaths.map((configuredPath) => `${configuredPath}/**/*`);
     diagnostics.excludePattern = EXCLUDE_GLOB;
     diagnostics.maxWorkspaceFiles = maxFiles;
     diagnostics.maxRoutineSearchPathFiles = maxRoutineSearchPathFiles;
@@ -419,25 +458,55 @@ export class MumpsRoutineIndex implements vscode.Disposable {
     const seenUris = new Set<string>();
     const inputs: FileIndexInput[] = [];
 
-    const workspaceUris = await vscode.workspace.findFiles(includePattern, EXCLUDE_GLOB, maxFiles);
-    diagnostics.workspaceFilesDiscovered = workspaceUris.length;
-    diagnostics.workspaceLimitReached = workspaceUris.length >= maxFiles;
-    await this.collectInputs(workspaceUris, inputs, seenUris, diagnostics, includeExtensionless);
+    // Navigation indexing is intentionally isolated from workspace-root scans.
+    // Only configured or auto-detected routine source folders feed the routine index.
+    diagnostics.workspaceFilesDiscovered = 0;
+    diagnostics.workspaceLimitReached = false;
 
-    const searchPathUris = await this.findConfiguredRoutineUris(maxRoutineSearchPathFiles, diagnostics);
-    await this.collectInputs(searchPathUris, inputs, seenUris, diagnostics, includeExtensionless);
+    const localrUris = await this.findConfiguredRoutineUris(maxRoutineSearchPathFiles, diagnostics, isLocalrRoutinePath);
+    await this.collectInputs(localrUris, inputs, seenUris, diagnostics, includeExtensionless);
+    this.commitIndexInputs(inputs, diagnostics, includeExtensionless, startTime);
+    diagnostics.localrIndexed = localrUris.length;
 
-    const data = buildRoutineIndexFromFiles(inputs, { includeExtensionless });
-    const duplicateNames = findDuplicateRoutineNames(data.routines);
-    diagnostics.indexedFiles = inputs.length;
-    diagnostics.duplicateRoutineNames = duplicateNames.length;
-    diagnostics.duplicateRoutineNameList = duplicateNames;
-
-    if (generation !== this.rebuildGeneration && data.routines.length < this.routines.size) {
-      this.debug(`Discarded stale rebuild with ${data.routines.length} routine(s); current index has ${this.routines.size}.`);
+    if (generation !== this.rebuildGeneration) {
+      this.debug('Discarded stale localr-first rebuild after a newer rebuild started.');
       return;
     }
 
+    const remainingLimit = Math.max(0, maxRoutineSearchPathFiles - localrUris.length);
+    const remainingUris = remainingLimit > 0
+      ? await this.findConfiguredRoutineUris(remainingLimit, diagnostics, (uri) => !isLocalrRoutinePath(uri))
+      : [];
+    await this.collectInputs(remainingUris, inputs, seenUris, diagnostics, includeExtensionless);
+    diagnostics.routinesIndexed = remainingUris.filter(isRoutinesRoutinePath).length;
+
+    const duplicateNames = findDuplicateRoutineNames(buildRoutineIndexFromFiles(inputs, { includeExtensionless }).routines);
+    diagnostics.duplicateRoutineNames = duplicateNames.length;
+    diagnostics.duplicateRoutineNameList = duplicateNames;
+
+    if (generation !== this.rebuildGeneration) {
+      this.debug('Discarded stale full rebuild after a newer rebuild started.');
+      return;
+    }
+
+    this.commitIndexInputs(inputs, diagnostics, includeExtensionless, startTime);
+    diagnostics.duplicatesRemoved = Math.max(0, inputs.length - this.routines.size);
+    diagnostics.cacheHits = this.cacheHits;
+    diagnostics.cacheMisses = this.cacheMisses;
+    this.lastDiagnostics = diagnostics;
+    this.output?.appendLine(`[navigation] Indexed ${this.routines.size} MUMPS routine(s), ${this.getLabelCount()} label(s) in ${diagnostics.elapsedMs}ms.`);
+    if (diagnostics.workspaceLimitReached || diagnostics.searchPathLimitReached) {
+      this.output?.appendLine('[navigation] Routine index file limit reached; some routines may not be indexed. Increase mforge.maxWorkspaceFiles or mforge.maxRoutineSearchPathFiles.');
+    }
+    for (const warning of diagnostics.broadPathWarnings) {
+      this.output?.appendLine(`[navigation] ${warning}`);
+    }
+    this.output?.appendLine(`[navigation] Key routines: ${KEY_ROUTINES.map((name) => `${name}=${diagnostics.keyRoutineStatus[name]?.startsWith('FOUND') ? 'FOUND' : 'not indexed'}`).join(', ')}`);
+    this.logDebugIndexSummary();
+  }
+
+  private commitIndexInputs(inputs: FileIndexInput[], diagnostics: RoutineIndexDiagnostics, includeExtensionless: boolean, startTime: number): void {
+    const data = buildRoutineIndexFromFiles(inputs, { includeExtensionless });
     this.routines = new Map();
     this.routinesByUri = new Map();
     for (const routine of data.routines) {
@@ -448,20 +517,13 @@ export class MumpsRoutineIndex implements vscode.Disposable {
     }
     diagnostics.indexedFiles = this.routines.size;
     diagnostics.elapsedMs = Date.now() - startTime;
+    diagnostics.cacheHits = this.cacheHits;
+    diagnostics.cacheMisses = this.cacheMisses;
     this.lastRebuildTime = new Date().toISOString();
     diagnostics.lastRebuildTime = this.lastRebuildTime;
     diagnostics.keyRoutineStatus = this.createKeyRoutineStatus();
     this.lastDiagnostics = diagnostics;
     this.built = true;
-    this.output?.appendLine(`[navigation] Indexed ${this.routines.size} MUMPS routine(s), ${this.getLabelCount()} label(s) in ${diagnostics.elapsedMs}ms.`);
-    if (diagnostics.workspaceLimitReached || diagnostics.searchPathLimitReached) {
-      this.output?.appendLine('[navigation] Routine index file limit reached; some routines may not be indexed. Increase mforge.maxWorkspaceFiles or mforge.maxRoutineSearchPathFiles.');
-    }
-    for (const warning of diagnostics.broadPathWarnings) {
-      this.output?.appendLine(`[navigation] ${warning}`);
-    }
-    this.output?.appendLine(`[navigation] Key routines: ${KEY_ROUTINES.map((name) => `${name}=${diagnostics.keyRoutineStatus[name]?.startsWith('FOUND') ? 'FOUND' : 'not indexed'}`).join(', ')}`);
-    this.logDebugIndexSummary();
   }
 
   async findRoutineCandidatesInSearchPaths(name: string): Promise<vscode.Uri[]> {
@@ -495,21 +557,41 @@ export class MumpsRoutineIndex implements vscode.Disposable {
         continue;
       }
       try {
+        const mtime = await getWorkspaceMtime(uri);
+        const cached = this.fileCache.get(key);
+        if (cached && cached.mtime !== null && mtime !== null && cached.mtime === mtime) {
+          this.cacheHits += 1;
+          inputs.push({
+            filePath: cached.filePath,
+            uri: cached.uri,
+            text: '',
+            labels: cached.labels,
+            sourcePriority: cached.sourcePriority,
+            mtime: cached.mtime ?? undefined
+          });
+          continue;
+        }
+
+        this.cacheMisses += 1;
         const text = await readWorkspaceText(uri);
         if (!isSupportedRoutineFile(value, includeExtensionless, text)) {
           diagnostics.skippedByContent += 1;
           this.debug(`Skipped by extensionless routine safety checks: ${uri.toString()}`);
           continue;
         }
-        inputs.push({ filePath: value, uri, text, sourcePriority: routineSourcePriority(uri, value) });
+        const routineName = routineNameFromUri(uri);
+        const labels = parseMumpsRoutine(text, routineName).labels;
+        const sourcePriority = routineSourcePriority(uri, value);
+        this.fileCache.set(key, { mtime, labels, routineName, filePath: value, uri, sourcePriority });
+        inputs.push({ filePath: value, uri, text, labels, sourcePriority, mtime: mtime ?? undefined });
       } catch (error) {
         this.debug(`Could not index ${uri.toString()}: ${String(error)}`);
       }
     }
   }
 
-  private async findConfiguredRoutineUris(maxFiles: number, diagnostics: RoutineIndexDiagnostics): Promise<vscode.Uri[]> {
-    const roots = await this.getEffectiveRoutineSearchRootUris(false);
+  private async findConfiguredRoutineUris(maxFiles: number, diagnostics: RoutineIndexDiagnostics, rootPredicate?: (uri: vscode.Uri) => boolean): Promise<vscode.Uri[]> {
+    const roots = (await this.getEffectiveRoutineSearchRootUris(false)).filter((root) => !rootPredicate || rootPredicate(root));
     const results: vscode.Uri[] = [];
     const seen = new Set<string>();
     for (const root of roots) {
@@ -701,6 +783,30 @@ async function readWorkspaceText(uri: vscode.Uri): Promise<string> {
   return new TextDecoder('utf-8').decode(bytes);
 }
 
+
+async function getWorkspaceMtime(uri: vscode.Uri): Promise<number | null> {
+  const fsWithStat = vscode.workspace.fs as typeof vscode.workspace.fs & { stat?: (uri: vscode.Uri) => Promise<{ mtime?: number }> };
+  if (typeof fsWithStat.stat !== 'function') {
+    return null;
+  }
+  try {
+    const stat = await fsWithStat.stat(uri);
+    return typeof stat.mtime === 'number' ? stat.mtime : null;
+  } catch {
+    return null;
+  }
+}
+
+function isLocalrRoutinePath(uri: vscode.Uri): boolean {
+  const value = displayRoutinePath(uri).replace(/\\/gu, '/').toLowerCase();
+  return value.endsWith('/localr') || value.includes('/localr/') || value.endsWith('/localroutines') || value.includes('/localroutines/');
+}
+
+function isRoutinesRoutinePath(uri: vscode.Uri): boolean {
+  const value = displayRoutinePath(uri).replace(/\\/gu, '/').toLowerCase();
+  return value.endsWith('/routines') || value.includes('/routines/');
+}
+
 function getMaxWorkspaceFiles(): number {
   const configured = vscode.workspace.getConfiguration('mforge').get<number>('maxWorkspaceFiles', DEFAULT_MAX_WORKSPACE_FILES);
   return Number.isFinite(configured) && configured > 0 ? Math.floor(configured) : DEFAULT_MAX_WORKSPACE_FILES;
@@ -841,6 +947,11 @@ function createEmptyDiagnostics(): RoutineIndexDiagnostics {
     searchPathLimitReached: false,
     indexedSourcePaths: [],
     broadPathWarnings: [],
+    duplicatesRemoved: 0,
+    localrIndexed: 0,
+    routinesIndexed: 0,
+    cacheHits: 0,
+    cacheMisses: 0,
     duplicateRoutineNames: 0,
     duplicateRoutineNameList: [],
     keyRoutineStatus: {}

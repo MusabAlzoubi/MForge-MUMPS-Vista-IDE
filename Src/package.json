@@ -2,7 +2,7 @@
   "name": "mforge-mumps-vista-ide",
   "displayName": "MForge MUMPS & VistA IDE",
   "description": "A modern VS Code IDE toolkit for MUMPS, GT.M/YottaDB, and VistA development with highlighting, navigation, IntelliSense, diagnostics, formatting, semantic tokens, and routine indexing.",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "publisher": "dopamind",
   "license": "MIT",
   "repository": {
@@ -52,7 +52,8 @@
     "onCommand:mforge.rebuildRoutineIndex",
     "onCommand:mforge.findRoutineInIndex",
     "onCommand:mforge.showRoutineIndexStatus",
-    "onCommand:mforge.saveDetectedRoutinePathsToSettings"
+    "onCommand:mforge.saveDetectedRoutinePathsToSettings",
+    "onCommand:mforge.showNavigationDiagnostics"
   ],
   "main": "./out/extension.js",
   "scripts": {
@@ -66,7 +67,7 @@
     "test": "npm run test:semantic-contributions && npm run test:stage2 && npm run test:stage3 && npm run test:stage4 && npm run test:stage45 && npm run test:stage46 && npm run test:stage5",
     "package": "npm run env:check && npm run compile && npm run test && vsce package",
     "package:local": "npm run package",
-    "install:local": "code --install-extension mforge-mumps-vista-ide-0.5.1.vsix",
+    "install:local": "code --install-extension mforge-mumps-vista-ide-0.5.2.vsix",
     "test:stage4": "node scripts/test-stage4.js",
     "test:stage45": "node scripts/test-stage45.js",
     "test:stage46": "node scripts/test-stage46.js",
@@ -137,6 +138,10 @@
       {
         "command": "mforge.saveDetectedRoutinePathsToSettings",
         "title": "MForge: Save Detected Routine Paths To Settings"
+      },
+      {
+        "command": "mforge.showNavigationDiagnostics",
+        "title": "MForge: Show Navigation Diagnostics"
       }
     ],
     "configurationDefaults": {

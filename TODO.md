@@ -86,6 +86,7 @@
 - [x] Stage 5.1: Add reference settings and `npm run test:stage5` coverage.
 - [x] Stage 5.1: Document references and deferred Stage 5 safety limits.
 - [x] Stage 5.1 stabilization: make Hakeem/WorldVistA indexing deterministic, safe for extensionless files, and reliable for Find References.
+- [x] Stage 5.2 stabilization: isolate navigation indexing from workspace scans, add localr-first incremental indexing, and add navigation diagnostics.
 - [ ] Stage 5.2: Implement safe Rename Symbol for local labels and same-document local variables.
 - [ ] Stage 5.3: Implement Call Hierarchy.
 - [ ] Stage 5.4: Implement routine dependency analyzer.

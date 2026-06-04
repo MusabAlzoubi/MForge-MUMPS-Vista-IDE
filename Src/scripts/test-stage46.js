@@ -161,6 +161,7 @@ const directoryEntries = new Map([
   ['file:/workspace/r', []],
   ['file:/workspace/src/routines', []]
 ]);
+const mtimes = new Map(Array.from(texts.keys()).map((key, index) => [key, 1000 + index]));
 const outputLines = [];
 const updateCalls = [];
 const registeredCommands = new Map();
@@ -178,6 +179,7 @@ Module._load = function patchedLoad(request, parent, isMain) {
         textDocuments: [],
         fs: {
           readFile: async (uri) => Buffer.from(texts.get(uri.toString()) ?? ''),
+          stat: async (uri) => ({ mtime: mtimes.get(uri.toString()) ?? 0 }),
           readDirectory: async (uri) => {
             if (!directoryEntries.has(uri.toString())) {
               throw new Error(`No directory fixture for ${uri.toString()}`);
@@ -319,7 +321,14 @@ assert.equal(refs.some((ref) => ref.label === 'VALUE' && ref.routine === 'ROUTIN
 
 const index = new MumpsRoutineIndex(output);
 const localDoc = createDocument(localUri, texts.get(localUri.toString()));
+const remoteDoc = createDocument(remoteUri, texts.get(remoteUri.toString()));
+const routineBDoc = createDocument(routineBUri, texts.get(routineBUri.toString()));
 await Promise.all([index.rebuild(), index.rebuild()]);
+index.indexOpenDocument(remoteDoc);
+index.indexOpenDocument(routineBDoc);
+index.indexOpenDocument(createDocument(rou1Uri, texts.get(rou1Uri.toString())));
+index.indexOpenDocument(createDocument(rou2Uri, texts.get(rou2Uri.toString())));
+index.indexOpenDocument(createDocument(rou3Uri, texts.get(rou3Uri.toString())));
 index.indexOpenDocument(localDoc);
 assert.equal(index.findRoutine('UJOWXUS')?.uri.toString(), ujowxusUri.toString(), 'routineSearchPaths index routines outside the workspace root');
 assert.equal(index.findRoutine('XPAR')?.uri.toString(), xparUri.toString(), 'configured routineSearchPaths index XPAR outside the workspace root');
@@ -330,6 +339,15 @@ assert.equal(index.getLastDiagnostics().keyRoutineStatus.UJOWXUS2.includes('FOUN
 assert.equal(index.getLastDiagnostics().keyRoutineStatus.XLFDT.includes('FOUND'), true, 'key routine diagnostics include auto-detected XLFDT status');
 assert.equal(index.getLastDiagnostics().keyRoutineStatus.XUS4.includes('FOUND'), true, 'key routine diagnostics include auto-detected XUS4 status');
 assert.equal(index.getLastDiagnostics().keyRoutineStatus.XTV.includes('FOUND'), true, 'key routine diagnostics include workspace-relative XTV status');
+assert.equal(index.getLastDiagnostics().workspaceFilesDiscovered, 0, 'routine indexing does not scan the workspace root');
+await index.rebuild();
+assert.equal(index.getLastDiagnostics().cacheHits > 0, true, 'unchanged routines are reused from the incremental index cache');
+index.indexOpenDocument(remoteDoc);
+index.indexOpenDocument(routineBDoc);
+index.indexOpenDocument(createDocument(rou1Uri, texts.get(rou1Uri.toString())));
+index.indexOpenDocument(createDocument(rou2Uri, texts.get(rou2Uri.toString())));
+index.indexOpenDocument(createDocument(rou3Uri, texts.get(rou3Uri.toString())));
+index.indexOpenDocument(localDoc);
 assert.equal(outputLines.some((line) => line.includes('Index contains UJOWXUS2')), true, 'debug logging includes UJOWXUS2 key routine status');
 const pathState = await index.getRoutinePathState(false);
 assert.equal(pathState.manualPaths.includes('/extra/routines'), true, 'manual routine paths remain part of the effective path state');
@@ -346,6 +364,8 @@ assert.equal(isSupportedRoutineFile('/tmp/package', true, 'PACKAGE Q'), false, '
 assert.equal(isSupportedRoutineFile('/tmp/1', true, '1 Q'), false, 'extensionless safety rejects numeric names');
 
 const autoOutputStart = outputLines.length;
+const originalRoutineSearchPaths = settings.routineSearchPaths;
+settings.routineSearchPaths = [];
 const autoIndex = new MumpsRoutineIndex(output);
 autoIndex.scheduleAutoRebuildOnActivation(0);
 autoIndex.scheduleAutoRebuildOnActivation(0);
@@ -354,18 +374,23 @@ assert.equal(outputLines.slice(autoOutputStart).filter((line) => line.includes('
 autoIndex.scheduleAutoRebuildOnActivation(0);
 await new Promise((resolve) => setTimeout(resolve, 25));
 assert.equal(outputLines.slice(autoOutputStart).filter((line) => line.includes('Auto rebuilding MUMPS routine index after activation')).length, 1, 'auto rebuild runs only once after activation');
+assert.equal(updateCalls.some((call) => call.name === 'routineSearchPaths' && call.value.includes('/var/worldvista/prod/hakeem/localr') && call.value.includes('/var/worldvista/prod/hakeem/routines')), true, 'first activation saves auto-detected Hakeem routine paths when settings are empty');
+settings.routineSearchPaths = originalRoutineSearchPaths;
 
 registerNavigationDebugCommands({ subscriptions: [] }, index, output);
 await registeredCommands.get('mforge.showRoutineIndexStatus')();
+await registeredCommands.get('mforge.showNavigationDiagnostics')();
 assert.equal(outputLines.some((line) => line.includes('MUMPS Routine Index Status')), true, 'Show Routine Index Status logs a status header');
 assert.equal(outputLines.some((line) => line.includes('Effective routine paths:') && line.includes('/var/worldvista/prod/hakeem/routines')), true, 'Show Routine Index Status includes effective auto-detected paths');
 assert.equal(outputLines.some((line) => line.includes('XLFDT: FOUND')), true, 'Show Routine Index Status includes key XLFDT routine status');
 assert.equal(outputLines.some((line) => line.includes('Elapsed indexing time:')), true, 'Show Routine Index Status includes elapsed indexing time');
 assert.equal(outputLines.some((line) => line.includes('Limit reached:')), true, 'Show Routine Index Status includes limit status');
 assert.equal(outputLines.some((line) => line.includes('Indexed source paths:')), true, 'Show Routine Index Status includes indexed source paths');
-assert.equal(updateCalls.length, 0, 'Save Detected Routine Paths To Settings does not update settings unless the explicit command is run and confirmed');
+assert.equal(outputLines.some((line) => line.includes('MForge Navigation Diagnostics')), true, 'Show Navigation Diagnostics logs a diagnostics header');
+assert.equal(outputLines.some((line) => line.includes('Cache hits:')), true, 'Show Navigation Diagnostics includes cache hits');
+const updateCallsBeforeSaveCommand = updateCalls.length;
 await registeredCommands.get('mforge.saveDetectedRoutinePathsToSettings')();
-assert.equal(updateCalls.length, 0, 'Save Detected Routine Paths To Settings respects cancellation');
+assert.equal(updateCalls.length, updateCallsBeforeSaveCommand, 'Save Detected Routine Paths To Settings respects cancellation');
 
 settings.routineSearchPaths = ['/var/worldvista/prod/hakeem'];
 settings.indexExtensionlessRoutines = false;

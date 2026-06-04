@@ -2,7 +2,7 @@
 
 MForge is a modern Visual Studio Code extension for MUMPS, GT.M/YottaDB, and VistA developers. It provides syntax highlighting, snippets, formatting, diagnostics, IntelliSense, semantic highlighting, routine indexing, Ctrl+Click navigation, and VistA-friendly development tools.
 
-**Version:** 0.5.1<br>
+**Version:** 0.5.2<br>
 **VS Code:** ^1.90.0<br>
 **License:** MIT<br>
 **Focus:** MUMPS / VistA / YottaDB
@@ -48,7 +48,7 @@ MForge is a modern Visual Studio Code extension for MUMPS, GT.M/YottaDB, and Vis
 
 ## Stage 5 Advanced Code Intelligence Status
 
-MForge 0.5.1 starts Stage 5 with **Stage 5.1 Find References**. Shift+F12 now supports local labels, cross-routine `LABEL^ROUTINE` calls, common FileMan/VistA APIs (`GET1^DIQ`, `FILE^DIE`, `UPDATE^DIE`, `FIND1^DIC`, `GET^XPAR`, `UP^XLFSTR`), and same-document local variables.
+MForge 0.5.2 starts Stage 5 with **Stage 5.1 Find References**. Shift+F12 now supports local labels, cross-routine `LABEL^ROUTINE` calls, common FileMan/VistA APIs (`GET1^DIQ`, `FILE^DIE`, `UPDATE^DIE`, `FIND1^DIC`, `GET^XPAR`, `UP^XLFSTR`), and same-document local variables.
 
 Deferred Stage 5 items are **Rename Symbol**, **Call Hierarchy**, **Routine Dependency Analyzer**, and **Routine Metrics**. They are documented as planned safe follow-up work and are not implemented in this release. Debugger/runtime and VistA explorers remain out of scope.
 
@@ -66,7 +66,7 @@ Safety notes: references are static, ignore strings and comments, skip ignored f
 ## Debugging / Diagnostics Tools
 
 - `MForge: Rebuild Routine Index`
-- `MForge: Show Routine Index Status`
+- `MForge: Show Routine Index Status` / `MForge: Show Navigation Diagnostics`
 - `MForge: Find Routine In Index`
 - `MForge: Debug References In Current Line`
 - `MForge: Save Detected Routine Paths To Settings`
@@ -125,7 +125,7 @@ Use Ctrl+Click, F12, Peek Definition, or Shift+F12 Find References on labels, lo
 | --- | --- |
 | `MForge: Show Getting Started` | Opens a quick overview of MForge features and setup tips. |
 | `MForge: Rebuild Routine Index` | Rebuilds the routine index for workspace, detected, configured, and supported remote paths. |
-| `MForge: Show Routine Index Status` | Displays indexed routine counts, detected paths, configured paths, and index health details. |
+| `MForge: Show Routine Index Status` / `MForge: Show Navigation Diagnostics` | Displays indexed routine counts, detected paths, configured paths, and index health details. |
 | `MForge: Find Routine In Index` | Searches the routine index for a routine name and opens the matching file. |
 | `MForge: Debug References In Current Line` | Shows parser and navigation reference details for the active line. |
 | `MForge: Save Detected Routine Paths To Settings` | Writes automatically detected routine folders to `mforge.routineSearchPaths`. |
@@ -173,7 +173,7 @@ code --install-extension mforge-mumps-vista-ide-x.y.z.vsix
 For this release, the expected local VSIX name is:
 
 ```bash
-code --install-extension mforge-mumps-vista-ide-0.5.1.vsix
+code --install-extension mforge-mumps-vista-ide-0.5.2.vsix
 ```
 
 ## Troubleshooting
@@ -184,15 +184,15 @@ Open a supported MUMPS file such as `.m`, `.M`, `.int`, `.rou`, `.mps`, or `.mum
 
 ### Semantic token errors
 
-MForge uses VS Code-compatible semantic token IDs with letters, numbers, hyphens, and underscores only. If VS Code reports semantic token schema errors, reinstall the latest VSIX and confirm the installed extension is version 0.5.1 or newer.
+MForge uses VS Code-compatible semantic token IDs with letters, numbers, hyphens, and underscores only. If VS Code reports semantic token schema errors, reinstall the latest VSIX and confirm the installed extension is version 0.5.2 or newer.
 
 ### Ctrl+Click does not work
 
-Run `MForge: Rebuild Routine Index`, confirm `mforge.navigation.enabled` is true, and check that the target routine is in the workspace, a configured `mforge.routineSearchPaths` entry, or an automatically detected routine folder.
+Run `MForge: Rebuild Routine Index`, confirm `mforge.navigation.enabled` is true, and check that the target routine is in a configured `mforge.routineSearchPaths` entry, an automatically detected routine folder, or an open document.
 
 ### Routine not indexed
 
-Run `MForge: Show Routine Index Status`. If the routine folder is outside your workspace, add it to `mforge.routineSearchPaths`. If your VistA export uses extensionless routines, enable `mforge.indexExtensionlessRoutines`.
+Run `MForge: Show Routine Index Status` / `MForge: Show Navigation Diagnostics`. If the routine folder is outside your workspace, add it to `mforge.routineSearchPaths`. If your VistA export uses extensionless routines, enable `mforge.indexExtensionlessRoutines`.
 
 ### Remote container indexing
 
@@ -200,7 +200,7 @@ MForge uses VS Code URI and filesystem APIs for remote-safe indexing. In contain
 
 ### Performance on huge routine trees
 
-Increase `mforge.maxWorkspaceFiles` only as needed, keep search paths focused, and disable `mforge.indexExtensionlessRoutines` unless your routine tree requires extensionless files.
+Increase `mforge.maxRoutineSearchPathFiles` only as needed, keep search paths focused, and disable `mforge.indexExtensionlessRoutines` unless your routine tree requires extensionless files.
 
 ## Roadmap
 

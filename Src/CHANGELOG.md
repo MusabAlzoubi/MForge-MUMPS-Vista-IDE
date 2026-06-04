@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.5.2 - 2026-06-04
+
+### Fixed
+
+- Isolated routine indexing from workspace-root scans so navigation uses only `mforge.routineSearchPaths` and auto-detected routine source folders.
+- Added localr-first indexing, incremental mtime/label cache reuse, duplicate removal diagnostics, and automatic first-activation saving of detected Hakeem routine paths.
+- Added **MForge: Show Navigation Diagnostics** for routine counts, source folders, duplicate removal, build timing, localr/routines phase counts, and cache hit/miss counts.
+
 ## 0.5.1 - 2026-06-04
 
 ### Fixed
