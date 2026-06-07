@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { isKnownMumpsCommand } from '../../parser/mumpsCommands';
 import { parseMumpsLine } from '../../parser/mumpsLineParser';
+import { analyzeStandards, readStandardsSettings } from './standardsRules';
 
 export function analyzeMumpsDocument(document: vscode.TextDocument): vscode.Diagnostic[] {
   const diagnostics: vscode.Diagnostic[] = [];
@@ -8,6 +9,13 @@ export function analyzeMumpsDocument(document: vscode.TextDocument): vscode.Diag
   for (let lineNumber = 0; lineNumber < document.lineCount; lineNumber++) {
     const line = document.lineAt(lineNumber);
     diagnostics.push(...analyzeMumpsLine(line.text, lineNumber));
+  }
+
+  for (const issue of analyzeStandards(document, readStandardsSettings())) {
+    const diagnostic = new vscode.Diagnostic(issue.range, issue.message, issue.severity);
+    diagnostic.source = issue.source;
+    diagnostic.code = issue.code;
+    diagnostics.push(diagnostic);
   }
 
   return diagnostics;

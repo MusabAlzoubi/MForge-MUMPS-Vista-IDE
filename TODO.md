@@ -95,8 +95,14 @@
 
 ## Stage 6: Runtime and debugging
 
-- [ ] Research MDEBUG protocol and compatibility requirements.
-- [ ] Design debug adapter architecture.
+- [x] Audit `Old Extensions/mumps-debugger---upgrade` for debugger/runtime, templates, standards, commands, settings, and package workflow parity.
+- [x] Port legacy routine header and patch change block templates into MForge.
+- [x] Port VistA/UJO standards diagnostics into MForge.
+- [x] Add MDEBUG-compatible debugger contribution, launch/attach snippets, breakpoint contribution, direct-debug commands, status controls, and Direct Debug view.
+- [x] Add legacy parity tests and `docs/features/legacy-debugger-audit.md`.
+- [ ] Harden full live MDEBUG TCP connector behavior for production debugging sessions.
+- [ ] Research MDEBUG protocol and compatibility requirements for runtime-hardening follow-up.
+- [ ] Design full debug adapter architecture for live runtime parity.
 - [ ] Add GT.M/YottaDB runtime configuration.
 - [ ] Document Docker/Remote SSH workflows.
 - [ ] Add runtime/debugger tests or mocks.

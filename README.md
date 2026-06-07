@@ -1,5 +1,7 @@
 # MForge-MUMPS-Vista-IDE
 
-## Stage 5.1 — Find References
+## Version 0.6.0 — Legacy Debugger Feature Parity
 
-MForge 0.5.2 starts Advanced Code Intelligence with robust Find References for local labels, cross-routine `LABEL^ROUTINE` calls, common FileMan/VistA APIs, and same-document local variables. Rename Symbol, Call Hierarchy, Routine Dependency Analyzer, Routine Metrics, debugger/runtime integration, and VistA explorers are deferred for later safe sub-stages. See `Src/README.md` and `docs/features/references.md` for details.
+MForge 0.6.0 completes the feature-by-feature audit of `Old Extensions/mumps-debugger---upgrade` and ports the useful missing pieces into the current MForge architecture. MForge now includes the legacy routine header and patch change block templates, VistA/UJO standards diagnostics, MDEBUG launch/attach contribution, MDEBUG direct debug controls (`ZSTEP`, `ZWRITE`, `ZSHOW`, `ZBREAK`, `ZPRINT`, `$ZPOSITION`, raw commands, setup, and smoke test), debugger settings, and automated parity tests while retaining existing highlighting, semantic tokens, navigation, references, hover, completion, signature help, snippets, packaging, and routine indexing.
+
+See `Src/README.md` and `docs/features/legacy-debugger-audit.md` for the comparison table, ported feature list, deferred items, and superset rationale.

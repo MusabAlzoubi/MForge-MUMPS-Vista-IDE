@@ -1,5 +1,23 @@
 # Changelog
 
+## 0.6.0 - 2026-06-07
+
+### Added
+
+- Completed the `mumps-debugger---upgrade` legacy debugger audit and documented the feature-by-feature comparison in `docs/features/legacy-debugger-audit.md`.
+- Ported legacy routine header and patch change block template generation with MForge command IDs plus legacy command aliases.
+- Ported VistA/UJO standards diagnostics for routine headers, namespace prefixes, label length, local variable length/case, `^TMP` job scoping, and guarded `^%` global mutations.
+- Added MDEBUG-compatible `mumps` launch/attach debugger contribution, breakpoint contribution, the legacy `MDEBUG.m` helper routine, debug toolbar actions, and a Direct Debug tree view.
+- Added direct debug commands for `ZSTEP`, `ZCONTINUE`, `ZWRITE`, `ZSHOW`, `ZBREAK`, `ZPRINT`, `$ZSTEP`, `$ZPOSITION`, raw commands, setup, smoke testing, output copy, and output clearing.
+- Added `mforge.standards.*` and `mforge.debug.*` settings while reading legacy `mumps.standards.*` settings as compatibility fallbacks.
+- Added `npm run test:legacy-parity` coverage for ported templates, standards diagnostics, versioning, debugger contributions, breakpoint contributions, and debug/template command contributions.
+
+### Changed
+
+- Bumped Marketplace package version to 0.6.0.
+- Updated the package workflow and local install script for the 0.6.0 VSIX.
+- MForge is now documented as a superset of the old debugger extension for useful editor, standards, template, and debugger-control features.
+
 ## 0.5.2 - 2026-06-04
 
 ### Fixed

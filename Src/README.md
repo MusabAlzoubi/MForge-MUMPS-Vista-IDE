@@ -1,8 +1,8 @@
 # MForge MUMPS & VistA IDE
 
-MForge is a modern Visual Studio Code extension for MUMPS, GT.M/YottaDB, and VistA developers. It provides syntax highlighting, snippets, formatting, diagnostics, IntelliSense, semantic highlighting, routine indexing, Ctrl+Click navigation, and VistA-friendly development tools.
+MForge is a modern Visual Studio Code extension for MUMPS, GT.M/YottaDB, and VistA developers. It provides syntax highlighting, snippets, formatting, diagnostics, IntelliSense, semantic highlighting, routine indexing, Ctrl+Click navigation, VistA-friendly development tools, and MDEBUG-compatible debugging controls.
 
-**Version:** 0.5.2<br>
+**Version:** 0.6.0<br>
 **VS Code:** ^1.90.0<br>
 **License:** MIT<br>
 **Focus:** MUMPS / VistA / YottaDB
@@ -20,6 +20,7 @@ MForge is a modern Visual Studio Code extension for MUMPS, GT.M/YottaDB, and Vis
 - Formatter for conservative MUMPS code cleanup.
 - Auto indentation support for labels, commands, comments, and dot-blocks.
 - Diagnostics for common line-level problems.
+- VistA/UJO standards diagnostics for routine headers, namespace prefixes, label length, local variable naming, `^TMP` job scoping, and protected `^%` global mutations.
 - Safe parsing for strings and comments so tooling avoids false positives in quoted text or comments.
 - Dot-block aware formatting for VistA-style indented command blocks.
 
@@ -48,9 +49,9 @@ MForge is a modern Visual Studio Code extension for MUMPS, GT.M/YottaDB, and Vis
 
 ## Stage 5 Advanced Code Intelligence Status
 
-MForge 0.5.2 starts Stage 5 with **Stage 5.1 Find References**. Shift+F12 now supports local labels, cross-routine `LABEL^ROUTINE` calls, common FileMan/VistA APIs (`GET1^DIQ`, `FILE^DIE`, `UPDATE^DIE`, `FIND1^DIC`, `GET^XPAR`, `UP^XLFSTR`), and same-document local variables.
+MForge 0.6.0 keeps **Stage 5.1 Find References** stable and adds the useful standards/template/debugger features from the legacy debugger audit. Shift+F12 now supports local labels, cross-routine `LABEL^ROUTINE` calls, common FileMan/VistA APIs (`GET1^DIQ`, `FILE^DIE`, `UPDATE^DIE`, `FIND1^DIC`, `GET^XPAR`, `UP^XLFSTR`), and same-document local variables.
 
-Deferred Stage 5 items are **Rename Symbol**, **Call Hierarchy**, **Routine Dependency Analyzer**, and **Routine Metrics**. They are documented as planned safe follow-up work and are not implemented in this release. Debugger/runtime and VistA explorers remain out of scope.
+Deferred Stage 5 items are **Rename Symbol**, **Call Hierarchy**, **Routine Dependency Analyzer**, and **Routine Metrics**. They are documented as planned safe follow-up work and are not implemented in this release. Full live MDEBUG protocol parity beyond the Marketplace launch/attach contribution and direct-command bridge remains a deferred runtime-hardening item; VistA explorers remain out of scope.
 
 Safety notes: references are static, ignore strings and comments, skip ignored folders such as `objects` and `localo`, use the cached routine index for cross-routine searches, respect `mforge.maxWorkspaceFiles`, and cap results with `mforge.references.maxResults`. Dynamic indirection and cross-document variable references are intentionally not resolved.
 
@@ -63,6 +64,11 @@ Safety notes: references are static, ignore strings and comments, skip ignored f
 - FileMan API references such as `UPDATE^DIE`, `FILE^DIE`, `GET1^DIQ`, and `GETS^DIQ`.
 - WorldVistA/Hakeem-friendly indexing, including optional extensionless routine indexing.
 
+## Templates
+
+- `MForge: Insert Routine Header Template` inserts the legacy EHS/VistA-style routine header with namespace, patch, date, version, and build metadata.
+- `MForge: Insert Patch Change Block Template` inserts the legacy patch marker block with author, patch number, date, fix type, reason, optional scope, and start/end sentinels.
+
 ## Debugging / Diagnostics Tools
 
 - `MForge: Rebuild Routine Index`
@@ -70,6 +76,10 @@ Safety notes: references are static, ignore strings and comments, skip ignored f
 - `MForge: Find Routine In Index`
 - `MForge: Debug References In Current Line`
 - `MForge: Save Detected Routine Paths To Settings`
+- The packaged `MDEBUG.m` helper routine is carried forward from the legacy debugger for sites that use that MDEBUG workflow.
+- `MForge: Direct Debug Setup` configures `$ZSTEP`, requests `$ZPOSITION`, and prints the current line through the active `mumps` debug session.
+- `MForge: Direct Debug Smoke Test` checks `$ZPOSITION`, `ZPRINT @$ZPOSITION`, `ZWRITE`, and `ZSHOW`.
+- `MForge: ZSTEP`, `ZCONTINUE`, `ZWRITE`, `ZSHOW`, `ZBREAK`, `ZPRINT`, `ZSTEP INTO`, `ZSTEP OUTOF`, `Show $ZPOSITION`, and `Send Raw Debug Command` expose the legacy direct-debug command surface with MForge command IDs and legacy aliases.
 
 ## Supported File Extensions
 
@@ -102,6 +112,9 @@ Safety notes: references are static, ignore strings and comments, skip ignored f
   "mforge.maxRoutineSearchPathFiles": 30000,
   "mforge.references.enabled": true,
   "mforge.references.maxResults": 5000,
+  "mforge.standards.profile": "vista",
+  "mforge.standards.namespacePrefixes": ["UJO", "XU"],
+  "mforge.debug.directCommandTimeoutMs": 5000,
   "mforge.trace.level": "info"
 }
 ```
@@ -137,6 +150,13 @@ Use Ctrl+Click, F12, Peek Definition, or Shift+F12 Find References on labels, lo
 | `mforge.trace.level` | `off` | Controls diagnostic logging for MForge extension features. |
 | `mforge.formatter.enabled` | `true` | Enables the conservative MForge document formatter for MUMPS files. |
 | `mforge.diagnostics.enabled` | `true` | Enables basic diagnostics for MUMPS files. |
+| `mforge.standards.profile` | `off` | Enables VistA/UJO/custom standards checks when set to `vista`, `ujo`, or `custom`. |
+| `mforge.standards.enforceRoutineHeader` | `false` | Checks standard routine header metadata. |
+| `mforge.standards.namespacePrefixes` | `[]` | Restricts routine names to approved namespace prefixes when routine header checks are enabled. |
+| `mforge.standards.enforceLabelLength` | `true` | Warns when labels exceed the VistA 8-character entry point limit. |
+| `mforge.standards.enforceLocalVariableNames` | `true` | Warns on local variables longer than 16 characters or containing lowercase letters. |
+| `mforge.standards.enforceTmpGlobalSubscript` | `true` | Warns when `^TMP` is not scoped by `$J` or package namespace plus `$J`. |
+| `mforge.standards.enforcePercentGlobalProtection` | `true` | Warns on READ/KILL/SET/MERGE operations against `^%` globals. |
 | `mforge.navigation.enabled` | `true` | Enables document links, Ctrl+Click, definitions, routine indexing, document symbols, and workspace symbols. |
 | `mforge.references.enabled` | `true` | Enables Stage 5.1 Find References. |
 | `mforge.references.includeDeclarations` | `true` | Includes label declarations or routine-top fallbacks when VS Code requests declarations. |
@@ -152,6 +172,8 @@ Use Ctrl+Click, F12, Peek Definition, or Shift+F12 Find References on labels, lo
 | `mforge.indexExtensionlessRoutines` | `false` | Indexes extensionless routine files for VistA/YottaDB exports when enabled. |
 | `mforge.autoDetectRoutinePaths` | `true` | Detects common VistA/YottaDB routine folders without modifying user settings. |
 | `mforge.autoRebuildIndexOnActivation` | `true` | Rebuilds the routine index shortly after activation when routine folders are detected. |
+| `mforge.debug.showOutputOnCommand` | `true` | Shows the MForge MUMPS Debug output channel after direct debug commands. |
+| `mforge.debug.directCommandTimeoutMs` | `5000` | Sets the active debug session custom-request timeout for MDEBUG direct commands. |
 
 ## Local Development
 
@@ -173,7 +195,7 @@ code --install-extension mforge-mumps-vista-ide-x.y.z.vsix
 For this release, the expected local VSIX name is:
 
 ```bash
-code --install-extension mforge-mumps-vista-ide-0.5.2.vsix
+code --install-extension mforge-mumps-vista-ide-0.6.0.vsix
 ```
 
 ## Troubleshooting
@@ -184,7 +206,7 @@ Open a supported MUMPS file such as `.m`, `.M`, `.int`, `.rou`, `.mps`, or `.mum
 
 ### Semantic token errors
 
-MForge uses VS Code-compatible semantic token IDs with letters, numbers, hyphens, and underscores only. If VS Code reports semantic token schema errors, reinstall the latest VSIX and confirm the installed extension is version 0.5.2 or newer.
+MForge uses VS Code-compatible semantic token IDs with letters, numbers, hyphens, and underscores only. If VS Code reports semantic token schema errors, reinstall the latest VSIX and confirm the installed extension is version 0.6.0 or newer.
 
 ### Ctrl+Click does not work
 
@@ -215,7 +237,7 @@ Increase `mforge.maxRoutineSearchPathFiles` only as needed, keep search paths fo
 
 ### Future
 
-- Debugger integration
+- Live MDEBUG connector hardening beyond the current launch/attach contribution and direct-command bridge
 - GT.M/YottaDB runtime tooling
 - VistA RPC explorer
 - FileMan dictionary explorer

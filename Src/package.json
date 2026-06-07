@@ -2,7 +2,7 @@
   "name": "mforge-mumps-vista-ide",
   "displayName": "MForge MUMPS & VistA IDE",
   "description": "A modern VS Code IDE toolkit for MUMPS, GT.M/YottaDB, and VistA development with highlighting, navigation, IntelliSense, diagnostics, formatting, semantic tokens, and routine indexing.",
-  "version": "0.5.2",
+  "version": "0.6.0",
   "publisher": "dopamind",
   "license": "MIT",
   "repository": {
@@ -48,12 +48,50 @@
   "activationEvents": [
     "onLanguage:mumps",
     "onCommand:mforge.showGettingStarted",
+    "onCommand:mforge.clearDirectDebugOutput",
+    "onCommand:mforge.configureZstepLinePrinting",
+    "onCommand:mforge.copyLastDirectDebugOutput",
     "onCommand:mforge.debugReferencesInCurrentLine",
-    "onCommand:mforge.rebuildRoutineIndex",
+    "onCommand:mforge.directDebugSetup",
+    "onCommand:mforge.directDebugSmokeTest",
     "onCommand:mforge.findRoutineInIndex",
-    "onCommand:mforge.showRoutineIndexStatus",
+    "onCommand:mforge.insertPatchChangeBlockTemplate",
+    "onCommand:mforge.insertRoutineHeaderTemplate",
+    "onCommand:mforge.openDirectDebugOutput",
+    "onCommand:mforge.rebuildRoutineIndex",
     "onCommand:mforge.saveDetectedRoutinePathsToSettings",
-    "onCommand:mforge.showNavigationDiagnostics"
+    "onCommand:mforge.sendRawDebugCommand",
+    "onCommand:mforge.showNavigationDiagnostics",
+    "onCommand:mforge.showRoutineIndexStatus",
+    "onCommand:mforge.showZposition",
+    "onCommand:mforge.zbreak",
+    "onCommand:mforge.zcontinue",
+    "onCommand:mforge.zprint",
+    "onCommand:mforge.zprintAtPosition",
+    "onCommand:mforge.zshow",
+    "onCommand:mforge.zstep",
+    "onCommand:mforge.zstepInto",
+    "onCommand:mforge.zstepOutOf",
+    "onCommand:mforge.zwrite",
+    "onCommand:mumps.clearDirectDebugOutput",
+    "onCommand:mumps.configureZstepLinePrinting",
+    "onCommand:mumps.copyLastDirectDebugOutput",
+    "onCommand:mumps.directDebugSetup",
+    "onCommand:mumps.directDebugSmokeTest",
+    "onCommand:mumps.insertPatchChangeBlockTemplate",
+    "onCommand:mumps.insertRoutineHeaderTemplate",
+    "onCommand:mumps.openDirectDebugOutput",
+    "onCommand:mumps.sendRawDebugCommand",
+    "onCommand:mumps.showZposition",
+    "onCommand:mumps.zbreak",
+    "onCommand:mumps.zcontinue",
+    "onCommand:mumps.zprint",
+    "onCommand:mumps.zprintAtPosition",
+    "onCommand:mumps.zshow",
+    "onCommand:mumps.zstep",
+    "onCommand:mumps.zstepInto",
+    "onCommand:mumps.zstepOutOf",
+    "onCommand:mumps.zwrite"
   ],
   "main": "./out/extension.js",
   "scripts": {
@@ -64,15 +102,16 @@
     "env:check": "node scripts/check-env.js",
     "test:stage2": "node scripts/test-stage2.js",
     "test:stage3": "node scripts/test-stage3.js",
-    "test": "npm run test:semantic-contributions && npm run test:stage2 && npm run test:stage3 && npm run test:stage4 && npm run test:stage45 && npm run test:stage46 && npm run test:stage5",
+    "test": "npm run test:semantic-contributions && npm run test:stage2 && npm run test:stage3 && npm run test:stage4 && npm run test:stage45 && npm run test:stage46 && npm run test:stage5 && npm run test:legacy-parity",
     "package": "npm run env:check && npm run compile && npm run test && vsce package",
     "package:local": "npm run package",
-    "install:local": "code --install-extension mforge-mumps-vista-ide-0.5.2.vsix",
+    "install:local": "code --install-extension mforge-mumps-vista-ide-0.6.0.vsix",
     "test:stage4": "node scripts/test-stage4.js",
     "test:stage45": "node scripts/test-stage45.js",
     "test:stage46": "node scripts/test-stage46.js",
     "test:semantic-contributions": "node scripts/test-semantic-token-contributions.js",
-    "test:stage5": "node scripts/test-stage5.js"
+    "test:stage5": "node scripts/test-stage5.js",
+    "test:legacy-parity": "node scripts/test-legacy-parity.js"
   },
   "devDependencies": {
     "@types/node": "^18.19.1",
@@ -142,6 +181,82 @@
       {
         "command": "mforge.showNavigationDiagnostics",
         "title": "MForge: Show Navigation Diagnostics"
+      },
+      {
+        "command": "mforge.insertRoutineHeaderTemplate",
+        "title": "MForge: Insert Routine Header Template"
+      },
+      {
+        "command": "mforge.insertPatchChangeBlockTemplate",
+        "title": "MForge: Insert Patch Change Block Template"
+      },
+      {
+        "command": "mforge.zstep",
+        "title": "MForge: ZSTEP"
+      },
+      {
+        "command": "mforge.zcontinue",
+        "title": "MForge: ZCONTINUE"
+      },
+      {
+        "command": "mforge.zwrite",
+        "title": "MForge: ZWRITE"
+      },
+      {
+        "command": "mforge.zshow",
+        "title": "MForge: ZSHOW"
+      },
+      {
+        "command": "mforge.zbreak",
+        "title": "MForge: ZBREAK"
+      },
+      {
+        "command": "mforge.zprintAtPosition",
+        "title": "MForge: ZPRINT At Current Position"
+      },
+      {
+        "command": "mforge.zstepInto",
+        "title": "MForge: ZSTEP INTO"
+      },
+      {
+        "command": "mforge.zstepOutOf",
+        "title": "MForge: ZSTEP OUTOF"
+      },
+      {
+        "command": "mforge.zprint",
+        "title": "MForge: ZPRINT"
+      },
+      {
+        "command": "mforge.configureZstepLinePrinting",
+        "title": "MForge: Configure $ZSTEP Line Printing"
+      },
+      {
+        "command": "mforge.showZposition",
+        "title": "MForge: Show $ZPOSITION"
+      },
+      {
+        "command": "mforge.directDebugSetup",
+        "title": "MForge: Direct Debug Setup"
+      },
+      {
+        "command": "mforge.directDebugSmokeTest",
+        "title": "MForge: Direct Debug Smoke Test"
+      },
+      {
+        "command": "mforge.sendRawDebugCommand",
+        "title": "MForge: Send Raw Debug Command"
+      },
+      {
+        "command": "mforge.openDirectDebugOutput",
+        "title": "MForge: Open Direct Debug Output"
+      },
+      {
+        "command": "mforge.copyLastDirectDebugOutput",
+        "title": "MForge: Copy Last Direct Debug Output"
+      },
+      {
+        "command": "mforge.clearDirectDebugOutput",
+        "title": "MForge: Clear Direct Debug Output"
       }
     ],
     "configurationDefaults": {
@@ -256,6 +371,61 @@
           "default": 30000,
           "minimum": 1,
           "description": "Maximum number of supported MUMPS routine files to scan from configured or auto-detected routine search paths."
+        },
+        "mforge.standards.profile": {
+          "type": "string",
+          "default": "off",
+          "enum": [
+            "off",
+            "vista",
+            "ujo",
+            "custom"
+          ],
+          "description": "Standards profile used by MForge diagnostics and templates."
+        },
+        "mforge.standards.enforceRoutineHeader": {
+          "type": "boolean",
+          "default": false,
+          "description": "When enabled, check routine header metadata format."
+        },
+        "mforge.standards.namespacePrefixes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [],
+          "description": "Allowed routine namespace prefixes for standards checks."
+        },
+        "mforge.standards.enforceLabelLength": {
+          "type": "boolean",
+          "default": true,
+          "description": "When a standards profile is active, warn when entry point labels exceed 8 characters."
+        },
+        "mforge.standards.enforceLocalVariableNames": {
+          "type": "boolean",
+          "default": true,
+          "description": "When a standards profile is active, warn when local variables exceed 16 characters or contain lowercase characters."
+        },
+        "mforge.standards.enforceTmpGlobalSubscript": {
+          "type": "boolean",
+          "default": true,
+          "description": "When a standards profile is active, warn when ^TMP is not scoped by $J or package namespace followed by $J."
+        },
+        "mforge.standards.enforcePercentGlobalProtection": {
+          "type": "boolean",
+          "default": true,
+          "description": "When a standards profile is active, warn on READ/KILL/SET/MERGE operations against ^% globals."
+        },
+        "mforge.debug.showOutputOnCommand": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show the MForge MUMPS Debug output channel whenever a direct debug command is sent."
+        },
+        "mforge.debug.directCommandTimeoutMs": {
+          "type": "number",
+          "default": 5000,
+          "minimum": 1000,
+          "description": "Timeout in milliseconds while waiting for output from a direct MDEBUG command."
         }
       }
     },
@@ -322,7 +492,188 @@
         "superType": "namespace",
         "description": "MUMPS routine references whose target routine is not currently indexed."
       }
-    ]
+    ],
+    "debuggers": [
+      {
+        "type": "mumps",
+        "label": "MForge MUMPS Debugger",
+        "program": "./out/debug/mumpsDebugAdapter.js",
+        "runtime": "node",
+        "languages": [
+          "mumps"
+        ],
+        "configurationAttributes": {
+          "launch": {
+            "required": [
+              "program",
+              "localRoutinesPath"
+            ],
+            "properties": {
+              "program": {
+                "type": "string",
+                "description": "Absolute path to the routine/program to debug."
+              },
+              "stopOnEntry": {
+                "type": "boolean",
+                "default": true,
+                "description": "Automatically stop after launch."
+              },
+              "localRoutinesPath": {
+                "type": "string",
+                "description": "Local routine directory mapped to the MDEBUG runtime."
+              }
+            }
+          },
+          "attach": {
+            "required": [
+              "hostname",
+              "port",
+              "localRoutinesPath"
+            ],
+            "properties": {
+              "hostname": {
+                "type": "string",
+                "default": "127.0.0.1",
+                "description": "MDEBUG host to attach to."
+              },
+              "port": {
+                "type": "number",
+                "default": 3000,
+                "description": "MDEBUG port to attach to."
+              },
+              "localRoutinesPath": {
+                "type": "string",
+                "description": "Local routine directory mapped to the MDEBUG runtime."
+              },
+              "stopOnEntry": {
+                "type": "boolean",
+                "default": false,
+                "description": "Step once after attach."
+              }
+            }
+          }
+        },
+        "initialConfigurations": [
+          {
+            "name": "MForge MUMPS: Launch via MDEBUG",
+            "type": "mumps",
+            "request": "launch",
+            "program": "${file}",
+            "localRoutinesPath": "${workspaceFolder}",
+            "stopOnEntry": true
+          }
+        ],
+        "configurationSnippets": [
+          {
+            "label": "MForge MUMPS Launch",
+            "description": "Launch a MUMPS routine through MDEBUG",
+            "body": {
+              "name": "MForge MUMPS: Launch",
+              "type": "mumps",
+              "request": "launch",
+              "program": "${file}",
+              "localRoutinesPath": "${workspaceFolder}",
+              "stopOnEntry": true
+            }
+          },
+          {
+            "label": "MForge MUMPS Attach",
+            "description": "Attach to an existing MDEBUG server",
+            "body": {
+              "name": "MForge MUMPS: Attach",
+              "type": "mumps",
+              "request": "attach",
+              "hostname": "127.0.0.1",
+              "port": 3000,
+              "localRoutinesPath": "${workspaceFolder}",
+              "stopOnEntry": false
+            }
+          }
+        ]
+      }
+    ],
+    "breakpoints": [
+      {
+        "language": "mumps"
+      }
+    ],
+    "views": {
+      "debug": [
+        {
+          "id": "mforgeDirectDebug",
+          "name": "MForge MUMPS Direct Debug",
+          "when": "inDebugMode && debugType == mumps"
+        }
+      ]
+    },
+    "viewsWelcome": [
+      {
+        "view": "mforgeDirectDebug",
+        "contents": "Start a MUMPS debug session to use MDEBUG Direct Debug controls.\n[Direct Debug Setup](command:mforge.directDebugSetup)\n[Smoke Test](command:mforge.directDebugSmokeTest)",
+        "when": "!inDebugMode"
+      }
+    ],
+    "menus": {
+      "debug/toolBar": [
+        {
+          "command": "mforge.directDebugSmokeTest",
+          "when": "inDebugMode && debugType == mumps",
+          "group": "mforge@-1"
+        },
+        {
+          "command": "mforge.directDebugSetup",
+          "when": "inDebugMode && debugType == mumps",
+          "group": "mforge@0"
+        },
+        {
+          "command": "mforge.zbreak",
+          "when": "inDebugMode && debugType == mumps",
+          "group": "mforge@1"
+        },
+        {
+          "command": "mforge.zprintAtPosition",
+          "when": "inDebugMode && debugType == mumps",
+          "group": "mforge@2"
+        },
+        {
+          "command": "mforge.zwrite",
+          "when": "inDebugMode && debugType == mumps",
+          "group": "mforge@3"
+        },
+        {
+          "command": "mforge.zshow",
+          "when": "inDebugMode && debugType == mumps",
+          "group": "mforge@4"
+        },
+        {
+          "command": "mforge.configureZstepLinePrinting",
+          "when": "inDebugMode && debugType == mumps",
+          "group": "mforge@5"
+        },
+        {
+          "command": "mforge.showZposition",
+          "when": "inDebugMode && debugType == mumps",
+          "group": "mforge@6"
+        }
+      ],
+      "view/title": [
+        {
+          "command": "mforge.directDebugSmokeTest",
+          "when": "view == mforgeDirectDebug",
+          "group": "navigation@0"
+        },
+        {
+          "command": "mforge.openDirectDebugOutput",
+          "when": "view == mforgeDirectDebug",
+          "group": "navigation@1"
+        },
+        {
+          "command": "mforge.clearDirectDebugOutput",
+          "when": "view == mforgeDirectDebug",
+          "group": "navigation@2"
+        }
+      ]
+    }
   },
   "overrides": {
     "cheerio": "1.0.0-rc.12"
