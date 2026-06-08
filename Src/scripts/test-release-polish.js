@@ -51,7 +51,7 @@ for (const phrase of [
 }
 
 const packageJson = readJson('package.json');
-assert.equal(packageJson.version, '0.6.1', 'version is 0.6.1 for release polish');
+assert.equal(packageJson.version, '0.6.2', 'version is 0.6.2 for release polish');
 const commands = new Set(packageJson.contributes.commands.map((command) => command.command));
 for (const command of [
   'mforge.applyRecommendedHakeemSettings',

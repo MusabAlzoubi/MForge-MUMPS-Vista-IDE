@@ -2,7 +2,7 @@
 
 A modern VS Code IDE toolkit for MUMPS, GT.M/YottaDB, InterSystems-style M code, and VistA/Hakeem development.
 
-**Version:** 0.6.1  
+**Version:** 0.6.2  
 **VS Code:** ^1.90.0  
 **License:** MIT
 
@@ -268,12 +268,12 @@ npm install
 npm run compile
 npm run test
 npm run package
-code --install-extension mforge-mumps-vista-ide-0.6.1.vsix
+code --install-extension mforge-mumps-vista-ide-0.6.2.vsix
 ```
 
 ## Roadmap Notes
 
-MForge 0.6.1 is release polish. It does **not** start new Stage 5 features such as Rename Symbol, Call Hierarchy, or Dependency Graph. Those remain planned follow-up work after indexing and runtime hardening.
+MForge 0.6.2 is release polish. It does **not** start new Stage 5 features such as Rename Symbol, Call Hierarchy, or Dependency Graph. Those remain planned follow-up work after indexing and runtime hardening.
 
 ## Author
 

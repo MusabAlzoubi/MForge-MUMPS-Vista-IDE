@@ -29,7 +29,7 @@ export interface ClassifiedMumpsSemanticToken {
 }
 
 const TOKEN_TYPE_SET = new Set<string>(MUMPS_SEMANTIC_TOKEN_TYPES);
-const COMMON_FILEMAN_APIS = new Set(['UPDATE^DIE', 'FILE^DIE', 'FIND1^DIC', 'GETS^DIQ', 'GET1^DIQ']);
+const COMMON_FILEMAN_APIS = new Set(['UPDATE^DIE', 'FILE^DIE', 'FIND1^DIC', 'GETS^DIQ', 'GET1^DIQ', 'GET^XPAR', 'UP^XLFSTR', 'FMADD^XLFDT']);
 const SYSTEM_VARIABLES = new Set([
   '$DEVICE', '$D', '$ECODE', '$EC', '$ESTACK', '$ES', '$ETRAP', '$ET', '$HOROLOG', '$H', '$IO', '$I', '$JOB', '$J', '$KEY', '$K',
   '$PRINCIPAL', '$P', '$QUIT', '$Q', '$REFERENCE', '$R', '$STACK', '$S', '$STORAGE', '$ST', '$TEST', '$T', '$X', '$Y',

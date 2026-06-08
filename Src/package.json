@@ -2,7 +2,7 @@
   "name": "mforge-mumps-vista-ide",
   "displayName": "MForge MUMPS & VistA IDE",
   "description": "A modern VS Code IDE toolkit for MUMPS, GT.M/YottaDB, InterSystems-style M code, and VistA/Hakeem development.",
-  "version": "0.6.1",
+  "version": "0.6.2",
   "publisher": "dopamind",
   "license": "MIT",
   "repository": {
@@ -104,17 +104,18 @@
     "env:check": "node scripts/check-env.js",
     "test:stage2": "node scripts/test-stage2.js",
     "test:stage3": "node scripts/test-stage3.js",
-    "test": "npm run test:semantic-contributions && npm run test:stage2 && npm run test:stage3 && npm run test:stage4 && npm run test:stage45 && npm run test:stage46 && npm run test:stage5 && npm run test:legacy-parity && npm run test:release-polish",
+    "test": "npm run test:semantic-contributions && npm run test:stage2 && npm run test:stage3 && npm run test:stage4 && npm run test:stage45 && npm run test:stage46 && npm run test:stage5 && npm run test:legacy-parity && npm run test:release-polish && npm run test:hakeem-hardening",
     "package": "npm run env:check && npm run compile && npm run test && vsce package",
     "package:local": "npm run package",
-    "install:local": "code --install-extension mforge-mumps-vista-ide-0.6.1.vsix",
+    "install:local": "code --install-extension mforge-mumps-vista-ide-0.6.2.vsix",
     "test:stage4": "node scripts/test-stage4.js",
     "test:stage45": "node scripts/test-stage45.js",
     "test:stage46": "node scripts/test-stage46.js",
     "test:semantic-contributions": "node scripts/test-semantic-token-contributions.js",
     "test:stage5": "node scripts/test-stage5.js",
     "test:legacy-parity": "node scripts/test-legacy-parity.js",
-    "test:release-polish": "node scripts/test-release-polish.js"
+    "test:release-polish": "node scripts/test-release-polish.js",
+    "test:hakeem-hardening": "node scripts/test-hakeem-hardening.js"
   },
   "devDependencies": {
     "@types/node": "^18.19.1",

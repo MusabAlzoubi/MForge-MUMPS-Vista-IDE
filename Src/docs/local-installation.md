@@ -7,7 +7,7 @@ npm install
 npm run compile
 npm run test
 npm run package
-code --install-extension mforge-mumps-vista-ide-0.6.1.vsix
+code --install-extension mforge-mumps-vista-ide-0.6.2.vsix
 ```
 
 ## JSON Validation

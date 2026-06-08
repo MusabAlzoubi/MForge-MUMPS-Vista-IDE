@@ -301,12 +301,13 @@ assert.deepEqual(summarizeReferences('S A=$$ONE^ROU1(),B=$$TWO^ROU2 D THREE^ROU3
 ], 'multiple extrinsic and inline DO references on one line must parse');
 
 
-const semanticText = ' S X=$$GET^XPAR() S Y=$O(^TMP($J)) S Z=$$MISS^NOPE()';
-const semanticTokens = classifyMumpsSemanticTokens(semanticText, new Set(['XPAR']));
+const semanticText = ' S X=$$GET^XPAR() S A=$$VALUE^ROUTINEB() S Y=$O(^TMP($J)) S Z=$$MISS^NOPE()';
+const semanticTokens = classifyMumpsSemanticTokens(semanticText, new Set(['XPAR', 'ROUTINEB']));
 function hasSemantic(type, value, text = semanticText) {
   return semanticTokens.some((token) => token.type === type && text.slice(token.start, token.start + token.length) === value);
 }
-assert.equal(hasSemantic('mumps-navigable-routine-reference', 'GET^XPAR'), true, 'navigable routine references get a dedicated semantic token');
+assert.equal(hasSemantic('mumps-api', 'GET^XPAR'), true, 'common Hakeem/VistA APIs get a dedicated API semantic token');
+assert.equal(hasSemantic('mumps-navigable-routine-reference', 'VALUE^ROUTINEB'), true, 'non-API navigable routine references get a dedicated semantic token');
 assert.equal(hasSemantic('mumps-unresolved-routine-reference', 'MISS^NOPE'), true, 'unresolved routine references get a dedicated semantic token');
 assert.equal(hasSemantic('mumps-intrinsic', '$O'), true, 'intrinsics keep intrinsic semantic token classification');
 assert.equal(hasSemantic('mumps-intrinsic', 'GET^XPAR'), false, 'routine references and intrinsics must not share token type');

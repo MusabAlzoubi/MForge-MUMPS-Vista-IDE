@@ -99,7 +99,7 @@ export function findMumpsReferencesInLine(lineText: string): MumpsReference[] {
 
     if (code[index] === '^') {
       const reference = readCaretRoutineReference(code, index);
-      if (reference) {
+      if (reference?.label) {
         references.push(reference);
         index = reference.endCharacter - 1;
       }
@@ -185,7 +185,26 @@ function collectCommandLabelReferences(code: string, start: number, references: 
       index++;
       continue;
     }
-    if (char === '$' || char === '^') {
+    if (char === '$') {
+      break;
+    }
+    if (char === '^') {
+      const routine = readReferenceName(code, index + 1);
+      if (routine && isRoutineName(routine.text)) {
+        references.push({
+          label: null,
+          routine: routine.text,
+          startCharacter: index,
+          endCharacter: routine.end,
+          labelStartCharacter: null,
+          labelEndCharacter: null,
+          routineStartCharacter: routine.start,
+          routineEndCharacter: routine.end,
+          raw: code.slice(index, routine.end)
+        });
+        index = routine.end;
+        continue;
+      }
       break;
     }
 

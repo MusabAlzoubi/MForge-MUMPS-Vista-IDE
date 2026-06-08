@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.6.2 - 2026-06-08
+
+### Fixed
+
+- Hardened routine-reference parsing for real Hakeem/VistA code so globals such as `^TMP($J)` are not treated as routine navigation targets while routine-only `D ^ROUTINE` calls remain navigable.
+- Expanded FileMan/VistA API semantic classification for `GET^XPAR`, `UP^XLFSTR`, and `FMADD^XLFDT`.
+
+### Added
+
+- Added Hakeem hardening fixtures and `npm run test:hakeem-hardening` covering nested extrinsics, post-conditionals, multiple references per line, strings, comments, local labels, local variables, `localr` priority, duplicate handling, cache behavior, document links, hover, Find References, and semantic tokens.
+- Added `docs/reports/hakeem-hardening-report.md` with issues found, fixes, measurements, limitations, and recommendations before Stage 5.2.
+
 ## 0.6.1 - 2026-06-07
 
 ### Added

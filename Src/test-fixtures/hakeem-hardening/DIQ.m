@@ -1,0 +1,2 @@
+DIQ ; FileMan read APIs
+GET1(FILE,IEN,FIELD) Q 1
