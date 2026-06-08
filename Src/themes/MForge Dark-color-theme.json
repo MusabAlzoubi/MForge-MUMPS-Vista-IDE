@@ -7,166 +7,98 @@
     "editor.background": "#1E1E1E",
     "editor.foreground": "#D4D4D4",
     "editorLineNumber.foreground": "#858585",
-    "editorCursor.foreground": "#AEAFAD",
+    "editorCursor.foreground": "#D4D4D4",
     "editor.selectionBackground": "#264F78",
     "editor.inactiveSelectionBackground": "#3A3D41",
-    "editorWhitespace.foreground": "#3B3A32"
+    "editorWhitespace.foreground": "#3B3A32",
+    "editorIndentGuide.background1": "#2D2D2D",
+    "editorIndentGuide.activeBackground1": "#4B5563",
+    "editorBracketMatch.background": "#264F78",
+    "editorBracketMatch.border": "#61AFEF"
   },
   "tokenColors": [
     {
       "name": "MUMPS labels",
-      "scope": [
-        "entity.name.function.label.mumps"
-      ],
-      "settings": {
-        "foreground": "#F5D76E",
-        "fontStyle": "bold"
-      }
+      "scope": ["entity.name.function.label.mumps"],
+      "settings": { "foreground": "#FFD166", "fontStyle": "bold" }
     },
     {
       "name": "MUMPS label parameters",
-      "scope": [
-        "variable.parameter.declaration.mumps",
-        "meta.parameters.mumps"
-      ],
-      "settings": {
-        "foreground": "#9CDCFE"
-      }
+      "scope": ["variable.parameter.declaration.mumps", "meta.parameters.mumps"],
+      "settings": { "foreground": "#98C379" }
     },
     {
       "name": "MUMPS commands",
-      "scope": [
-        "keyword.control.command.mumps",
-        "keyword.control.command.abbreviation.mumps"
-      ],
-      "settings": {
-        "foreground": "#61AFEF",
-        "fontStyle": "bold"
-      }
+      "scope": ["keyword.control.command.mumps", "keyword.control.command.abbreviation.mumps"],
+      "settings": { "foreground": "#61AFEF", "fontStyle": "bold" }
     },
     {
       "name": "MUMPS intrinsic functions",
-      "scope": [
-        "support.function.intrinsic.mumps"
-      ],
-      "settings": {
-        "foreground": "#B678DD"
-      }
+      "scope": ["support.function.intrinsic.mumps"],
+      "settings": { "foreground": "#C678DD" }
     },
     {
       "name": "MUMPS globals",
-      "scope": [
-        "variable.other.global.mumps",
-        "variable.other.indirect-global.mumps"
-      ],
-      "settings": {
-        "foreground": "#56B6C2"
-      }
+      "scope": ["variable.other.global.mumps", "variable.other.indirect-global.mumps"],
+      "settings": { "foreground": "#56B6C2" }
     },
     {
       "name": "MUMPS system variables",
-      "scope": [
-        "variable.language.system.mumps",
-        "support.variable.special.mumps"
-      ],
-      "settings": {
-        "foreground": "#4FC1FF"
-      }
+      "scope": ["variable.language.system.mumps", "support.variable.special.mumps"],
+      "settings": { "foreground": "#E06C75" }
     },
     {
       "name": "MUMPS strings",
-      "scope": [
-        "string.quoted.double.mumps"
-      ],
-      "settings": {
-        "foreground": "#CE9178"
-      }
+      "scope": ["string.quoted.double.mumps"],
+      "settings": { "foreground": "#CE9178" }
     },
     {
       "name": "MUMPS comments",
-      "scope": [
-        "comment.line.semicolon.mumps"
-      ],
-      "settings": {
-        "foreground": "#6A9955",
-        "fontStyle": "italic"
-      }
+      "scope": ["comment.line.semicolon.mumps"],
+      "settings": { "foreground": "#6A9955", "fontStyle": "italic" }
     },
     {
       "name": "MUMPS numbers",
-      "scope": [
-        "constant.numeric.mumps"
-      ],
-      "settings": {
-        "foreground": "#B5CEA8"
-      }
+      "scope": ["constant.numeric.mumps"],
+      "settings": { "foreground": "#B5CEA8" }
     },
     {
       "name": "MUMPS local variables",
-      "scope": [
-        "variable.other.local.mumps"
-      ],
-      "settings": {
-        "foreground": "#D4D4D4"
-      }
+      "scope": ["variable.other.local.mumps"],
+      "settings": { "foreground": "#E5C07B" }
     },
     {
-      "name": "FileMan APIs",
-      "scope": [
-        "support.function.api.fileman.mumps"
-      ],
-      "settings": {
-        "foreground": "#DCDCAA",
-        "fontStyle": "bold"
-      }
+      "name": "FileMan and VistA APIs",
+      "scope": ["support.function.api.fileman.mumps"],
+      "settings": { "foreground": "#4EC9B0", "fontStyle": "bold" }
     },
     {
-      "name": "MUMPS routine references",
-      "scope": [
-        "meta.routine-reference.mumps",
-        "entity.name.namespace.routine-reference.mumps"
-      ],
-      "settings": {
-        "foreground": "#E5C07B",
-        "fontStyle": "underline"
-      }
+      "name": "MUMPS navigable routine references",
+      "scope": ["meta.routine-reference.mumps", "entity.name.namespace.routine-reference.mumps"],
+      "settings": { "foreground": "#F5D76E", "fontStyle": "underline" }
     },
     {
       "name": "MUMPS label references",
-      "scope": [
-        "entity.name.function.label-reference.mumps"
-      ],
-      "settings": {
-        "foreground": "#DCDCAA"
-      }
+      "scope": ["entity.name.function.label-reference.mumps"],
+      "settings": { "foreground": "#FFD166" }
+    },
+    {
+      "name": "MDEBUG and GT.M debug tokens",
+      "scope": ["support.function.debug.mumps", "keyword.other.debug.mumps"],
+      "settings": { "foreground": "#D19A66", "fontStyle": "bold" }
     }
   ],
   "semanticTokenColors": {
-    "mumps-label": {
-      "foreground": "#F5D76E",
-      "bold": true
-    },
-    "mumps-command": {
-      "foreground": "#61AFEF",
-      "bold": true
-    },
-    "mumps-intrinsic": "#B678DD",
+    "mumps-label": { "foreground": "#FFD166", "bold": true },
+    "mumps-command": { "foreground": "#61AFEF", "bold": true },
+    "mumps-intrinsic": "#C678DD",
     "mumps-global": "#56B6C2",
-    "mumps-system-variable": "#4FC1FF",
-    "mumps-parameter": "#9CDCFE",
-    "mumps-local-variable": "#D4D4D4",
-    "mumps-api": {
-      "foreground": "#DCDCAA",
-      "bold": true
-    },
-    "mumps-routine-reference": "#C586C0",
-    "mumps-navigable-routine-reference": {
-      "foreground": "#E5C07B",
-      "underline": true
-    },
-    "mumps-unresolved-routine-reference": {
-      "foreground": "#C586C0",
-      "italic": true
-    }
+    "mumps-system-variable": "#E06C75",
+    "mumps-parameter": "#98C379",
+    "mumps-local-variable": "#E5C07B",
+    "mumps-api": { "foreground": "#4EC9B0", "bold": true },
+    "mumps-routine-reference": { "foreground": "#F5D76E", "underline": true },
+    "mumps-navigable-routine-reference": { "foreground": "#F5D76E", "underline": true },
+    "mumps-unresolved-routine-reference": { "foreground": "#C586C0", "italic": true }
   }
 }

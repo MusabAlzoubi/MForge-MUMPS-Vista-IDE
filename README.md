@@ -1,7 +1,9 @@
 # MForge-MUMPS-Vista-IDE
 
-## Version 0.6.0 — Legacy Debugger Feature Parity
+## MForge 0.6.1 — Public Release Polish
 
-MForge 0.6.0 completes the feature-by-feature audit of `Old Extensions/mumps-debugger---upgrade` and ports the useful missing pieces into the current MForge architecture. MForge now includes the legacy routine header and patch change block templates, VistA/UJO standards diagnostics, MDEBUG launch/attach contribution, MDEBUG direct debug controls (`ZSTEP`, `ZWRITE`, `ZSHOW`, `ZBREAK`, `ZPRINT`, `$ZPOSITION`, raw commands, setup, and smoke test), debugger settings, and automated parity tests while retaining existing highlighting, semantic tokens, navigation, references, hover, completion, signature help, snippets, packaging, and routine indexing.
+MForge MUMPS & VistA IDE is a modern VS Code IDE toolkit for MUMPS, GT.M/YottaDB, InterSystems-style M code, and VistA/Hakeem development.
 
-See `Src/README.md` and `docs/features/legacy-debugger-audit.md` for the comparison table, ported feature list, deferred items, and superset rationale.
+The 0.6.1 release polishes Marketplace documentation, production-ready defaults, first-run Hakeem/YottaDB indexing behavior, MForge Dark semantic colors, settings commands, troubleshooting docs, and release validation without starting new Stage 5 features such as Rename, Call Hierarchy, or Dependency Graph.
+
+See `Src/README.md` for the Marketplace README and feature guide.

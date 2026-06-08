@@ -10,6 +10,7 @@ import { registerSemanticTokenFeature } from './features/semanticTokens';
 import { registerReferencesFeature } from './features/references';
 import { registerDirectDebugCommands } from './features/debug/directDebugCommands';
 import { registerTemplateCommands } from './features/templates/templateCommands';
+import { registerSettingsCommands } from './features/settings/settingsCommands';
 
 const OUTPUT_CHANNEL_NAME = 'MForge MUMPS & VistA IDE';
 
@@ -30,11 +31,12 @@ export function activate(context: vscode.ExtensionContext): void {
   registerReferencesFeature(context, routineIndex, output);
   registerTemplateCommands(context);
   registerDirectDebugCommands(context);
+  registerSettingsCommands(context, output);
 
   context.subscriptions.push(
     vscode.commands.registerCommand('mforge.showGettingStarted', async () => {
       const selection = await vscode.window.showInformationMessage(
-        'MForge MUMPS & VistA IDE is ready. MForge 0.6.0 includes syntax highlighting, snippets, formatting, diagnostics, symbols, Ctrl+Click/F12 navigation, Stage 5.1 Find References, remote-safe routine indexing, hover, completion, signature help, semantic highlighting, and the MForge Dark theme, VistA/UJO standards rules, legacy templates, and MDEBUG direct debug controls.',
+        'MForge MUMPS & VistA IDE is ready. MForge 0.6.1 includes syntax highlighting, snippets, formatting, diagnostics, symbols, Ctrl+Click/F12 navigation, Stage 5.1 Find References, remote-safe routine indexing, hover, completion, signature help, semantic highlighting, and the MForge Dark theme, VistA/UJO standards rules, legacy templates, and MDEBUG direct debug controls.',
         'Open README',
         'Show Output'
       );

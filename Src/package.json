@@ -1,8 +1,8 @@
 {
   "name": "mforge-mumps-vista-ide",
   "displayName": "MForge MUMPS & VistA IDE",
-  "description": "A modern VS Code IDE toolkit for MUMPS, GT.M/YottaDB, and VistA development with highlighting, navigation, IntelliSense, diagnostics, formatting, semantic tokens, and routine indexing.",
-  "version": "0.6.0",
+  "description": "A modern VS Code IDE toolkit for MUMPS, GT.M/YottaDB, InterSystems-style M code, and VistA/Hakeem development.",
+  "version": "0.6.1",
   "publisher": "dopamind",
   "license": "MIT",
   "repository": {
@@ -48,6 +48,7 @@
   "activationEvents": [
     "onLanguage:mumps",
     "onCommand:mforge.showGettingStarted",
+    "onCommand:mforge.applyRecommendedHakeemSettings",
     "onCommand:mforge.clearDirectDebugOutput",
     "onCommand:mforge.configureZstepLinePrinting",
     "onCommand:mforge.copyLastDirectDebugOutput",
@@ -59,6 +60,7 @@
     "onCommand:mforge.insertRoutineHeaderTemplate",
     "onCommand:mforge.openDirectDebugOutput",
     "onCommand:mforge.rebuildRoutineIndex",
+    "onCommand:mforge.resetSettingsToDefaults",
     "onCommand:mforge.saveDetectedRoutinePathsToSettings",
     "onCommand:mforge.sendRawDebugCommand",
     "onCommand:mforge.showNavigationDiagnostics",
@@ -102,16 +104,17 @@
     "env:check": "node scripts/check-env.js",
     "test:stage2": "node scripts/test-stage2.js",
     "test:stage3": "node scripts/test-stage3.js",
-    "test": "npm run test:semantic-contributions && npm run test:stage2 && npm run test:stage3 && npm run test:stage4 && npm run test:stage45 && npm run test:stage46 && npm run test:stage5 && npm run test:legacy-parity",
+    "test": "npm run test:semantic-contributions && npm run test:stage2 && npm run test:stage3 && npm run test:stage4 && npm run test:stage45 && npm run test:stage46 && npm run test:stage5 && npm run test:legacy-parity && npm run test:release-polish",
     "package": "npm run env:check && npm run compile && npm run test && vsce package",
     "package:local": "npm run package",
-    "install:local": "code --install-extension mforge-mumps-vista-ide-0.6.0.vsix",
+    "install:local": "code --install-extension mforge-mumps-vista-ide-0.6.1.vsix",
     "test:stage4": "node scripts/test-stage4.js",
     "test:stage45": "node scripts/test-stage45.js",
     "test:stage46": "node scripts/test-stage46.js",
     "test:semantic-contributions": "node scripts/test-semantic-token-contributions.js",
     "test:stage5": "node scripts/test-stage5.js",
-    "test:legacy-parity": "node scripts/test-legacy-parity.js"
+    "test:legacy-parity": "node scripts/test-legacy-parity.js",
+    "test:release-polish": "node scripts/test-release-polish.js"
   },
   "devDependencies": {
     "@types/node": "^18.19.1",
@@ -257,6 +260,14 @@
       {
         "command": "mforge.clearDirectDebugOutput",
         "title": "MForge: Clear Direct Debug Output"
+      },
+      {
+        "command": "mforge.applyRecommendedHakeemSettings",
+        "title": "MForge: Apply Recommended Hakeem Settings"
+      },
+      {
+        "command": "mforge.resetSettingsToDefaults",
+        "title": "MForge: Reset MForge Settings To Defaults"
       }
     ],
     "configurationDefaults": {

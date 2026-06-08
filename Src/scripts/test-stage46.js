@@ -374,7 +374,7 @@ assert.equal(outputLines.slice(autoOutputStart).filter((line) => line.includes('
 autoIndex.scheduleAutoRebuildOnActivation(0);
 await new Promise((resolve) => setTimeout(resolve, 25));
 assert.equal(outputLines.slice(autoOutputStart).filter((line) => line.includes('Auto rebuilding MUMPS routine index after activation')).length, 1, 'auto rebuild runs only once after activation');
-assert.equal(updateCalls.some((call) => call.name === 'routineSearchPaths' && call.value.includes('/var/worldvista/prod/hakeem/localr') && call.value.includes('/var/worldvista/prod/hakeem/routines')), true, 'first activation saves auto-detected Hakeem routine paths when settings are empty');
+assert.equal(updateCalls.some((call) => call.name === 'routineSearchPaths'), false, 'first activation does not silently write routineSearchPaths without user confirmation');
 settings.routineSearchPaths = originalRoutineSearchPaths;
 
 registerNavigationDebugCommands({ subscriptions: [] }, index, output);
@@ -401,7 +401,7 @@ const broadIndex = new MumpsRoutineIndex(output);
 await broadIndex.rebuild();
 assert.equal(broadIndex.getLastDiagnostics().broadPathWarnings.length, 1, 'manual broad Hakeem root emits a broad-path warning');
 assert.equal(broadIndex.getLastDiagnostics().searchPathLimitReached, true, 'maxRoutineSearchPathFiles limit warning is recorded');
-assert.equal(outputLines.some((line) => line.includes('Routine index file limit reached')), true, 'limit reached warning is logged');
+assert.equal(outputLines.some((line) => line.includes('Routine search-path file limit reached')), true, 'search-path limit warning is logged');
 assert.equal(outputLines.slice(broadOutputStart).some((line) => line.includes('[navigation] Duplicate routine names')), false, 'duplicate routine names are not logged in normal info mode');
 settings.routineSearchPaths = ['/extra/routines', '/workspace/routines'];
 settings.indexExtensionlessRoutines = true;

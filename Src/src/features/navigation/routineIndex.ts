@@ -14,13 +14,13 @@ const WORKSPACE_EXTENSIONLESS_GLOB = '**/*';
 const EXCLUDE_GLOB = '{**/node_modules/**,**/.git/**,**/dist/**,**/out/**,**/Old Extensions/**,**/objects/**,**/objects_org/**,**/localo/**,**/localo_org/**,**/generated/**}';
 const KEY_ROUTINES = ['UJOWXUS', 'UJOWXUS2', 'XPAR', 'XLFSTR', 'DIE', 'DIQ', 'XLFDT', 'XUS4', 'XTV'];
 const AUTO_ABSOLUTE_ROUTINE_PATHS = [
-  '/var/worldvista/prod/hakeem/routines',
   '/var/worldvista/prod/hakeem/localr',
+  '/var/worldvista/prod/hakeem/routines',
   '/var/worldvista/prod/hakeem/localroutines',
   '/var/worldvista/prod/hakeem/r',
   '/var/worldvista/prod/hakeem/local'
 ];
-const AUTO_WORKSPACE_RELATIVE_ROUTINE_PATHS = ['routines', 'localr', 'localroutines', 'r', 'src/routines'];
+const AUTO_WORKSPACE_RELATIVE_ROUTINE_PATHS = ['localr', 'routines', 'localroutines', 'r', 'src/routines'];
 const AUTO_REBUILD_DELAY_MS = 1500;
 const AUTO_DETECT_SCAN_LIMIT = 200;
 const AUTO_DETECT_MAX_DEPTH = 3;
@@ -29,6 +29,8 @@ const FILE_TYPE_DIRECTORY = 2;
 const STRICT_ROUTINE_NAME_PATTERN = /^%?[A-Za-z][A-Za-z0-9]{0,31}$/u;
 const NON_ROUTINE_EXTENSIONLESS_NAMES = new Set(['LICENSE', 'UNLICENSE', 'README', 'CNAME', 'PACKAGE', 'PACKAGE-LOCK', 'YARN', 'PNPM-LOCK', 'TSCONFIG', 'JSCONFIG', 'MAKEFILE', 'DOCKERFILE']);
 const BROAD_PATH_ENDINGS = [/\/var\/worldvista\/prod\/hakeem$/iu, /(?:^|[\/])(?:objects|objects_org|localo|localo_org|generated|node_modules|\.git)$/iu];
+const SLOW_INDEX_WARNING_MS = 10000;
+const RECOMMENDED_HAKEEM_PATHS = ['/var/worldvista/prod/hakeem/localr', '/var/worldvista/prod/hakeem/routines'];
 
 export interface IndexedRoutine {
   name: string;
@@ -320,7 +322,7 @@ export class MumpsRoutineIndex implements vscode.Disposable {
       }
       this.autoRebuildStarted = true;
       this.lastPathSignature = signature;
-      this.output?.appendLine('[navigation] Auto rebuilding MUMPS routine index after activation.');
+      this.output?.appendLine('[navigation] Auto rebuilding MUMPS routine index after activation using detected routine folders.');
       this.debug(`Manual routine paths: ${pathState.manualPaths.join(', ') || '(none)'}`);
       this.debug(`Auto-detected routine paths: ${pathState.autoDetectedPaths.join(', ') || '(none)'}`);
       this.debug(`Effective routine paths: ${pathState.effectivePaths.join(', ') || '(none)'}`);
@@ -330,17 +332,24 @@ export class MumpsRoutineIndex implements vscode.Disposable {
 
 
   private async saveAutoDetectedPathsToSettingsIfUnset(manualPaths: string[], autoDetectedPaths: string[]): Promise<void> {
-    if (manualPaths.length > 0 || autoDetectedPaths.length === 0) {
+    if (manualPaths.length > 0 || autoDetectedPaths.length === 0 || !hasDetectedRecommendedHakeemPaths(autoDetectedPaths)) {
       return;
     }
-    const preferred = autoDetectedPaths.filter((entry) => /(?:^|[\/])(?:localr|routines)$/iu.test(entry));
-    const toSave = preferred.length > 0 ? preferred : autoDetectedPaths;
-    try {
-      await vscode.workspace.getConfiguration('mforge').update('routineSearchPaths', toSave, vscode.ConfigurationTarget.Global);
-      this.output?.appendLine(`[navigation] Saved detected routine paths to mforge.routineSearchPaths: ${toSave.join(', ')}`);
-    } catch (error) {
-      this.debug(`Could not save detected routine paths: ${String(error)}`);
-    }
+    vscode.window.showInformationMessage(
+      'MForge detected common Hakeem routine folders. Apply recommended Hakeem settings so navigation works without editing settings.json?',
+      'Apply Recommended Hakeem Settings',
+      'Not Now'
+    ).then(async (selection) => {
+      if (selection !== 'Apply Recommended Hakeem Settings') {
+        this.debug('Recommended Hakeem settings prompt dismissed.');
+        return;
+      }
+      try {
+        await vscode.commands.executeCommand('mforge.applyRecommendedHakeemSettings');
+      } catch (error) {
+        this.debug(`Could not apply recommended Hakeem settings: ${String(error)}`);
+      }
+    });
   }
 
   markDirtyDebounced(): void {
@@ -494,14 +503,22 @@ export class MumpsRoutineIndex implements vscode.Disposable {
     diagnostics.cacheHits = this.cacheHits;
     diagnostics.cacheMisses = this.cacheMisses;
     this.lastDiagnostics = diagnostics;
-    this.output?.appendLine(`[navigation] Indexed ${this.routines.size} MUMPS routine(s), ${this.getLabelCount()} label(s) in ${diagnostics.elapsedMs}ms.`);
-    if (diagnostics.workspaceLimitReached || diagnostics.searchPathLimitReached) {
-      this.output?.appendLine('[navigation] Routine index file limit reached; some routines may not be indexed. Increase mforge.maxWorkspaceFiles or mforge.maxRoutineSearchPathFiles.');
+    this.output?.appendLine(`[navigation] Indexed ${this.routines.size} routine(s), ${this.getLabelCount()} label(s) in ${diagnostics.elapsedMs}ms from ${diagnostics.indexedSourcePaths.length} source folder(s).`);
+    this.output?.appendLine(`[navigation] Sources: ${diagnostics.indexedSourcePaths.join(', ') || '(none)'}`);
+    this.output?.appendLine(`[navigation] Cache: ${diagnostics.cacheHits} hit(s), ${diagnostics.cacheMisses} miss(es); duplicates removed: ${diagnostics.duplicatesRemoved}.`);
+    this.output?.appendLine(`[navigation] Key routines: ${KEY_ROUTINES.map((name) => `${name}=${diagnostics.keyRoutineStatus[name]?.startsWith('FOUND') ? 'FOUND' : 'not indexed'}`).join(', ')}`);
+    if (diagnostics.elapsedMs > SLOW_INDEX_WARNING_MS || diagnostics.broadPathWarnings.length > 0) {
+      this.output?.appendLine('[navigation] Indexing is slower than expected. Try MForge: Apply Recommended Hakeem Settings or use focused localr/routines paths.');
+    }
+    if (diagnostics.searchPathLimitReached) {
+      this.output?.appendLine('[navigation] Routine search-path file limit reached. Increase mforge.maxRoutineSearchPathFiles only if important routines are missing, or narrow routine paths.');
+    }
+    if (diagnostics.workspaceLimitReached) {
+      this.output?.appendLine('[navigation] Workspace file limit reached. Routine navigation prefers configured or auto-detected routineSearchPaths; run MForge: Show Navigation Diagnostics.');
     }
     for (const warning of diagnostics.broadPathWarnings) {
       this.output?.appendLine(`[navigation] ${warning}`);
     }
-    this.output?.appendLine(`[navigation] Key routines: ${KEY_ROUTINES.map((name) => `${name}=${diagnostics.keyRoutineStatus[name]?.startsWith('FOUND') ? 'FOUND' : 'not indexed'}`).join(', ')}`);
     this.logDebugIndexSummary();
   }
 
@@ -763,7 +780,7 @@ export class MumpsRoutineIndex implements vscode.Disposable {
     this.output?.appendLine(`[navigation] skipped by content: ${diagnostics.skippedByContent}`);
     this.output?.appendLine(`[navigation] First routines: ${routines.slice(0, 20).map((routine) => routine.name).join(', ') || '(none)'}`);
     if (diagnostics.duplicateRoutineNameList.length > 0) {
-      this.output?.appendLine(`[navigation] Duplicate routine names: ${diagnostics.duplicateRoutineNameList.join(', ')}`);
+      this.output?.appendLine(`[navigation-debug] Duplicate routine names: ${diagnostics.duplicateRoutineNameList.join(', ')}`);
     }
     for (const name of KEY_ROUTINES) {
       this.output?.appendLine(`[navigation] Index contains ${name}: ${diagnostics.keyRoutineStatus[name] ?? 'not indexed'}`);
@@ -919,6 +936,12 @@ function dedupeUris(uris: vscode.Uri[]): vscode.Uri[] {
     }
   }
   return result;
+}
+
+
+function hasDetectedRecommendedHakeemPaths(paths: string[]): boolean {
+  const normalized = new Set(paths.map((entry) => entry.replace(/\\/gu, '/').toLowerCase()));
+  return RECOMMENDED_HAKEEM_PATHS.every((entry) => normalized.has(entry.toLowerCase()));
 }
 
 function createEmptyDiagnostics(): RoutineIndexDiagnostics {

@@ -1,22 +1,20 @@
 # Navigation
 
-MForge navigation includes document symbols, workspace symbols, document links, Ctrl+Click/F12 definition lookup, Peek Definition support through VS Code, and Stage 5.1 Find References.
+MForge navigation supports Ctrl+Click, F12 Go To Definition, Peek Definition, document links, Document Symbols, Workspace Symbols, and Shift+F12 Find References for common MUMPS and VistA routine patterns.
 
-Navigation is static and parser-based. It resolves local labels, local variable definitions, and indexed `LABEL^ROUTINE` targets without requiring a MUMPS runtime, Python LSP, or tree-sitter dependency.
+## Routine Indexing Defaults
 
-## Stage 5.1 reliability notes
+MForge auto-detects routine folders and prefers focused source folders over broad project roots. In common Hakeem layouts, `localr` is preferred before `routines`, so local overrides win when duplicate routine names exist. Manual `mforge.routineSearchPaths` entries are optional; auto-detected effective paths are used internally even when the setting remains `[]`.
 
-- Peek Definition and Find References share the same scanner for inline calls, no-parentheses extrinsics, unary-NOT/logical extrinsics, and multiple references per line.
-- Cross-routine results depend on the cached routine index.
-- Missing labels fall back to the top of an indexed routine for definitions and declarations where appropriate.
-- Strings, comments, and ignored folders are skipped.
+## Commands
 
-See [Find References](references.md) for reference-specific settings and limitations.
+- **MForge: Rebuild Routine Index** rebuilds configured and auto-detected routine paths.
+- **MForge: Show Routine Index Status** shows routine count, label count, limits, effective paths, and key routine status.
+- **MForge: Show Navigation Diagnostics** shows build time, cache hits/misses, duplicates removed, source folders, and localr/routines counts.
+- **MForge: Apply Recommended Hakeem Settings** applies focused `/var/worldvista/prod/hakeem/localr` and `/var/worldvista/prod/hakeem/routines` paths.
 
-## Hakeem / WorldVistA indexing
+## Performance Notes
 
-Auto-detection now selects only routine source folders such as `/var/worldvista/prod/hakeem/routines` and `/var/worldvista/prod/hakeem/localr`; it does not auto-detect the broad `/var/worldvista/prod/hakeem` project root.
+Normal output is intentionally concise and never dumps thousands of duplicate routine names. Detailed duplicate information is reserved for `mforge.trace.level = debug`. If indexing is slow, prefer focused `localr` and `routines` folders or run **MForge: Apply Recommended Hakeem Settings**.
 
-## Old extension review
-
-Stage 5.2 reviewed `Old Extensions/mumps-lsp`, `Old Extensions/tree-sitter-m-vscode`, and `Old Extensions/mumps-debugger---upgrade`. The old Python LSP indexes a whole workspace glob, the tree-sitter extension focuses on semantic tokens/parser integration, and the debugger extension provides document-level symbols/definition helpers. None provided a faster Hakeem-specific routine-source index, so MForge keeps its native TypeScript index and adds localr-first, routine-search-path-only, incremental caching.
+MForge currently uses cached routine indexing with incremental file metadata reuse. A fuller lazy routine catalog that defers label parsing for very large trees remains the next required performance task and is documented as future work rather than claimed complete.

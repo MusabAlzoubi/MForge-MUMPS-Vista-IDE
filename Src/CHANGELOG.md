@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.6.1 - 2026-06-07
+
+### Added
+
+- Rewrote the Marketplace README for public release with complete feature, command, setting, troubleshooting, debug, standards, template, and Hakeem quick-start guidance.
+- Added **MForge: Apply Recommended Hakeem Settings** and **MForge: Reset MForge Settings To Defaults** commands so users normally do not need to edit `settings.json` manually.
+- Added release-polish tests covering README sections, commands, settings commands, theme JSON, semantic token colors, and normal index logging.
+- Added public docs for theme, navigation, standards diagnostics, templates, debugging, and local installation.
+
+### Changed
+
+- Improved MForge Dark theme colors for labels, commands, intrinsics, system variables, globals, locals, parameters, strings, comments, numbers, FileMan/VistA APIs, navigable routine references, and unresolved routine references.
+- Improved routine-index normal output to stay concise, show source folders/build time/cache/key routines, and reserve detailed duplicate names for debug logging.
+- Kept production defaults focused on automatic routine-path detection, safe debounced activation rebuilds, no extensionless indexing by default, and trace logging off by default.
+- Documented lazy routine catalog work as the next performance task rather than claiming a major indexing refactor.
+
 ## 0.6.0 - 2026-06-07
 
 ### Added

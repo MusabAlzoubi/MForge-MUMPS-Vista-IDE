@@ -93,6 +93,15 @@
 - [ ] Stage 5.5: Implement code metrics.
 - [ ] Add analysis reports after dependency and metrics commands land.
 
+## Stage 5.9: Public release polish
+
+- [x] Rewrite Marketplace README with complete current feature coverage.
+- [x] Add recommended Hakeem settings and reset-settings commands.
+- [x] Improve routine-index normal logs and document lazy catalog as future performance work.
+- [x] Improve MForge Dark theme semantic colors and documentation.
+- [x] Add release-polish tests for README, commands, settings commands, theme validation, semantic token colors, and normal logging.
+- [ ] Implement full lazy routine catalog with deferred label parsing for very large trees.
+
 ## Stage 6: Runtime and debugging
 
 - [x] Audit `Old Extensions/mumps-debugger---upgrade` for debugger/runtime, templates, standards, commands, settings, and package workflow parity.
