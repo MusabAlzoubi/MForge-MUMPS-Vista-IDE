@@ -50,16 +50,18 @@ const texts = new Map([
   [diqUri.toString(), diqText],
   [xparUri.toString(), xparText],
   [xlfstrUri.toString(), xlfstrText],
-  [xupUri.toString(), 'XUP ; Kernel entry\nEN Q']
+  [xupUri.toString(), 'XUP ; Kernel entry\nEN Q'],
+  [Uri.file('/var/worldvista/prod/hakeem/routines/UJOWXUS.m').toString(), 'UJOWXUS ; User session\nLOGIN Q']
 ]);
 const directoryEntries = new Map([
+  ['file:/var/worldvista/prod/hakeem', [['README.md', 1], ['workspace.code-workspace', 1], ['localr', 2], ['routines', 2], ...Array.from({ length: 50 }, (_, index) => [`NOISE${index}.m`, 1])]],
   ['file:/var/worldvista/prod/hakeem/localr', [['XLFDT.m', 1]]],
-  ['file:/var/worldvista/prod/hakeem/routines', [['XLFDT.m', 1], ['DIE.m', 1], ['DIQ.m', 1], ['XPAR.m', 1], ['XLFSTR.m', 1], ['XUP.m', 1]]]
+  ['file:/var/worldvista/prod/hakeem/routines', [['XLFDT.m', 1], ['DIE.m', 1], ['DIQ.m', 1], ['XPAR.m', 1], ['XLFSTR.m', 1], ['UJOWXUS.m', 1], ['XUP.m', 1]]]
 ]);
 const mtimes = new Map(Array.from(texts.keys()).map((key, index) => [key, 2000 + index]));
 const settings = {
   'trace.level': 'info',
-  routineSearchPaths: ['/var/worldvista/prod/hakeem/localr', '/var/worldvista/prod/hakeem/routines'],
+  routineSearchPaths: ['/var/worldvista/prod/hakeem/routines', '/var/worldvista/prod/hakeem', '/var/worldvista/prod/hakeem/localr'],
   autoDetectRoutinePaths: true,
   autoRebuildIndexOnActivation: true,
   indexExtensionlessRoutines: false,
@@ -70,6 +72,7 @@ const settings = {
   'references.maxResults': 5000
 };
 const outputLines = [];
+const originalSetTimeout = global.setTimeout;
 const output = { appendLine: (line) => outputLines.push(line), show: () => undefined, dispose: () => undefined };
 
 function createDocument(uri, text) {
@@ -99,13 +102,16 @@ Module._load = function patchedLoad(request, parent, isMain) {
           readFile: async (uri) => Buffer.from(texts.get(uri.toString()) ?? ''),
           stat: async (uri) => ({ mtime: mtimes.get(uri.toString()) ?? 0 }),
           readDirectory: async (uri) => {
-            if (!directoryEntries.has(uri.toString())) throw new Error(`No directory fixture for ${uri.toString()}`);
+            if (!directoryEntries.has(uri.toString())) throw new Error(`EntryNotFound: No directory fixture for ${uri.toString()}`);
             return directoryEntries.get(uri.toString());
           }
         },
         findFiles: async () => [callerUri],
-        getConfiguration: () => ({ get: (name, fallback) => Object.prototype.hasOwnProperty.call(settings, name) ? settings[name] : fallback })
+        getConfiguration: () => ({ get: (name, fallback) => Object.prototype.hasOwnProperty.call(settings, name) ? settings[name] : fallback, update: async (name, value) => { settings[name] = value; } })
       },
+      window: { showInformationMessage: async () => undefined, showInputBox: async () => undefined },
+      commands: { executeCommand: async () => undefined, registerCommand: () => ({ dispose() {} }) },
+      ConfigurationTarget: { Global: 1, Workspace: 2, WorkspaceFolder: 3 },
       languages: { registerReferenceProvider: () => ({ dispose() {} }) }
     };
   }
@@ -138,15 +144,37 @@ assert.equal(findMumpsReferencesInLine(' D ^XUP').some((ref) => ref.routine === 
 
 const callerDoc = createDocument(callerUri, callerText);
 const index = new MumpsRoutineIndex(output);
+const prebuildPathState = await index.getRoutinePathState(true);
+assert.deepEqual(prebuildPathState.effectivePaths, ['/var/worldvista/prod/hakeem/localr', '/var/worldvista/prod/hakeem/routines'], 'effective paths are localr then routines only');
+assert.equal(prebuildPathState.autoDetectedPaths.includes('/var/worldvista/prod/hakeem'), false, 'broad root is never auto-detected');
+assert.equal(prebuildPathState.effectivePaths.includes('/var/worldvista/prod/hakeem'), false, 'broad root is ignored if manually configured');
+assert(prebuildPathState.broadPathWarnings.includes('Ignored broad Hakeem root path. Use localr and routines instead.'), 'manual broad root produces repair warning');
+assert.equal(outputLines.some((line) => line.includes('EntryNotFound')), false, 'missing candidate folders do not spam normal logs');
 await index.rebuild();
+const diagnostics = index.getLastDiagnostics();
+assert.deepEqual(diagnostics.effectiveRoutineSearchPaths, ['/var/worldvista/prod/hakeem/localr', '/var/worldvista/prod/hakeem/routines'], 'diagnostics report localr then routines only');
+assert.equal(diagnostics.effectiveRoutineSearchPaths.includes('/var/worldvista/prod/hakeem'), false, 'diagnostics do not include broad root');
+assert(outputLines.some((line) => line.includes('Ignored broad Hakeem root path. Use localr and routines instead.')), 'normal log reports ignored broad Hakeem root');
 assert.equal(index.findRoutine('XLFDT')?.uri.toString(), localXlfdtUri.toString(), 'localr XLFDT overrides routines fallback');
 assert.equal(index.getLastDiagnostics().duplicatesRemoved > 0 || index.getLastDiagnostics().duplicateRoutineNames > 0, true, `duplicate routine handling records removal or duplicate names: ${JSON.stringify(index.getLastDiagnostics())}`);
 await index.rebuild();
 assert.equal(index.getLastDiagnostics().cacheHits > 0, true, 'second rebuild uses cache hits');
+assert.equal(['XPAR', 'XLFSTR', 'XLFDT', 'UJOWXUS'].every((name) => index.hasRoutine(name)), true, 'key routines are not skipped due to broad root');
 assert(outputLines.some((line) => line.includes('Indexed') && line.includes('source folder')), 'normal diagnostics include index summary');
 assert(outputLines.some((line) => line.includes('Cache:')), 'normal diagnostics include cache summary');
 assert(outputLines.some((line) => line.includes('Key routines:')), 'normal diagnostics include key routines');
 assert.equal(outputLines.some((line) => line.includes('[navigation] Duplicate routine names:')), false, 'normal diagnostics do not dump duplicate details');
+settings['trace.level'] = 'debug';
+outputLines.length = 0;
+await index.rebuild();
+assert(outputLines.some((line) => line.includes('[navigation-debug] Duplicate routine names:')), 'duplicate list is available in debug output only');
+settings['trace.level'] = 'info';
+outputLines.length = 0;
+const autoIndex = new MumpsRoutineIndex(output);
+autoIndex.scheduleAutoRebuildOnActivation(0);
+autoIndex.scheduleAutoRebuildOnActivation(0);
+await new Promise((resolve) => originalSetTimeout(resolve, 25));
+assert.equal(outputLines.filter((line) => line.includes('Auto rebuilding MUMPS routine index after activation')).length, 1, 'auto rebuild runs once on activation');
 
 const definitionProvider = new MumpsDefinitionProvider(index, output);
 for (const [line, label, routine, expectedUri, expectedSlice] of [

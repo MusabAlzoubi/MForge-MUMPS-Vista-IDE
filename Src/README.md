@@ -2,7 +2,7 @@
 
 A modern VS Code IDE toolkit for MUMPS, GT.M/YottaDB, InterSystems-style M code, and VistA/Hakeem development.
 
-**Version:** 0.6.2  
+**Version:** 0.6.3
 **VS Code:** ^1.90.0  
 **License:** MIT
 
@@ -128,7 +128,7 @@ Live MDEBUG connector hardening is still under active improvement. Direct debug 
 3. Select **MForge Dark** from **Preferences: Color Theme**.
 4. Ctrl+Click a `LABEL^ROUTINE` reference such as `D EN^XUP`.
 5. If navigation needs help, run **MForge: Show Navigation Diagnostics**.
-6. For common Hakeem systems, run **MForge: Apply Recommended Hakeem Settings** only if auto-detection needs a nudge.
+6. For common Hakeem systems, run **MForge: Repair Hakeem Routine Settings** if settings ever include the broad `/var/worldvista/prod/hakeem` root or auto-detection needs a nudge.
 
 ## MUMPS / VistA Examples
 
@@ -153,6 +153,7 @@ Use Ctrl+Click, F12, Peek Definition, or Shift+F12 on labels, variables, FileMan
 | `MForge: Debug References In Current Line` | Prints parser/navigation details for references on the active line. |
 | `MForge: Save Detected Routine Paths To Settings` | Saves auto-detected routine paths after confirmation. |
 | `MForge: Apply Recommended Hakeem Settings` | Sets safe Hakeem defaults for `/var/worldvista/prod/hakeem/localr` and `/var/worldvista/prod/hakeem/routines`. |
+| `MForge: Repair Hakeem Routine Settings` | Rewrites the Hakeem routine settings block for 0.6.3: `localr` first, `routines` second, auto-detect/rebuild on, extensionless indexing off, trace level `info`. |
 | `MForge: Reset MForge Settings To Defaults` | Removes MForge-only settings overrides without touching unrelated VS Code settings. |
 | `MForge: Insert Routine Header Template` | Inserts the routine header template at the top of the active MUMPS file. |
 | `MForge: Insert Patch Change Block Template` | Inserts a patch change block at the cursor. |
@@ -176,7 +177,7 @@ Use Ctrl+Click, F12, Peek Definition, or Shift+F12 on labels, variables, FileMan
 
 ## Important Settings
 
-Most users do not need to edit `settings.json` manually. Use **MForge: Apply Recommended Hakeem Settings** and **MForge: Show Navigation Diagnostics** first.
+Most users do not need to edit `settings.json` manually. Use **MForge: Repair Hakeem Routine Settings** or **MForge: Apply Recommended Hakeem Settings**, then **MForge: Show Navigation Diagnostics** first.
 
 | Setting | Default | Optional? | Notes |
 | --- | --- | --- | --- |
@@ -192,7 +193,7 @@ Most users do not need to edit `settings.json` manually. Use **MForge: Apply Rec
 | `mforge.standards.namespacePrefixes` | `[]` | Optional | Restricts routine namespaces when header checks are enabled. |
 | `mforge.debug.directCommandTimeoutMs` | `5000` | Optional | Direct MDEBUG command timeout. |
 
-Recommended Hakeem settings applied by command:
+Recommended Hakeem settings applied by **MForge: Repair Hakeem Routine Settings**:
 
 ```json
 {
@@ -235,11 +236,11 @@ Open a supported MUMPS file (`.m`, `.M`, `.mumps`, `.mps`, `.rou`, or `.int`). C
 
 ### Routine not indexed
 
-Run **MForge: Show Navigation Diagnostics**. If the routine folder is outside the workspace and not auto-detected, run **MForge: Apply Recommended Hakeem Settings** or add the exact routine folder to `mforge.routineSearchPaths`.
+Run **MForge: Show Navigation Diagnostics**. Effective Hakeem paths must be exactly `/var/worldvista/prod/hakeem/localr` and `/var/worldvista/prod/hakeem/routines` in that order. If the broad root appears in user settings, MForge ignores it and logs `Ignored broad Hakeem root path. Use localr and routines instead.` Run **MForge: Repair Hakeem Routine Settings** to rewrite the safe settings block.
 
 ### Navigation slow
 
-Avoid broad parent folders such as `/var/worldvista/prod/hakeem`. Prefer focused folders such as `localr` and `routines`. Run **MForge: Apply Recommended Hakeem Settings** for the common Hakeem layout.
+Do not configure broad parent folders such as `/var/worldvista/prod/hakeem`; MForge 0.6.3 ignores that Hakeem root and indexes only `localr` then `routines`. Run **MForge: Repair Hakeem Routine Settings** for the common Hakeem layout. Normal logs stay concise and do not print huge duplicate lists; set `mforge.trace.level` to `debug` only when duplicate details are needed.
 
 ### Ctrl+Click not working
 
@@ -256,6 +257,7 @@ Use paths as seen inside the remote container or Remote SSH host. For Hakeem con
 ### Reset or rebuild index
 
 - Run **MForge: Rebuild Routine Index** to rebuild routine navigation data.
+- Run **MForge: Repair Hakeem Routine Settings** to restore the safe Hakeem routine paths and indexing defaults.
 - Run **MForge: Reset MForge Settings To Defaults** to remove only MForge setting overrides.
 - Reload VS Code if a remote filesystem provider changes paths underneath the extension.
 
@@ -268,12 +270,12 @@ npm install
 npm run compile
 npm run test
 npm run package
-code --install-extension mforge-mumps-vista-ide-0.6.2.vsix
+code --install-extension mforge-mumps-vista-ide-0.6.3.vsix
 ```
 
 ## Roadmap Notes
 
-MForge 0.6.2 is release polish. It does **not** start new Stage 5 features such as Rename Symbol, Call Hierarchy, or Dependency Graph. Those remain planned follow-up work after indexing and runtime hardening.
+MForge 0.6.3 is a Hakeem indexing hotfix. It does **not** start new Stage 5 features such as Rename Symbol, Call Hierarchy, or Dependency Graph. Do not publish until the 0.6.3 manual verification checklist passes. Stage 5 features such as Rename Symbol, Call Hierarchy, or Dependency Graph remain planned follow-up work after indexing and runtime hardening.
 
 ## Author
 

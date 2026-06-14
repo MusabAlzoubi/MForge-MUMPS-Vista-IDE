@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.6.3 - 2026-06-09
+
+### Fixed
+
+- Prevented auto-detection and effective indexing of the broad `/var/worldvista/prod/hakeem` root so Hakeem indexing stays limited to `/var/worldvista/prod/hakeem/localr` followed by `/var/worldvista/prod/hakeem/routines`.
+- Ignored manually configured broad Hakeem root paths with the normal log message `Ignored broad Hakeem root path. Use localr and routines instead.`
+- Suppressed normal/info log spam for missing auto-detect candidate folders; those details remain debug-only.
+- Guarded activation auto-rebuild scheduling so it runs once and does not rebuild again after an already-current manual build.
+- Kept huge duplicate routine name lists out of normal output; duplicate details remain available only at `mforge.trace.level = debug`.
+
+### Added
+
+- Added **MForge: Repair Hakeem Routine Settings** to write the safe Hakeem settings block for 0.6.3 verification.
+- Expanded Hakeem hardening tests for broad-root ignoring, localr-first effective paths, missing candidate log behavior, one-shot activation rebuild, debug-only duplicates, and key routine retention.
+
 ## 0.6.2 - 2026-06-08
 
 ### Fixed

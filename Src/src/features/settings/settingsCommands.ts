@@ -38,20 +38,29 @@ const MFORGE_SETTING_KEYS = [
 export function registerSettingsCommands(context: vscode.ExtensionContext, output?: vscode.OutputChannel): void {
   context.subscriptions.push(
     vscode.commands.registerCommand('mforge.applyRecommendedHakeemSettings', async () => applyRecommendedHakeemSettings(output)),
+    vscode.commands.registerCommand('mforge.repairHakeemRoutineSettings', async () => repairHakeemRoutineSettings(output)),
     vscode.commands.registerCommand('mforge.resetSettingsToDefaults', async () => resetMForgeSettingsToDefaults(output))
   );
 }
 
 export async function applyRecommendedHakeemSettings(output?: vscode.OutputChannel): Promise<void> {
+  await writeHakeemRoutineSettings(output, 'Applied recommended Hakeem routine paths', 'MForge recommended Hakeem settings applied. Run MForge: Rebuild Routine Index if needed.');
+}
+
+export async function repairHakeemRoutineSettings(output?: vscode.OutputChannel): Promise<void> {
+  await writeHakeemRoutineSettings(output, 'Repaired Hakeem routine settings', 'MForge Hakeem routine settings repaired. Reload VS Code, then run MForge: Rebuild Routine Index.');
+}
+
+async function writeHakeemRoutineSettings(output: vscode.OutputChannel | undefined, logPrefix: string, userMessage: string): Promise<void> {
   const configuration = vscode.workspace.getConfiguration('mforge');
   await configuration.update('routineSearchPaths', RECOMMENDED_HAKEEM_ROUTINE_PATHS, vscode.ConfigurationTarget.Global);
-  await configuration.update('indexExtensionlessRoutines', false, vscode.ConfigurationTarget.Global);
   await configuration.update('autoDetectRoutinePaths', true, vscode.ConfigurationTarget.Global);
   await configuration.update('autoRebuildIndexOnActivation', true, vscode.ConfigurationTarget.Global);
+  await configuration.update('indexExtensionlessRoutines', false, vscode.ConfigurationTarget.Global);
   await configuration.update('trace.level', 'info', vscode.ConfigurationTarget.Global);
-  output?.appendLine(`[settings] Applied recommended Hakeem routine paths: ${RECOMMENDED_HAKEEM_ROUTINE_PATHS.join(', ')}`);
-  output?.appendLine('[settings] Recommended Hakeem settings applied. Run MForge: Rebuild Routine Index if the index is already built.');
-  vscode.window.showInformationMessage('MForge recommended Hakeem settings applied. Run MForge: Rebuild Routine Index if needed.');
+  output?.appendLine(`[settings] ${logPrefix}: ${RECOMMENDED_HAKEEM_ROUTINE_PATHS.join(', ')}`);
+  output?.appendLine('[settings] Hakeem routine settings now use localr first, routines second, extensionless indexing off, auto-detect on, auto-rebuild on, and info logging.');
+  vscode.window.showInformationMessage(userMessage);
 }
 
 export async function resetMForgeSettingsToDefaults(output?: vscode.OutputChannel): Promise<void> {

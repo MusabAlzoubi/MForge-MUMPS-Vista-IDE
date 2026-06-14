@@ -15,12 +15,9 @@ const EXCLUDE_GLOB = '{**/node_modules/**,**/.git/**,**/dist/**,**/out/**,**/Old
 const KEY_ROUTINES = ['UJOWXUS', 'UJOWXUS2', 'XPAR', 'XLFSTR', 'DIE', 'DIQ', 'XLFDT', 'XUS4', 'XTV'];
 const AUTO_ABSOLUTE_ROUTINE_PATHS = [
   '/var/worldvista/prod/hakeem/localr',
-  '/var/worldvista/prod/hakeem/routines',
-  '/var/worldvista/prod/hakeem/localroutines',
-  '/var/worldvista/prod/hakeem/r',
-  '/var/worldvista/prod/hakeem/local'
+  '/var/worldvista/prod/hakeem/routines'
 ];
-const AUTO_WORKSPACE_RELATIVE_ROUTINE_PATHS = ['localr', 'routines', 'localroutines', 'r', 'src/routines'];
+const AUTO_WORKSPACE_RELATIVE_ROUTINE_PATHS = ['localr', 'routines'];
 const AUTO_REBUILD_DELAY_MS = 1500;
 const AUTO_DETECT_SCAN_LIMIT = 200;
 const AUTO_DETECT_MAX_DEPTH = 3;
@@ -28,7 +25,8 @@ const FILE_TYPE_FILE = 1;
 const FILE_TYPE_DIRECTORY = 2;
 const STRICT_ROUTINE_NAME_PATTERN = /^%?[A-Za-z][A-Za-z0-9]{0,31}$/u;
 const NON_ROUTINE_EXTENSIONLESS_NAMES = new Set(['LICENSE', 'UNLICENSE', 'README', 'CNAME', 'PACKAGE', 'PACKAGE-LOCK', 'YARN', 'PNPM-LOCK', 'TSCONFIG', 'JSCONFIG', 'MAKEFILE', 'DOCKERFILE']);
-const BROAD_PATH_ENDINGS = [/\/var\/worldvista\/prod\/hakeem$/iu, /(?:^|[\/])(?:objects|objects_org|localo|localo_org|generated|node_modules|\.git)$/iu];
+const BROAD_HAKEEM_ROOT_PATTERN = /\/var\/worldvista\/prod\/hakeem$/iu;
+const BROAD_PATH_ENDINGS = [BROAD_HAKEEM_ROOT_PATTERN, /(?:^|[\/])(?:objects|objects_org|localo|localo_org|generated|node_modules|\.git)$/iu];
 const SLOW_INDEX_WARNING_MS = 10000;
 const RECOMMENDED_HAKEEM_PATHS = ['/var/worldvista/prod/hakeem/localr', '/var/worldvista/prod/hakeem/routines'];
 
@@ -208,6 +206,7 @@ export class MumpsRoutineIndex implements vscode.Disposable {
   private autoRebuildTimer: ReturnType<typeof setTimeout> | null = null;
   private autoDetectedRoutinePathUris: vscode.Uri[] = [];
   private autoRebuildStarted = false;
+  private autoRebuildScheduled = false;
   private lastPathSignature: string | null = null;
   private lastRebuildTime: string | null = null;
   private lastDiagnostics: RoutineIndexDiagnostics = createEmptyDiagnostics();
@@ -298,14 +297,16 @@ export class MumpsRoutineIndex implements vscode.Disposable {
   }
 
   scheduleAutoRebuildOnActivation(delayMs = AUTO_REBUILD_DELAY_MS): void {
-    if (!getAutoRebuildIndexOnActivation() || this.autoRebuildStarted) {
+    if (!getAutoRebuildIndexOnActivation() || this.autoRebuildStarted || this.autoRebuildScheduled) {
       return;
     }
     if (this.autoRebuildTimer) {
       clearTimeout(this.autoRebuildTimer);
     }
+    this.autoRebuildScheduled = true;
     this.autoRebuildTimer = setTimeout(async () => {
       this.autoRebuildTimer = null;
+      this.autoRebuildScheduled = false;
       if (this.autoRebuildStarted || this.buildPromise) {
         return;
       }
@@ -432,6 +433,7 @@ export class MumpsRoutineIndex implements vscode.Disposable {
       await this.buildPromise;
       return;
     }
+    this.autoRebuildStarted = true;
     this.buildPromise = this.rebuildIndex().finally(() => {
       this.buildPromise = null;
     });
@@ -447,6 +449,7 @@ export class MumpsRoutineIndex implements vscode.Disposable {
     const maxRoutineSearchPathFiles = getMaxRoutineSearchPathFiles();
     const includeExtensionless = getIndexExtensionlessRoutines();
     const pathState = await this.getRoutinePathState(true);
+    this.lastPathSignature = `${pathState.effectivePaths.join('|')}|${includeExtensionless}|${maxFiles}|${maxRoutineSearchPathFiles}`;
     const includePattern = includeExtensionless ? WORKSPACE_EXTENSIONLESS_GLOB : WORKSPACE_ROUTINE_GLOB;
     const diagnostics = createEmptyDiagnostics();
     diagnostics.workspaceFolders = getWorkspaceFolders().map((folder) => folder.uri.toString());
@@ -508,7 +511,7 @@ export class MumpsRoutineIndex implements vscode.Disposable {
     this.output?.appendLine(`[navigation] Cache: ${diagnostics.cacheHits} hit(s), ${diagnostics.cacheMisses} miss(es); duplicates removed: ${diagnostics.duplicatesRemoved}.`);
     this.output?.appendLine(`[navigation] Key routines: ${KEY_ROUTINES.map((name) => `${name}=${diagnostics.keyRoutineStatus[name]?.startsWith('FOUND') ? 'FOUND' : 'not indexed'}`).join(', ')}`);
     if (diagnostics.elapsedMs > SLOW_INDEX_WARNING_MS || diagnostics.broadPathWarnings.length > 0) {
-      this.output?.appendLine('[navigation] Indexing is slower than expected. Try MForge: Apply Recommended Hakeem Settings or use focused localr/routines paths.');
+      this.output?.appendLine('[navigation] Indexing is slower than expected. Try MForge: Repair Hakeem Routine Settings or use focused localr/routines paths.');
     }
     if (diagnostics.searchPathLimitReached) {
       this.output?.appendLine('[navigation] Routine search-path file limit reached. Increase mforge.maxRoutineSearchPathFiles only if important routines are missing, or narrow routine paths.');
@@ -623,12 +626,15 @@ export class MumpsRoutineIndex implements vscode.Disposable {
   }
 
   async getRoutinePathState(refreshAuto = false): Promise<{ manualPaths: string[]; autoDetectedPaths: string[]; effectivePaths: string[]; broadPathWarnings: string[] }> {
-    const manualUris = getManualRoutineSearchRoots();
-    const autoUris = getAutoDetectRoutinePaths() ? (refreshAuto || this.autoDetectedRoutinePathUris.length === 0 ? await this.detectAutoRoutinePaths() : this.autoDetectedRoutinePathUris) : [];
-    const effectiveUris = dedupeUris([...manualUris, ...autoUris]);
-    const broadPathWarnings = manualUris.filter(isBroadRoutineSearchPath).map((uri) => `Routine search path ${displayRoutinePath(uri)} looks broad and may slow indexing. Consider selecting routines/localr instead.`);
+    const configuredManualUris = getManualRoutineSearchRoots();
+    const manualBroadUris = configuredManualUris.filter(isBroadHakeemRootPath);
+    const manualUris = configuredManualUris.filter((uri) => !isBroadHakeemRootPath(uri));
+    const detectedAutoUris = getAutoDetectRoutinePaths() ? (refreshAuto || this.autoDetectedRoutinePathUris.length === 0 ? await this.detectAutoRoutinePaths() : this.autoDetectedRoutinePathUris) : [];
+    const autoUris = detectedAutoUris.filter((uri) => !isBroadHakeemRootPath(uri));
+    const effectiveUris = orderRoutineRoots(dedupeUris([...manualUris, ...autoUris]));
+    const broadPathWarnings = manualBroadUris.map(() => 'Ignored broad Hakeem root path. Use localr and routines instead.');
     return {
-      manualPaths: manualUris.map(displayRoutinePath),
+      manualPaths: configuredManualUris.map(displayRoutinePath),
       autoDetectedPaths: autoUris.map(displayRoutinePath),
       effectivePaths: effectiveUris.map(displayRoutinePath),
       broadPathWarnings
@@ -641,7 +647,7 @@ export class MumpsRoutineIndex implements vscode.Disposable {
       return [];
     }
     const includeExtensionless = getIndexExtensionlessRoutines();
-    const candidates = getAutoRoutinePathCandidates();
+    const candidates = getAutoRoutinePathCandidates().filter((candidate) => !isBroadHakeemRootPath(candidate));
     const detected: vscode.Uri[] = [];
     for (const candidate of candidates) {
       if (await this.directoryContainsRoutineFile(candidate, includeExtensionless)) {
@@ -852,8 +858,16 @@ function routineSourcePriority(uri: vscode.Uri, filePath: string): number {
 }
 
 function isBroadRoutineSearchPath(uri: vscode.Uri): boolean {
-  const value = displayRoutinePath(uri).replace(/\\/gu, '/').replace(/\/+$/u, '');
+  const value = normalizedDisplayRoutinePath(uri);
   return BROAD_PATH_ENDINGS.some((pattern) => pattern.test(value));
+}
+
+function isBroadHakeemRootPath(uri: vscode.Uri): boolean {
+  return BROAD_HAKEEM_ROOT_PATTERN.test(normalizedDisplayRoutinePath(uri));
+}
+
+function normalizedDisplayRoutinePath(uri: vscode.Uri): string {
+  return displayRoutinePath(uri).replace(/\\/gu, '/').replace(/\/+$/u, '');
 }
 
 function getWorkspaceScanDebounceMs(): number {
@@ -923,6 +937,20 @@ function displayRoutinePath(uri: vscode.Uri): string {
     return uriPathLike(uri);
   }
   return uri.toString();
+}
+
+function orderRoutineRoots(uris: vscode.Uri[]): vscode.Uri[] {
+  return [...uris].sort((left, right) => routineRootOrder(left) - routineRootOrder(right));
+}
+
+function routineRootOrder(uri: vscode.Uri): number {
+  if (isLocalrRoutinePath(uri)) {
+    return 0;
+  }
+  if (isRoutinesRoutinePath(uri)) {
+    return 1;
+  }
+  return 2;
 }
 
 function dedupeUris(uris: vscode.Uri[]): vscode.Uri[] {

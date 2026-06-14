@@ -188,7 +188,7 @@ async function saveDetectedRoutinePathsToSettings(routineIndex: MumpsRoutineInde
     return;
   }
 
-  const merged = Array.from(new Set([...pathState.manualPaths, ...pathState.autoDetectedPaths]));
+  const merged = pathState.effectivePaths;
   const selection = await vscode.window.showInformationMessage(
     `Save ${pathState.autoDetectedPaths.length} detected MUMPS routine path(s) to mforge.routineSearchPaths?`,
     'Save',

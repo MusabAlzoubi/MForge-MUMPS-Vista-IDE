@@ -32,4 +32,4 @@ If cross-routine references are missing, run **MForge: Rebuild Routine Index**, 
 
 ## Index reliability guidance
 
-For large Hakeem/WorldVistA trees, keep `mforge.indexExtensionlessRoutines` disabled when `.m` files exist and configure only routine source folders such as `/var/worldvista/prod/hakeem/routines` and `/var/worldvista/prod/hakeem/localr`. Do not configure `/var/worldvista/prod/hakeem` unless necessary; it is broad and can slow indexing. If Shift+F12 reports that a routine is not indexed, run **MForge: Show Routine Index Status**, remove broad paths, and run **MForge: Rebuild Routine Index**.
+For large Hakeem/WorldVistA trees, keep `mforge.indexExtensionlessRoutines` disabled when `.m` files exist and configure only routine source folders such as `/var/worldvista/prod/hakeem/routines` and `/var/worldvista/prod/hakeem/localr`. Never configure `/var/worldvista/prod/hakeem`; MForge 0.6.3 ignores that broad Hakeem root and logs `Ignored broad Hakeem root path. Use localr and routines instead.` If Shift+F12 reports that a routine is not indexed, run **MForge: Show Routine Index Status**, remove broad paths, and run **MForge: Rebuild Routine Index**.
