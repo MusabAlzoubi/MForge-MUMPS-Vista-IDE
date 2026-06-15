@@ -69,3 +69,10 @@ To disable diagnostics:
 - **No diagnostics appear:** Confirm the file language mode is `mumps` and `mforge.diagnostics.enabled` is `true`.
 - **A warning appears inside unusual syntax:** Add a small fixture and disable diagnostics temporarily if needed.
 - **Trailing whitespace keeps returning:** Check editor settings or workspace tooling that may add spaces on save.
+
+
+## Navigation diagnostics
+
+**MForge: Show Navigation Diagnostics** reports routine-catalog health separately from parser diagnostics. For large VistA/Hakeem trees, expect catalog counts to be high and parsed-label cache counts to stay low immediately after rebuild.
+
+Key fields include catalog routine count, parsed routine cache count, parsed labels cached, catalog build time, lazy parses performed, lazy parse average time, duplicates removed, and source folders. The command no longer reports a huge full-project “indexed labels” value during rebuild because labels are parsed lazily per target routine.

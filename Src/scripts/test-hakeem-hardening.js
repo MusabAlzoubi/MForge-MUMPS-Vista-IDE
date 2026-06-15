@@ -72,6 +72,7 @@ const settings = {
   'references.maxResults': 5000
 };
 const outputLines = [];
+let readFileCount = 0;
 const originalSetTimeout = global.setTimeout;
 const output = { appendLine: (line) => outputLines.push(line), show: () => undefined, dispose: () => undefined };
 
@@ -99,7 +100,7 @@ Module._load = function patchedLoad(request, parent, isMain) {
         workspaceFolders: [{ uri: Uri.file('/workspace'), name: 'workspace', index: 0 }],
         textDocuments: [createDocument(callerUri, callerText)],
         fs: {
-          readFile: async (uri) => Buffer.from(texts.get(uri.toString()) ?? ''),
+          readFile: async (uri) => { readFileCount += 1; return Buffer.from(texts.get(uri.toString()) ?? ''); },
           stat: async (uri) => ({ mtime: mtimes.get(uri.toString()) ?? 0 }),
           readDirectory: async (uri) => {
             if (!directoryEntries.has(uri.toString())) throw new Error(`EntryNotFound: No directory fixture for ${uri.toString()}`);
@@ -157,10 +158,12 @@ assert.equal(diagnostics.effectiveRoutineSearchPaths.includes('/var/worldvista/p
 assert(outputLines.some((line) => line.includes('Ignored broad Hakeem root path. Use localr and routines instead.')), 'normal log reports ignored broad Hakeem root');
 assert.equal(index.findRoutine('XLFDT')?.uri.toString(), localXlfdtUri.toString(), 'localr XLFDT overrides routines fallback');
 assert.equal(index.getLastDiagnostics().duplicatesRemoved > 0 || index.getLastDiagnostics().duplicateRoutineNames > 0, true, `duplicate routine handling records removal or duplicate names: ${JSON.stringify(index.getLastDiagnostics())}`);
+assert.equal(readFileCount, 0, 'catalog build does not read file contents');
+assert.equal(index.getLastDiagnostics().parsedLabelsCacheCount, 0, 'catalog build does not parse labels');
 await index.rebuild();
-assert.equal(index.getLastDiagnostics().cacheHits > 0, true, 'second rebuild uses cache hits');
+assert.equal(readFileCount, 0, 'second catalog rebuild still does not read file contents');
 assert.equal(['XPAR', 'XLFSTR', 'XLFDT', 'UJOWXUS'].every((name) => index.hasRoutine(name)), true, 'key routines are not skipped due to broad root');
-assert(outputLines.some((line) => line.includes('Indexed') && line.includes('source folder')), 'normal diagnostics include index summary');
+assert(outputLines.some((line) => line.includes('Cataloged') && line.includes('source folder')), 'normal diagnostics include index summary');
 assert(outputLines.some((line) => line.includes('Cache:')), 'normal diagnostics include cache summary');
 assert(outputLines.some((line) => line.includes('Key routines:')), 'normal diagnostics include key routines');
 assert.equal(outputLines.some((line) => line.includes('[navigation] Duplicate routine names:')), false, 'normal diagnostics do not dump duplicate details');
@@ -188,11 +191,15 @@ for (const [line, label, routine, expectedUri, expectedSlice] of [
 ]) {
   const ref = findMumpsReferenceAt(callerDoc.lineAt(line).text, callerDoc.lineAt(line).text.indexOf(label));
   assert.equal(ref?.routine, routine, `${label} routine side parsed`);
+  const beforeResolveReads = readFileCount;
   const labelLocation = await definitionProvider.provideDefinition(callerDoc, pos(callerDoc, line, label));
+  assert.equal(readFileCount >= beforeResolveReads, true, 'lazy parse occurs only during definition resolution');
   assert.equal(labelLocation.uri.toString(), expectedUri, `${label} definition from label side`);
   assert.equal(sliceAt(labelLocation), expectedSlice, `${label} definition target slice`);
+  const routineReadsBefore = readFileCount;
   const routineLocation = await definitionProvider.provideDefinition(callerDoc, pos(callerDoc, line, routine));
   assert.equal(routineLocation.uri.toString(), expectedUri, `${label} definition from routine side`);
+  assert.equal(readFileCount, routineReadsBefore, 'second navigation uses lazy label cache');
 }
 const localLabelLocation = await definitionProvider.provideDefinition(callerDoc, pos(callerDoc, 7, 'LOCAL'));
 assert.equal(sliceAt(localLabelLocation), 'LOCAL', 'local label navigation resolves');

@@ -2,7 +2,7 @@
   "name": "mforge-mumps-vista-ide",
   "displayName": "MForge MUMPS & VistA IDE",
   "description": "A modern VS Code IDE toolkit for MUMPS, GT.M/YottaDB, InterSystems-style M code, and VistA/Hakeem development.",
-  "version": "0.6.3",
+  "version": "0.7.0",
   "publisher": "dopamind",
   "license": "MIT",
   "repository": {
@@ -108,7 +108,7 @@
     "test": "npm run test:semantic-contributions && npm run test:stage2 && npm run test:stage3 && npm run test:stage4 && npm run test:stage45 && npm run test:stage46 && npm run test:stage5 && npm run test:legacy-parity && npm run test:release-polish && npm run test:hakeem-hardening",
     "package": "npm run env:check && npm run compile && npm run test && vsce package",
     "package:local": "npm run package",
-    "install:local": "code --install-extension mforge-mumps-vista-ide-0.6.3.vsix",
+    "install:local": "code --install-extension mforge-mumps-vista-ide-0.7.0.vsix",
     "test:stage4": "node scripts/test-stage4.js",
     "test:stage45": "node scripts/test-stage45.js",
     "test:stage46": "node scripts/test-stage46.js",

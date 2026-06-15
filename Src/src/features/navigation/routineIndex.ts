@@ -83,6 +83,10 @@ export interface RoutineIndexDiagnostics {
   routinesIndexed: number;
   cacheHits: number;
   cacheMisses: number;
+  parsedRoutineCacheCount: number;
+  parsedLabelsCacheCount: number;
+  lazyParsesPerformed: number;
+  lazyParseAverageMs: number;
   duplicateRoutineNames: number;
   duplicateRoutineNameList: string[];
   keyRoutineStatus: Record<string, string>;
@@ -171,7 +175,7 @@ export function uriKey(uri: vscode.Uri): string {
 export function buildRoutineIndexFromFiles(files: FileIndexInput[], options: BuildRoutineIndexOptions = {}): RoutineIndexData {
   const includeExtensionless = options.includeExtensionless ?? false;
   const routines = files
-    .filter((file) => isSupportedRoutineFile(file.filePath, includeExtensionless, file.text))
+    .filter((file) => isSupportedRoutineFile(file.filePath, includeExtensionless, file.labels ? undefined : file.text))
     .filter((file) => !shouldIgnoreRoutinePath(file.filePath))
     .map((file) => {
       const uri = file.uri ?? vscode.Uri.file(path.resolve(file.filePath));
@@ -285,7 +289,11 @@ export class MumpsRoutineIndex implements vscode.Disposable {
   }
 
   getLabelCount(): number {
-    return this.getRoutines().reduce((total, routine) => total + routine.labels.length, 0);
+    return Array.from(this.fileCache.values()).reduce((total, entry) => total + entry.labels.length, 0);
+  }
+
+  getParsedRoutineCacheCount(): number {
+    return this.fileCache.size;
   }
 
   getLastDiagnostics(): RoutineIndexDiagnostics {
@@ -467,21 +475,20 @@ export class MumpsRoutineIndex implements vscode.Disposable {
     diagnostics.indexedSourcePaths = pathState.effectivePaths;
     diagnostics.broadPathWarnings = pathState.broadPathWarnings;
 
-    const seenUris = new Set<string>();
-    const inputs: FileIndexInput[] = [];
+    const catalogUris: vscode.Uri[] = [];
 
     // Navigation indexing is intentionally isolated from workspace-root scans.
-    // Only configured or auto-detected routine source folders feed the routine index.
+    // Rebuild now creates a fast VistA-style routine catalog from filenames only;
+    // labels are parsed lazily when definitions or declarations are requested.
     diagnostics.workspaceFilesDiscovered = 0;
     diagnostics.workspaceLimitReached = false;
 
     const localrUris = await this.findConfiguredRoutineUris(maxRoutineSearchPathFiles, diagnostics, isLocalrRoutinePath);
-    await this.collectInputs(localrUris, inputs, seenUris, diagnostics, includeExtensionless);
-    this.commitIndexInputs(inputs, diagnostics, includeExtensionless, startTime);
+    catalogUris.push(...localrUris);
     diagnostics.localrIndexed = localrUris.length;
 
     if (generation !== this.rebuildGeneration) {
-      this.debug('Discarded stale localr-first rebuild after a newer rebuild started.');
+      this.debug('Discarded stale localr-first catalog rebuild after a newer rebuild started.');
       return;
     }
 
@@ -489,10 +496,11 @@ export class MumpsRoutineIndex implements vscode.Disposable {
     const remainingUris = remainingLimit > 0
       ? await this.findConfiguredRoutineUris(remainingLimit, diagnostics, (uri) => !isLocalrRoutinePath(uri))
       : [];
-    await this.collectInputs(remainingUris, inputs, seenUris, diagnostics, includeExtensionless);
+    catalogUris.push(...remainingUris);
     diagnostics.routinesIndexed = remainingUris.filter(isRoutinesRoutinePath).length;
 
-    const duplicateNames = findDuplicateRoutineNames(buildRoutineIndexFromFiles(inputs, { includeExtensionless }).routines);
+    const catalogInputs = await this.createCatalogInputs(catalogUris, includeExtensionless);
+    const duplicateNames = findDuplicateRoutineNames(buildRoutineIndexFromFiles(catalogInputs, { includeExtensionless }).routines);
     diagnostics.duplicateRoutineNames = duplicateNames.length;
     diagnostics.duplicateRoutineNameList = duplicateNames;
 
@@ -501,12 +509,12 @@ export class MumpsRoutineIndex implements vscode.Disposable {
       return;
     }
 
-    this.commitIndexInputs(inputs, diagnostics, includeExtensionless, startTime);
-    diagnostics.duplicatesRemoved = Math.max(0, inputs.length - this.routines.size);
+    this.commitIndexInputs(catalogInputs, diagnostics, includeExtensionless, startTime);
+    diagnostics.duplicatesRemoved = Math.max(0, catalogInputs.length - this.routines.size);
     diagnostics.cacheHits = this.cacheHits;
     diagnostics.cacheMisses = this.cacheMisses;
     this.lastDiagnostics = diagnostics;
-    this.output?.appendLine(`[navigation] Indexed ${this.routines.size} routine(s), ${this.getLabelCount()} label(s) in ${diagnostics.elapsedMs}ms from ${diagnostics.indexedSourcePaths.length} source folder(s).`);
+    this.output?.appendLine(`[navigation] Cataloged ${this.routines.size} routine(s), ${diagnostics.parsedLabelsCacheCount} parsed label(s) cached in ${diagnostics.elapsedMs}ms from ${diagnostics.indexedSourcePaths.length} source folder(s).`);
     this.output?.appendLine(`[navigation] Sources: ${diagnostics.indexedSourcePaths.join(', ') || '(none)'}`);
     this.output?.appendLine(`[navigation] Cache: ${diagnostics.cacheHits} hit(s), ${diagnostics.cacheMisses} miss(es); duplicates removed: ${diagnostics.duplicatesRemoved}.`);
     this.output?.appendLine(`[navigation] Key routines: ${KEY_ROUTINES.map((name) => `${name}=${diagnostics.keyRoutineStatus[name]?.startsWith('FOUND') ? 'FOUND' : 'not indexed'}`).join(', ')}`);
@@ -539,6 +547,10 @@ export class MumpsRoutineIndex implements vscode.Disposable {
     diagnostics.elapsedMs = Date.now() - startTime;
     diagnostics.cacheHits = this.cacheHits;
     diagnostics.cacheMisses = this.cacheMisses;
+    diagnostics.parsedRoutineCacheCount = this.fileCache.size;
+    diagnostics.parsedLabelsCacheCount = this.getLabelCount();
+    diagnostics.lazyParsesPerformed = this.cacheMisses;
+    diagnostics.lazyParseAverageMs = 0;
     this.lastRebuildTime = new Date().toISOString();
     diagnostics.lastRebuildTime = this.lastRebuildTime;
     diagnostics.keyRoutineStatus = this.createKeyRoutineStatus();
@@ -551,6 +563,64 @@ export class MumpsRoutineIndex implements vscode.Disposable {
     const diagnostics = createEmptyDiagnostics();
     const uris = await this.findConfiguredRoutineUris(getMaxRoutineSearchPathFiles(), diagnostics);
     return uris.filter((uri) => routineNameFromUri(uri).toUpperCase().includes(target));
+  }
+
+
+  private async createCatalogInputs(uris: vscode.Uri[], includeExtensionless: boolean): Promise<FileIndexInput[]> {
+    const inputs: FileIndexInput[] = [];
+    const seen = new Set<string>();
+    for (const uri of uris) {
+      const key = uriKey(uri);
+      if (seen.has(key)) {
+        continue;
+      }
+      seen.add(key);
+      const filePath = uriPathLike(uri);
+      if (!isSupportedRoutineFile(filePath, includeExtensionless) || shouldIgnoreRoutinePath(filePath)) {
+        continue;
+      }
+      const mtime = await getWorkspaceMtime(uri);
+      inputs.push({ filePath, uri, text: '', labels: [], sourcePriority: routineSourcePriority(uri, filePath), mtime: mtime ?? undefined });
+    }
+    return inputs;
+  }
+
+  async getRoutineLabels(routineName: string): Promise<MumpsLabel[]> {
+    await this.ensureBuilt();
+    const routine = this.findRoutine(routineName);
+    if (!routine) {
+      return [];
+    }
+    const key = routine.uriKey;
+    const mtime = await getWorkspaceMtime(routine.uri);
+    const cached = this.fileCache.get(key);
+    if (cached && cached.mtime !== null && mtime !== null && cached.mtime === mtime) {
+      this.cacheHits += 1;
+      this.lastDiagnostics.cacheHits = this.cacheHits;
+      return cached.labels;
+    }
+    const startTime = Date.now();
+    const text = await readWorkspaceText(routine.uri);
+    const routineBaseName = routineNameFromUri(routine.uri);
+    const labels = parseMumpsRoutine(text, routineBaseName).labels;
+    const elapsed = Date.now() - startTime;
+    this.cacheMisses += 1;
+    const previousParses = this.lastDiagnostics.lazyParsesPerformed;
+    this.fileCache.set(key, {
+      mtime,
+      labels,
+      routineName: routine.name,
+      filePath: routine.filePath,
+      uri: routine.uri,
+      sourcePriority: routine.sourcePriority ?? routineSourcePriority(routine.uri, routine.filePath)
+    });
+    routine.labels = labels;
+    this.lastDiagnostics.cacheMisses = this.cacheMisses;
+    this.lastDiagnostics.parsedRoutineCacheCount = this.fileCache.size;
+    this.lastDiagnostics.parsedLabelsCacheCount = this.getLabelCount();
+    this.lastDiagnostics.lazyParsesPerformed = previousParses + 1;
+    this.lastDiagnostics.lazyParseAverageMs = Math.round(((this.lastDiagnostics.lazyParseAverageMs * previousParses) + elapsed) / Math.max(1, previousParses + 1));
+    return labels;
   }
 
   private async collectInputs(
@@ -758,7 +828,7 @@ export class MumpsRoutineIndex implements vscode.Disposable {
     const status: Record<string, string> = {};
     for (const name of KEY_ROUTINES) {
       const routine = this.findRoutine(name);
-      status[name] = routine ? `FOUND ${routine.uri.toString()} (${routine.labels.length} label(s))` : 'not indexed';
+      status[name] = routine ? `FOUND ${routine.uri.toString()} (catalog)` : 'not indexed';
     }
     return status;
   }
@@ -1003,6 +1073,10 @@ function createEmptyDiagnostics(): RoutineIndexDiagnostics {
     routinesIndexed: 0,
     cacheHits: 0,
     cacheMisses: 0,
+    parsedRoutineCacheCount: 0,
+    parsedLabelsCacheCount: 0,
+    lazyParsesPerformed: 0,
+    lazyParseAverageMs: 0,
     duplicateRoutineNames: 0,
     duplicateRoutineNameList: [],
     keyRoutineStatus: {}

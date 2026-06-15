@@ -14,9 +14,9 @@ Stage 5.1 adds a dedicated MForge Find References provider registered with `vsco
 - References ignore strings and comments.
 - Dynamic indirection such as `D @TARGET` is intentionally not resolved.
 - Local variable references do not cross routine or document boundaries yet.
-- Cross-routine searches use the existing cached routine index and VS Code filesystem APIs for `file:` and `vscode-remote:` URIs.
+- Cross-routine searches use the routine catalog and VS Code filesystem APIs for `file:` and `vscode-remote:` URIs. They scan content only when Shift+F12 is invoked, not during activation or catalog rebuild.
 - `objects`, `localo`, generated build output, old extension folders, and other ignored folders are not indexed.
-- `mforge.maxWorkspaceFiles` limits routine indexing, and `mforge.references.maxResults` limits returned reference locations.
+- `mforge.maxRoutineSearchPathFiles` limits cataloged routine files, and `mforge.references.maxResults` limits returned reference locations. Cross-routine searches yield periodically and honor cancellation.
 
 ## Settings
 
@@ -32,4 +32,4 @@ If cross-routine references are missing, run **MForge: Rebuild Routine Index**, 
 
 ## Index reliability guidance
 
-For large Hakeem/WorldVistA trees, keep `mforge.indexExtensionlessRoutines` disabled when `.m` files exist and configure only routine source folders such as `/var/worldvista/prod/hakeem/routines` and `/var/worldvista/prod/hakeem/localr`. Never configure `/var/worldvista/prod/hakeem`; MForge 0.6.3 ignores that broad Hakeem root and logs `Ignored broad Hakeem root path. Use localr and routines instead.` If Shift+F12 reports that a routine is not indexed, run **MForge: Show Routine Index Status**, remove broad paths, and run **MForge: Rebuild Routine Index**.
+For large Hakeem/WorldVistA trees, keep `mforge.indexExtensionlessRoutines` disabled when `.m` files exist and configure only routine source folders such as `/var/worldvista/prod/hakeem/routines` and `/var/worldvista/prod/hakeem/localr`. Never configure `/var/worldvista/prod/hakeem`; MForge 0.7.0 ignores that broad Hakeem root and logs `Ignored broad Hakeem root path. Use localr and routines instead.` If Shift+F12 reports that a routine is not indexed, run **MForge: Show Routine Index Status**, remove broad paths, and run **MForge: Rebuild Routine Index**.

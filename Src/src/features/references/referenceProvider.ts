@@ -32,11 +32,16 @@ export class MForgeReferenceProvider implements vscode.ReferenceProvider {
     }
 
     const includeDeclarations = context.includeDeclaration && getIncludeDeclarations();
-    return findReferencesForTarget(document, target, this.routineIndex, {
+    const search = () => findReferencesForTarget(document, target, this.routineIndex, {
       includeDeclarations,
       maxResults: getMaxResults(),
       token
     });
+    const windowWithProgress = vscode.window as (typeof vscode.window & { withProgress?: <T>(options: unknown, task: () => Thenable<T>) => Thenable<T> }) | undefined;
+    if (target.kind === 'routineReference' && typeof windowWithProgress?.withProgress === 'function' && vscode.ProgressLocation) {
+      return windowWithProgress.withProgress({ location: vscode.ProgressLocation.Notification, title: `MForge: Finding references for ${target.name}`, cancellable: true }, search);
+    }
+    return search();
   }
 
   private debug(message: string): void {

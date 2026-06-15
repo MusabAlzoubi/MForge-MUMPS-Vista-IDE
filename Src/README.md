@@ -2,7 +2,7 @@
 
 A modern VS Code IDE toolkit for MUMPS, GT.M/YottaDB, InterSystems-style M code, and VistA/Hakeem development.
 
-**Version:** 0.6.3
+**Version:** 0.7.0
 **VS Code:** ^1.90.0  
 **License:** MIT
 
@@ -79,11 +79,11 @@ Use Shift+F12 or **Find All References** for:
 MForge builds a routine index for navigation and references while avoiding broad, slow scans by default.
 
 - Auto-detects common routine folders.
+- Builds a fast VistA-style routine catalog from filenames, source priority, URI, and mtime only.
 - Gives `localr` priority over `routines` when duplicate routines exist.
 - Uses `routines` as fallback source folders.
-- Maintains incremental cache data for repeated indexing.
-- Uses lazy/cached index behavior for normal navigation startup.
-- Provides navigation diagnostics and index health commands.
+- Parses labels lazily only when a target routine definition is resolved, then caches labels by mtime.
+- Provides catalog diagnostics and index health commands.
 - Supports **MForge: Rebuild Routine Index** and **MForge: Show Navigation Diagnostics**.
 
 Normally you do **not** need to edit `settings.json`. MForge auto-detects common Hakeem/YottaDB routine folders and can apply recommended Hakeem settings from the Command Palette.
@@ -147,13 +147,13 @@ Use Ctrl+Click, F12, Peek Definition, or Shift+F12 on labels, variables, FileMan
 | --- | --- |
 | `MForge: Show Getting Started` | Shows a short activation and setup message. |
 | `MForge: Rebuild Routine Index` | Rebuilds the current routine index from configured and auto-detected routine folders. |
-| `MForge: Show Routine Index Status` | Shows routine count, label count, source folders, limits, and key routine status. |
-| `MForge: Show Navigation Diagnostics` | Shows concise index health, build time, cache, duplicate, localr, and routines diagnostics. |
+| `MForge: Show Routine Index Status` | Shows catalog routine count, parsed-label cache counts, source folders, limits, and key routine catalog status. |
+| `MForge: Show Navigation Diagnostics` | Shows catalog count, parsed routine/label cache counts, catalog build time, lazy parse timing, duplicates, localr, and routines diagnostics. |
 | `MForge: Find Routine In Index` | Searches indexed routines by name and opens the match. |
 | `MForge: Debug References In Current Line` | Prints parser/navigation details for references on the active line. |
 | `MForge: Save Detected Routine Paths To Settings` | Saves auto-detected routine paths after confirmation. |
 | `MForge: Apply Recommended Hakeem Settings` | Sets safe Hakeem defaults for `/var/worldvista/prod/hakeem/localr` and `/var/worldvista/prod/hakeem/routines`. |
-| `MForge: Repair Hakeem Routine Settings` | Rewrites the Hakeem routine settings block for 0.6.3: `localr` first, `routines` second, auto-detect/rebuild on, extensionless indexing off, trace level `info`. |
+| `MForge: Repair Hakeem Routine Settings` | Rewrites the Hakeem routine settings block for 0.7.0: `localr` first, `routines` second, auto-detect/rebuild on, extensionless indexing off, trace level `info`. |
 | `MForge: Reset MForge Settings To Defaults` | Removes MForge-only settings overrides without touching unrelated VS Code settings. |
 | `MForge: Insert Routine Header Template` | Inserts the routine header template at the top of the active MUMPS file. |
 | `MForge: Insert Patch Change Block Template` | Inserts a patch change block at the cursor. |
@@ -240,7 +240,7 @@ Run **MForge: Show Navigation Diagnostics**. Effective Hakeem paths must be exac
 
 ### Navigation slow
 
-Do not configure broad parent folders such as `/var/worldvista/prod/hakeem`; MForge 0.6.3 ignores that Hakeem root and indexes only `localr` then `routines`. Run **MForge: Repair Hakeem Routine Settings** for the common Hakeem layout. Normal logs stay concise and do not print huge duplicate lists; set `mforge.trace.level` to `debug` only when duplicate details are needed.
+Do not configure broad parent folders such as `/var/worldvista/prod/hakeem`; MForge 0.7.0 ignores that Hakeem root and indexes only `localr` then `routines`. Run **MForge: Repair Hakeem Routine Settings** for the common Hakeem layout. Normal logs stay concise and do not print huge duplicate lists; set `mforge.trace.level` to `debug` only when duplicate details are needed.
 
 ### Ctrl+Click not working
 
@@ -270,12 +270,12 @@ npm install
 npm run compile
 npm run test
 npm run package
-code --install-extension mforge-mumps-vista-ide-0.6.3.vsix
+code --install-extension mforge-mumps-vista-ide-0.7.0.vsix
 ```
 
 ## Roadmap Notes
 
-MForge 0.6.3 is a Hakeem indexing hotfix. It does **not** start new Stage 5 features such as Rename Symbol, Call Hierarchy, or Dependency Graph. Do not publish until the 0.6.3 manual verification checklist passes. Stage 5 features such as Rename Symbol, Call Hierarchy, or Dependency Graph remain planned follow-up work after indexing and runtime hardening.
+MForge 0.7.0 is a routine catalog performance release. It does **not** start new Stage 5 features such as Rename Symbol, Call Hierarchy, or Dependency Graph. Do not publish until the 0.7.0 manual Hakeem verification checklist passes. Stage 5 features such as Rename Symbol, Call Hierarchy, or Dependency Graph remain planned follow-up work after indexing and runtime hardening.
 
 ## Author
 

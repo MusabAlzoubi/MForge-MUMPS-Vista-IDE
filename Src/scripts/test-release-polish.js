@@ -52,7 +52,7 @@ for (const phrase of [
 }
 
 const packageJson = readJson('package.json');
-assert.equal(packageJson.version, '0.6.3', 'version is 0.6.3 for Hakeem root indexing fix');
+assert.equal(packageJson.version, '0.7.0', 'version is 0.7.0 for lazy routine catalog performance release');
 const commands = new Set(packageJson.contributes.commands.map((command) => command.command));
 for (const command of [
   'mforge.applyRecommendedHakeemSettings',

@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.7.0 - 2026-06-14
+
+### Changed
+
+- Replaced eager full-project label indexing with a fast VistA-style routine catalog built from routine filenames, source priority, URI, and mtime only.
+- Added lazy target-routine label parsing for Ctrl+Click/F12 so labels are parsed only when a definition or declaration is resolved, then cached by routine URI and mtime.
+- Updated navigation diagnostics to report catalog routine count, parsed routine cache count, parsed labels cached, catalog build time, lazy parse count, lazy parse average time, duplicates removed, and source folders.
+- Kept Find References on-demand and separate from activation/rebuild so normal startup no longer preloads all labels.
+
+### Fixed
+
+- Preserved localr-over-routines catalog priority without parsing duplicate routine contents.
+- Kept Hakeem effective paths limited to localr then routines while avoiding activation-time parsing of ~290k labels.
+
+
 ## 0.6.3 - 2026-06-09
 
 ### Fixed
