@@ -100,7 +100,9 @@
 - [x] Fix false routine navigation on globals while preserving routine-only `D ^ROUTINE` references.
 - [x] Add Hakeem hardening regression fixtures and tests for core FileMan/VistA APIs and parser safety.
 - [x] Add `docs/reports/hakeem-hardening-report.md`.
-- [ ] Validate packaged VSIX manually in a real production-style Hakeem/WorldVistA container or Remote SSH workspace.
+- [x] Prevent broad `/var/worldvista/prod/hakeem` indexing and force effective Hakeem paths to `localr` then `routines`.
+- [x] Add **MForge: Repair Hakeem Routine Settings** for the 0.7.0 routine catalog settings block.
+- [ ] Validate packaged 0.7.0 VSIX manually in a real production-style Hakeem/WorldVistA container or Remote SSH workspace.
 
 ## Stage 5.9: Public release polish
 

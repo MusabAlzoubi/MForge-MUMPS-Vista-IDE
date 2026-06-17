@@ -109,7 +109,7 @@ async function findCrossRoutineReferences(
   await routineIndex.ensureBuilt();
   const locations: vscode.Location[] = [];
   if (options.includeDeclarations) {
-    const declaration = declarationForCrossRoutineTarget(target, routineIndex);
+    const declaration = await declarationForCrossRoutineTarget(target, routineIndex);
     if (declaration) {
       locations.push(declaration);
     }
@@ -140,7 +140,7 @@ async function findCrossRoutineReferences(
   return dedupeLocations(locations).slice(0, options.maxResults);
 }
 
-function declarationForCrossRoutineTarget(target: MumpsReference, routineIndex: MumpsRoutineIndex): vscode.Location | null {
+async function declarationForCrossRoutineTarget(target: MumpsReference, routineIndex: MumpsRoutineIndex): Promise<vscode.Location | null> {
   if (!target.routine) {
     return null;
   }
@@ -151,7 +151,8 @@ function declarationForCrossRoutineTarget(target: MumpsReference, routineIndex: 
   if (!target.label) {
     return new vscode.Location(routine.uri, new vscode.Range(0, 0, 0, 0));
   }
-  const label = routine.labels.find((candidate) => sameName(candidate.name, target.label));
+  const labels = await routineIndex.getRoutineLabels(target.routine);
+  const label = labels.find((candidate) => sameName(candidate.name, target.label));
   if (label) {
     return new vscode.Location(routine.uri, new vscode.Range(label.line, label.nameStartCharacter, label.line, label.nameEndCharacter));
   }

@@ -27,7 +27,7 @@ Module._load = function(request, parent, isMain) {
 };
 
 const pkg = require('../package.json');
-assert.equal(pkg.version, '0.6.2', 'version remains on the legacy parity release line or newer');
+assert.equal(pkg.version, '0.7.0', 'version remains on the legacy parity release line or newer');
 const commandIds = new Set(pkg.contributes.commands.map((command) => command.command));
 for (const id of ['mforge.insertRoutineHeaderTemplate','mforge.insertPatchChangeBlockTemplate','mforge.zstep','mforge.zwrite','mforge.zshow','mforge.zbreak','mforge.directDebugSetup','mforge.directDebugSmokeTest']) {
   assert(commandIds.has(id), `${id} is contributed`);

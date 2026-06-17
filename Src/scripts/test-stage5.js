@@ -92,6 +92,7 @@ class FakeRoutineIndex {
   async ensureBuilt() { this.built = true; }
   getRoutines() { return this.data.routines; }
   findRoutine(name) { return this.data.routines.find((routine) => routine.name.toUpperCase() === name.toUpperCase()); }
+  async getRoutineLabels(name) { return this.findRoutine(name)?.labels ?? []; }
   parseDocument(document) { return parseMumpsRoutine(document.getText(), document.uri.path.split('/').pop().replace(/\..*$/, '')); }
 }
 

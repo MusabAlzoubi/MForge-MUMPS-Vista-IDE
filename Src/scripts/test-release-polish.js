@@ -41,6 +41,7 @@ for (const phrase of [
   'D FILE^DIE("","FDA","ERR")',
   "I '$D(ASKINGVC)!'$$GET^XPAR",
   'MForge: Apply Recommended Hakeem Settings',
+  'MForge: Repair Hakeem Routine Settings',
   'MForge: Reset MForge Settings To Defaults',
   'MForge: Show Navigation Diagnostics',
   'MForge: Insert Routine Header Template',
@@ -51,10 +52,11 @@ for (const phrase of [
 }
 
 const packageJson = readJson('package.json');
-assert.equal(packageJson.version, '0.6.2', 'version is 0.6.2 for release polish');
+assert.equal(packageJson.version, '0.7.0', 'version is 0.7.0 for lazy routine catalog performance release');
 const commands = new Set(packageJson.contributes.commands.map((command) => command.command));
 for (const command of [
   'mforge.applyRecommendedHakeemSettings',
+  'mforge.repairHakeemRoutineSettings',
   'mforge.resetSettingsToDefaults',
   'mforge.rebuildRoutineIndex',
   'mforge.showNavigationDiagnostics',
@@ -81,6 +83,7 @@ assert.equal(theme.semanticTokenColors['mumps-api'].foreground, '#4EC9B0', 'File
 const routineIndexSource = read('src/features/navigation/routineIndex.ts');
 assert(!routineIndexSource.includes("this.output?.appendLine(`[navigation] Duplicate routine names"), 'normal index logs do not dump duplicate routine names');
 assert(routineIndexSource.includes('logDebugIndexSummary'), 'debug index summary remains available for detailed logs');
-assertIncludes(routineIndexSource, 'MForge: Apply Recommended Hakeem Settings', 'slow index recommendation');
+assertIncludes(routineIndexSource, 'Ignored broad Hakeem root path. Use localr and routines instead.', 'broad Hakeem root ignore warning');
+assertIncludes(routineIndexSource, 'MForge: Repair Hakeem Routine Settings', 'slow index recommendation');
 
 console.log('Release polish validation passed.');

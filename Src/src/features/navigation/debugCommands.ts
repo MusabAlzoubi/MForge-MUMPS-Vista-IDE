@@ -69,7 +69,7 @@ async function rebuildRoutineIndex(routineIndex: MumpsRoutineIndex, output?: vsc
   await routineIndex.rebuild();
   const routines = routineIndex.getRoutines();
   const diagnostics = routineIndex.getLastDiagnostics();
-  output?.appendLine(`[navigation-debug] Indexed ${routines.length} routine(s), ${routineIndex.getLabelCount()} label(s).`);
+  output?.appendLine(`[navigation-debug] Cataloged ${routines.length} routine(s), ${diagnostics.parsedLabelsCacheCount} parsed label(s) cached.`);
   output?.appendLine(`[navigation-debug] Workspace folders: ${diagnostics.workspaceFolders.join(', ') || '(none)'}`);
   output?.appendLine(`[navigation-debug] Include patterns: ${diagnostics.includePatterns.join(', ') || '(none)'}`);
   output?.appendLine(`[navigation-debug] Exclude patterns: ${diagnostics.excludePattern}`);
@@ -112,7 +112,7 @@ async function findRoutineInIndex(routineIndex: MumpsRoutineIndex, output?: vsco
   const routine = routineIndex.findRoutine(normalized);
   if (routine) {
     output?.appendLine(`[navigation-debug] ${normalized}: FOUND ${routine.uri.toString()}`);
-    output?.appendLine(`[navigation-debug] label count: ${routine.labels.length}`);
+    output?.appendLine(`[navigation-debug] status: catalog entry found; labels parse lazily on definition.`);
     output?.show();
     return;
   }
@@ -135,9 +135,13 @@ async function showNavigationDiagnostics(routineIndex: MumpsRoutineIndex, output
   await routineIndex.ensureBuilt();
   const diagnostics = routineIndex.getLastDiagnostics();
   output?.appendLine('[navigation-debug] MForge Navigation Diagnostics');
-  output?.appendLine(`[navigation-debug] Indexed routines: ${routineIndex.getRoutines().length}`);
-  output?.appendLine(`[navigation-debug] Indexed labels: ${routineIndex.getLabelCount()}`);
+  output?.appendLine(`[navigation-debug] Catalog routines: ${routineIndex.getRoutines().length}`);
+  output?.appendLine(`[navigation-debug] Parsed labels cached: ${diagnostics.parsedLabelsCacheCount}`);
   output?.appendLine(`[navigation-debug] Index source folders: ${diagnostics.indexedSourcePaths.join(', ') || '(none)'}`);
+  output?.appendLine(`[navigation-debug] Parsed routine cache count: ${diagnostics.parsedRoutineCacheCount}`);
+  output?.appendLine(`[navigation-debug] Catalog build time: ${diagnostics.elapsedMs}ms`);
+  output?.appendLine(`[navigation-debug] Lazy parses performed: ${diagnostics.lazyParsesPerformed}`);
+  output?.appendLine(`[navigation-debug] Lazy parse average time: ${diagnostics.lazyParseAverageMs}ms`);
   output?.appendLine(`[navigation-debug] Duplicates removed: ${diagnostics.duplicatesRemoved}`);
   output?.appendLine(`[navigation-debug] Index build time: ${diagnostics.elapsedMs}ms`);
   output?.appendLine(`[navigation-debug] Localr indexed: ${diagnostics.localrIndexed}`);
@@ -152,8 +156,8 @@ async function showRoutineIndexStatus(routineIndex: MumpsRoutineIndex, output?: 
   const diagnostics = routineIndex.getLastDiagnostics();
   const pathState = await routineIndex.getRoutinePathState(false);
   output?.appendLine('[navigation-debug] MUMPS Routine Index Status');
-  output?.appendLine(`[navigation-debug] Indexed routines: ${routineIndex.getRoutines().length}`);
-  output?.appendLine(`[navigation-debug] Indexed labels: ${routineIndex.getLabelCount()}`);
+  output?.appendLine(`[navigation-debug] Catalog routines: ${routineIndex.getRoutines().length}`);
+  output?.appendLine(`[navigation-debug] Parsed labels cached: ${diagnostics.parsedLabelsCacheCount}`);
   output?.appendLine(`[navigation-debug] Last rebuild time: ${routineIndex.getLastRebuildTime() ?? '(not rebuilt yet)'}`);
   output?.appendLine(`[navigation-debug] Elapsed indexing time: ${diagnostics.elapsedMs}ms`);
   output?.appendLine(`[navigation-debug] Limit reached: workspace=${diagnostics.workspaceLimitReached}, searchPaths=${diagnostics.searchPathLimitReached}`);
@@ -168,7 +172,7 @@ async function showRoutineIndexStatus(routineIndex: MumpsRoutineIndex, output?: 
   output?.appendLine(`[navigation-debug] Effective routine paths: ${pathState.effectivePaths.join(', ') || '(none)'}`);
   for (const name of IMPORTANT_ROUTINES) {
     const routine = routineIndex.findRoutine(name);
-    output?.appendLine(`[navigation-debug] ${name}: ${routine ? `FOUND ${routine.uri.toString()} (${routine.labels.length} label(s))` : 'not indexed'}`);
+    output?.appendLine(`[navigation-debug] ${name}: ${routine ? `FOUND ${routine.uri.toString()} (catalog)` : 'not indexed'}`);
   }
   if (diagnostics.workspaceLimitReached || diagnostics.searchPathLimitReached) {
     output?.appendLine('[navigation-debug] Next action: increase mforge.maxWorkspaceFiles or mforge.maxRoutineSearchPathFiles if important routines are missing.');
@@ -188,7 +192,7 @@ async function saveDetectedRoutinePathsToSettings(routineIndex: MumpsRoutineInde
     return;
   }
 
-  const merged = Array.from(new Set([...pathState.manualPaths, ...pathState.autoDetectedPaths]));
+  const merged = pathState.effectivePaths;
   const selection = await vscode.window.showInformationMessage(
     `Save ${pathState.autoDetectedPaths.length} detected MUMPS routine path(s) to mforge.routineSearchPaths?`,
     'Save',
